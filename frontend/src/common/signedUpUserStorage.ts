@@ -17,3 +17,11 @@ export function rememberSignedUpUser(userId: number) {
     return
   }
 }
+
+export function forgetSignedUpUser(userId: number) {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(getSignedUpUserIds().filter((id) => id !== userId)))
+  } catch {
+    return
+  }
+}
