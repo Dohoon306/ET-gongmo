@@ -28,6 +28,8 @@ erDiagram
     users ||--o{ chat_message : "보낸 사람 / 쪽지 받는 사람"
     room ||--o{ chat_read : "팀 채팅 읽은 위치"
     users ||--o{ chat_read : ""
+    room |o--o{ room_event : "강퇴·나가기·방장 변경"
+    chat_message |o--o| room_event : "채팅 알림"
     users ||--o| admin_account : "관리자"
     users ||--o| user_suspension : "정지"
     users ||--o{ user_report : "신고한 사람 / 신고된 사람"
@@ -50,6 +52,7 @@ erDiagram
 | `bookmark` | 관심 공고 (D-1) | D | D-2 |
 | `chat_message` | 팀 채팅·쪽지 메시지 (C-8, C-9) | C | - |
 | `chat_read` | 팀 채팅을 어디까지 읽었는지 (C-8) | C | - |
+| `room_event` | 강퇴·나가기·방장 변경 기록 (C-10~C-13) | C | C-8 (채팅 알림), E-2 (강퇴 횟수) |
 | `admin_account` | 관리자 계정 (E-1) | admin | 전체 (관리자 확인) |
 | `user_suspension` | 정지된 계정 (E-2) | admin | 전체 (정지 차단) |
 | `user_report` | 유저 신고 (E-6) | admin | E-2 |
@@ -253,6 +256,21 @@ MySQL에는 조건부 UNIQUE가 없어서 생성 컬럼을 씁니다. 대기 중
 - 팀 채팅의 안 읽은 수는 "그 방에서 내가 아닌 사람이 보낸, `last_read_id`보다 큰 메시지 수"입니다 ([5.8](#58-안-읽은-메시지-수-c-8c-9)).
 - 팀 채팅 메시지를 사람마다 따로 표시하지 않고 읽은 위치 하나만 저장해서, 팀원이 늘어도 행이 늘지 않습니다.
 - 시드에는 넣지 않습니다. 시드 러너가 다른 테이블과 함께 비웁니다.
+
+### 3.13.1 `room_event` — 방 관리 기록 (C, C-10~C-13)
+
+| 컬럼 | 타입 | 제약 | 설명 |
+|---|---|---|---|
+| `id` | BIGINT | PK | |
+| `room_id` | BIGINT | NULL, FK → `room.id` (방 지우면 NULL) | 방이 지워져도 강퇴 횟수가 남도록 NULL로 둠 |
+| `actor_id` | BIGINT | NOT NULL, FK → `users.id` | 한 사람 (강퇴·방장 변경은 방장, 나가기는 본인) |
+| `user_id` | BIGINT | NOT NULL, FK → `users.id` | 당한 사람 (강퇴된 사람, 새 방장, 나간 사람) |
+| `kind` | VARCHAR(20) | NOT NULL | `KICK`·`LEAVE`·`HOST_CHANGE` |
+| `reason` | VARCHAR(200) | NULL | 강퇴 사유 (강퇴면 필수, 앱에서 확인) |
+| `message_id` | BIGINT | NULL, FK → `chat_message.id` | 팀 채팅에 넣은 알림 메시지. 채팅 화면은 이 연결이 있는 메시지를 가운데 회색 알림으로 보여 줌 |
+| `created_at` | DATETIME | NOT NULL, 기본 현재 시각 | |
+
+`chat_message`에 컬럼을 더하지 않고 이 테이블로 알림 여부를 가려서, 이미 만들어진 DB도 다시 만들 필요가 없습니다. 관리자 계정 탭(E-2)은 `actor_id`·`user_id`별 `KICK` 수를 셉니다.
 
 ### 3.14 `admin_account` — 관리자 (admin, E-1)
 
@@ -469,6 +487,26 @@ CREATE TABLE IF NOT EXISTS chat_read (
   PRIMARY KEY (room_id, user_id),
   CONSTRAINT fk_chat_read_room FOREIGN KEY (room_id) REFERENCES room (id)  ON DELETE CASCADE,
   CONSTRAINT fk_chat_read_user FOREIGN KEY (user_id) REFERENCES users (id)
+);
+
+CREATE TABLE IF NOT EXISTS room_event (
+  id          BIGINT        NOT NULL AUTO_INCREMENT,
+  room_id     BIGINT        NULL,
+  actor_id    BIGINT        NOT NULL,
+  user_id     BIGINT        NOT NULL,
+  kind        VARCHAR(20)   NOT NULL,
+  reason      VARCHAR(200)  NULL,
+  message_id  BIGINT        NULL,
+  created_at  DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_event_actor (actor_id, kind),
+  KEY idx_event_user (user_id, kind),
+  KEY idx_event_message (message_id),
+  CONSTRAINT fk_event_room    FOREIGN KEY (room_id)    REFERENCES room (id)         ON DELETE SET NULL,
+  CONSTRAINT fk_event_actor   FOREIGN KEY (actor_id)   REFERENCES users (id)        ON DELETE CASCADE,
+  CONSTRAINT fk_event_user    FOREIGN KEY (user_id)    REFERENCES users (id)        ON DELETE CASCADE,
+  CONSTRAINT fk_event_message FOREIGN KEY (message_id) REFERENCES chat_message (id) ON DELETE SET NULL,
+  CONSTRAINT ck_event_kind CHECK (kind IN ('KICK', 'LEAVE', 'HOST_CHANGE'))
 );
 ```
 

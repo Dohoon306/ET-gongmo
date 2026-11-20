@@ -28,7 +28,8 @@ public class AdminService {
     private final NamedParameterJdbcTemplate named;
 
     public record UserRow(long id, String name, String intro, String createdAt, boolean admin, boolean suspended,
-                          String suspendReason, long reportCount, List<String> categories) {}
+                          String suspendReason, long reportCount, long kickCount, long kickedCount,
+                          List<String> categories) {}
 
     public record EvaluationRow(long id, long roomId, String roomTitle, long evaluatorId, String evaluatorName,
                                 long targetId, String targetName, int score, String comment, String createdAt) {}
@@ -113,6 +114,8 @@ public class AdminService {
                 SELECT u.id, u.name, u.intro, DATE_FORMAT(u.created_at, %s) AS created_at,
                        a.user_id IS NOT NULL AS is_admin, s.user_id IS NOT NULL AS is_suspended, s.reason,
                        (SELECT COUNT(*) FROM user_report r WHERE r.target_id = u.id) AS report_count,
+                       (SELECT COUNT(*) FROM room_event k WHERE k.actor_id = u.id AND k.kind = 'KICK') AS kick_count,
+                       (SELECT COUNT(*) FROM room_event k WHERE k.user_id = u.id AND k.kind = 'KICK') AS kicked_count,
                        (SELECT GROUP_CONCAT(c.name ORDER BY c.sort_order SEPARATOR ',')
                         FROM user_category uc JOIN category c ON c.id = uc.category_id WHERE uc.user_id = u.id) AS categories
                 FROM users u
@@ -122,7 +125,7 @@ public class AdminService {
                 """.formatted(DATETIME), (rs, i) -> new UserRow(rs.getLong("id"), rs.getString("name"),
                 rs.getString("intro"), rs.getString("created_at"), rs.getBoolean("is_admin"),
                 rs.getBoolean("is_suspended"), rs.getString("reason"), rs.getLong("report_count"),
-                splitList(rs.getString("categories"))));
+                rs.getLong("kick_count"), rs.getLong("kicked_count"), splitList(rs.getString("categories"))));
     }
 
     @Transactional

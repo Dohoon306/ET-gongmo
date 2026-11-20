@@ -8,6 +8,7 @@ export type ChatMessage = {
   content: string
   createdAt: string
   mine: boolean
+  notice: boolean
 }
 
 export type RoomUnread = { roomId: number; title: string; unread: number; lastContent: string | null }

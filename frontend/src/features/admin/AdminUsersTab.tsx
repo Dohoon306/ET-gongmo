@@ -47,6 +47,10 @@ export default function AdminUsersTab() {
                   )}
                 </p>
                 <p className="mt-1 truncate text-sm text-(--color-muted)">{u.intro ?? '자기소개 없음'}</p>
+                <p className="mt-1 text-xs text-(--color-ink-2)">
+                  강퇴한 횟수 <span className="font-semibold">{u.kickCount}</span> · 강퇴당한 횟수{' '}
+                  <span className={`font-semibold ${u.kickedCount > 0 ? 'text-red-700' : ''}`}>{u.kickedCount}</span>
+                </p>
                 {u.categories.length > 0 && <p className="mt-1 text-xs text-(--color-ink-2)">{u.categories.join(' · ')}</p>}
                 {u.suspended && u.suspendReason && <p className="mt-1 text-xs text-red-700">정지 이유: {u.suspendReason}</p>}
                 <p className="mt-1 text-xs text-(--color-muted)">가입 {u.createdAt.slice(0, 10)}</p>

@@ -80,7 +80,13 @@ export default function ChatView({ title, subtitle, backTo, backLabel, path, rep
           {messages.length === 0 && (
             <p className="py-16 text-center text-sm text-(--color-muted)">아직 메시지가 없어요. 첫 메시지를 보내 보세요.</p>
           )}
-          {messages.map((m) => (
+          {messages.map((m) =>
+            m.notice ? (
+              <p key={m.id} role="status" className="mx-auto w-fit max-w-[90%] rounded-full bg-(--color-subtle) px-4 py-1.5 text-center text-[13px] text-(--color-ink-2)">
+                {m.content}
+                <span className="ml-2 text-[11px] text-(--color-muted)">{m.createdAt.slice(11, 16)}</span>
+              </p>
+            ) : (
             <div key={m.id} className={`flex items-end gap-2.5 ${m.mine ? 'flex-row-reverse' : ''}`}>
               {!m.mine && <Avatar name={m.senderName} userId={m.senderId} reportContext={reportContext} />}
               <div className={`max-w-[70%] ${m.mine ? 'text-right' : ''}`}>
@@ -93,7 +99,8 @@ export default function ChatView({ title, subtitle, backTo, backLabel, path, rep
                 <p className="mt-1 text-[11px] text-(--color-muted)">{m.createdAt.slice(11, 16)}</p>
               </div>
             </div>
-          ))}
+            ),
+          )}
           <div ref={bottom} />
         </div>
         <form onSubmit={send} className="flex gap-2 border-t border-line p-4">
