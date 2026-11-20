@@ -86,7 +86,8 @@ backend/src/main/java/com/gdgoc/et/
 ├── contest/    # B: 수집, 분류, 추천, 상세
 ├── team/       # C: 방, 참가 요청, 수락·거절, 팀원 목록
 ├── bookmark/   # D: 관심 공고 저장·목록
-└── profile/    # D: 팀원 평가, 프로필
+├── profile/    # D: 팀원 평가, 프로필
+└── admin/      # 관리자 계정·탭, 정지, 신고, 평가 항의 (E)
 ```
 
 담당끼리는 다른 패키지의 클래스를 import하지 않습니다. 다른 담당의 테이블은 native SQL로 읽기만 하고, 화면 이동은 경로로만 연결합니다 ([담당 사이 접점](docs/feature-spec.md#담당-사이-접점)).
@@ -95,7 +96,7 @@ backend/src/main/java/com/gdgoc/et/
 
 - **MySQL 8**을 `docker compose`로 띄웁니다. 각자 PC에 MySQL을 설치하지 않아도 같은 환경이 됩니다.
 - 문자셋은 `utf8mb4`입니다.
-- `backend/src/main/resources/db/schema/`의 담당별 파일(`user.sql`, `contest.sql`, `team.sql`, `bookmark.sql`, `profile.sql`)로 테이블을 만들고(JPA `ddl-auto=none`, 앱을 켤 때마다 `application.yml`에 적은 순서로 실행), `seed` 프로필로 실행하면 DB가 시연 시작 상태로 돌아갑니다 (X-5). 시드는 담당별 `SeedContributor`가 자기 테이블만 넣고, 러너가 순서대로 부릅니다. 공모전 시드는 JSON 스냅샷을 읽어 수집과 **같은 upsert 코드**로 넣습니다.
+- `backend/src/main/resources/db/schema/`의 담당별 파일(`user.sql`, `contest.sql`, `team.sql`, `bookmark.sql`, `profile.sql`, `admin.sql`)로 테이블을 만들고(JPA `ddl-auto=none`, 앱을 켤 때마다 `application.yml`에 적은 순서로 실행), `seed` 프로필로 실행하면 DB가 시연 시작 상태로 돌아갑니다 (X-5). 시드는 담당별 `SeedContributor`가 자기 테이블만 넣고, 러너가 순서대로 부릅니다. 공모전 시드는 JSON 스냅샷을 읽어 수집과 **같은 upsert 코드**로 넣습니다.
 
 ### 프론트엔드
 
@@ -114,7 +115,8 @@ frontend/src/
     ├── contest/routes.tsx  # B
     ├── team/routes.tsx     # C
     ├── bookmark/routes.tsx # D
-    └── profile/routes.tsx  # D
+    ├── profile/routes.tsx  # D
+    └── admin/              # 관리자 화면 (경로는 team/routes.tsx에 등록)
 ```
 
 ### 공통 코드 쓰는 법

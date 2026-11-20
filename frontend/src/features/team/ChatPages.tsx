@@ -19,6 +19,7 @@ export function TeamChatPage() {
       backTo="/my/team"
       backLabel="내 팀 목록"
       path={`/api/rooms/${roomId}/messages`}
+      reportContext={{ source: 'TEAM_CHAT', roomId }}
     />
   )
 }
@@ -36,6 +37,7 @@ export function DirectChatPage() {
       backTo="/messages"
       backLabel="채팅·쪽지 목록"
       path={`/api/direct-messages/${peerId}`}
+      reportContext={{ source: 'DIRECT' }}
     />
   )
 }

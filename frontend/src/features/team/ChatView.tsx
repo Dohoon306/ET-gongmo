@@ -3,11 +3,12 @@ import { Link } from 'react-router'
 import { api } from '../../api/client.ts'
 import { useCurrentUser } from '../../common/useCurrentUser.ts'
 import { MESSAGES_POLL_MS, type ChatMessage } from './chatApi.ts'
+import type { ReportContext } from '../admin/ReportDialog.tsx'
 import { Avatar, Card, ErrorText, TeamPage, primaryButton } from './ui.tsx'
 
-type Props = { title: string; subtitle: string; backTo: string; backLabel: string; path: string }
+type Props = { title: string; subtitle: string; backTo: string; backLabel: string; path: string; reportContext: ReportContext }
 
-export default function ChatView({ title, subtitle, backTo, backLabel, path }: Props) {
+export default function ChatView({ title, subtitle, backTo, backLabel, path, reportContext }: Props) {
   const { userId } = useCurrentUser()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -81,7 +82,7 @@ export default function ChatView({ title, subtitle, backTo, backLabel, path }: P
           )}
           {messages.map((m) => (
             <div key={m.id} className={`flex items-end gap-2.5 ${m.mine ? 'flex-row-reverse' : ''}`}>
-              {!m.mine && <Avatar name={m.senderName} userId={m.senderId} />}
+              {!m.mine && <Avatar name={m.senderName} userId={m.senderId} reportContext={reportContext} />}
               <div className={`max-w-[70%] ${m.mine ? 'text-right' : ''}`}>
                 {!m.mine && <p className="mb-1 text-xs font-medium text-(--color-muted)">{m.senderName}</p>}
                 <p

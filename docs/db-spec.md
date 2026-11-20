@@ -28,6 +28,11 @@ erDiagram
     users ||--o{ chat_message : "보낸 사람 / 쪽지 받는 사람"
     room ||--o{ chat_read : "팀 채팅 읽은 위치"
     users ||--o{ chat_read : ""
+    users ||--o| admin_account : "관리자"
+    users ||--o| user_suspension : "정지"
+    users ||--o{ user_report : "신고한 사람 / 신고된 사람"
+    user_report ||--o{ user_report_message : "신고 당시 대화"
+    evaluation ||--o{ evaluation_appeal : "평가 항의 (복사본)"
 ```
 
 | 테이블 | 내용 | 만드는 사람 | 읽는 기능 |
@@ -45,6 +50,11 @@ erDiagram
 | `bookmark` | 관심 공고 (D-1) | D | D-2 |
 | `chat_message` | 팀 채팅·쪽지 메시지 (C-8, C-9) | C | - |
 | `chat_read` | 팀 채팅을 어디까지 읽었는지 (C-8) | C | - |
+| `admin_account` | 관리자 계정 (E-1) | admin | 전체 (관리자 확인) |
+| `user_suspension` | 정지된 계정 (E-2) | admin | 전체 (정지 차단) |
+| `user_report` | 유저 신고 (E-6) | admin | E-2 |
+| `user_report_message` | 신고 당시 대화 복사본 (E-6) | admin | E-2 |
+| `evaluation_appeal` | 평가 항의 (E-7) | admin | E-3 |
 
 "만드는 사람"이 테이블과 JPA 엔티티, DDL 파일, 시드 조각을 만들고 고칩니다. 다른 사람 테이블은 **native SQL로 읽기만** 하고, 그 담당의 엔티티·리포지토리 클래스는 import하지 않습니다. 컬럼을 바꿔야 하면 그 사람에게 요청합니다.
 
@@ -243,6 +253,61 @@ MySQL에는 조건부 UNIQUE가 없어서 생성 컬럼을 씁니다. 대기 중
 - 팀 채팅의 안 읽은 수는 "그 방에서 내가 아닌 사람이 보낸, `last_read_id`보다 큰 메시지 수"입니다 ([5.8](#58-안-읽은-메시지-수-c-8c-9)).
 - 팀 채팅 메시지를 사람마다 따로 표시하지 않고 읽은 위치 하나만 저장해서, 팀원이 늘어도 행이 늘지 않습니다.
 - 시드에는 넣지 않습니다. 시드 러너가 다른 테이블과 함께 비웁니다.
+
+### 3.14 `admin_account` — 관리자 (admin, E-1)
+
+| 컬럼 | 타입 | 제약 | 설명 |
+|---|---|---|---|
+| `user_id` | BIGINT | PK, FK → `users.id` (사용자 지우면 같이 삭제) | 관리자인 사용자 |
+
+앱이 켜질 때(`AdminBootstrap`, 시드 러너 다음) 이 테이블이 비어 있으면 `users`에 "관리자"를 넣고 그 ID를 여기에 넣습니다. ID 1이 비어 있으면 1번으로 넣습니다 (시드 사용자는 2~8). 예전 시드로 1번을 이미 쓰는 DB에서는 다음 번호로 만듭니다.
+
+### 3.15 `user_suspension` — 정지된 계정 (admin, E-2)
+
+| 컬럼 | 타입 | 제약 | 설명 |
+|---|---|---|---|
+| `user_id` | BIGINT | PK, FK → `users.id` | 정지된 사용자. 행이 있으면 정지, 지우면 정지 풀림 |
+| `reason` | VARCHAR(200) | NULL | 정지 이유 |
+| `suspended_at` | DATETIME | NOT NULL, 기본 현재 시각 | |
+
+### 3.16 `user_report` — 유저 신고 (admin, E-6)
+
+| 컬럼 | 타입 | 제약 | 설명 |
+|---|---|---|---|
+| `id` | BIGINT | PK | |
+| `reporter_id` | BIGINT | NOT NULL, FK → `users.id` | 신고한 사람 |
+| `target_id` | BIGINT | NOT NULL, FK → `users.id` | 신고된 사람 |
+| `reasons` | VARCHAR(200) | NOT NULL | 쉼표로 이은 이유 코드 `AD`·`ABUSE`·`DISRUPT`·`LOW_PARTICIPATION`·`ETC` |
+| `detail` | VARCHAR(1000) | NULL | 신고 이유 글. `ETC`면 필수 (앱에서 확인) |
+| `source` | VARCHAR(20) | NOT NULL, 기본 `PROFILE` | `PROFILE`·`TEAM_CHAT`·`DIRECT` 신고한 곳 |
+| `room_id` | BIGINT | NULL, FK → `room.id` (방 지우면 NULL) | 팀 채팅에서 신고했을 때 |
+| `created_at` | DATETIME | NOT NULL, 기본 현재 시각 | |
+| | | CHECK (`reporter_id <> target_id`) | 자기 자신은 신고할 수 없음 |
+
+### 3.17 `user_report_message` — 신고 당시 대화 (admin, E-6)
+
+| 컬럼 | 타입 | 제약 | 설명 |
+|---|---|---|---|
+| `id` | BIGINT | PK | 대화 순서 |
+| `report_id` | BIGINT | NOT NULL, FK → `user_report.id` (신고 지우면 같이 삭제) | |
+| `sender_id`, `sender_name` | BIGINT, VARCHAR(30) | NOT NULL | 보낸 사람 (이름도 복사) |
+| `content` | VARCHAR(1000) | NOT NULL | 메시지 본문 |
+| `sent_at` | DATETIME | NOT NULL | 원래 보낸 시각 |
+
+팀 채팅이면 그 방의, 쪽지면 두 사람 사이의 최근 50개를 신고하는 순간 복사합니다. 나중에 원래 메시지가 지워져도 관리자는 신고 당시 대화를 볼 수 있습니다.
+
+### 3.18 `evaluation_appeal` — 평가 항의 (admin, E-7)
+
+| 컬럼 | 타입 | 제약 | 설명 |
+|---|---|---|---|
+| `id` | BIGINT | PK | |
+| `evaluation_id` | BIGINT | NOT NULL | 항의한 평가. 평가가 지워져도 항의 기록은 남도록 FK를 걸지 않음 |
+| `room_id`, `evaluator_id`, `target_id`, `score`, `comment` | | NOT NULL (`comment`만 NULL) | 항의할 때의 평가 복사본 |
+| `reason` | VARCHAR(1000) | NOT NULL | 항의 이유 |
+| `status` | VARCHAR(20) | NOT NULL, 기본 `PENDING` | `PENDING` 검토 중 · `REMOVED` 평가 제거됨 · `REJECTED` 기각됨 |
+| `created_at`, `decided_at` | DATETIME | | 보낸 시각, 처리한 시각 |
+| `pending_flag` | TINYINT | 생성 컬럼 | `PENDING`이면 1 |
+| | | UNIQUE (`evaluation_id`, `pending_flag`) | 한 평가에 검토 중인 항의는 하나만 |
 
 ## 4. DDL (`db/schema/*.sql`)
 
@@ -443,6 +508,75 @@ CREATE TABLE IF NOT EXISTS evaluation (
 );
 ```
 
+### `admin.sql` (admin)
+
+`application.yml`에서 `profile.sql` 다음에 실행합니다.
+
+```sql
+CREATE TABLE IF NOT EXISTS admin_account (
+  user_id  BIGINT NOT NULL,
+  PRIMARY KEY (user_id),
+  CONSTRAINT fk_admin_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS user_suspension (
+  user_id       BIGINT        NOT NULL,
+  reason        VARCHAR(200)  NULL,
+  suspended_at  DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id),
+  CONSTRAINT fk_suspension_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS user_report (
+  id           BIGINT         NOT NULL AUTO_INCREMENT,
+  reporter_id  BIGINT         NOT NULL,
+  target_id    BIGINT         NOT NULL,
+  reasons      VARCHAR(200)   NOT NULL,
+  detail       VARCHAR(1000)  NULL,
+  source       VARCHAR(20)    NOT NULL DEFAULT 'PROFILE',
+  room_id      BIGINT         NULL,
+  created_at   DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_report_target (target_id),
+  CONSTRAINT fk_report_reporter FOREIGN KEY (reporter_id) REFERENCES users (id) ON DELETE CASCADE,
+  CONSTRAINT fk_report_target   FOREIGN KEY (target_id)   REFERENCES users (id) ON DELETE CASCADE,
+  CONSTRAINT fk_report_room     FOREIGN KEY (room_id)     REFERENCES room (id)  ON DELETE SET NULL,
+  CONSTRAINT ck_report_source CHECK (source IN ('PROFILE', 'TEAM_CHAT', 'DIRECT')),
+  CONSTRAINT ck_report_not_self CHECK (reporter_id <> target_id)
+);
+
+CREATE TABLE IF NOT EXISTS user_report_message (
+  id           BIGINT         NOT NULL AUTO_INCREMENT,
+  report_id    BIGINT         NOT NULL,
+  sender_id    BIGINT         NOT NULL,
+  sender_name  VARCHAR(30)    NOT NULL,
+  content      VARCHAR(1000)  NOT NULL,
+  sent_at      DATETIME       NOT NULL,
+  PRIMARY KEY (id),
+  KEY idx_report_message (report_id, id),
+  CONSTRAINT fk_report_message FOREIGN KEY (report_id) REFERENCES user_report (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS evaluation_appeal (
+  id             BIGINT         NOT NULL AUTO_INCREMENT,
+  evaluation_id  BIGINT         NOT NULL,
+  room_id        BIGINT         NOT NULL,
+  evaluator_id   BIGINT         NOT NULL,
+  target_id      BIGINT         NOT NULL,
+  score          TINYINT        NOT NULL,
+  comment        VARCHAR(200)   NULL,
+  reason         VARCHAR(1000)  NOT NULL,
+  status         VARCHAR(20)    NOT NULL DEFAULT 'PENDING',
+  created_at     DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  decided_at     DATETIME       NULL,
+  pending_flag   TINYINT GENERATED ALWAYS AS (CASE WHEN status = 'PENDING' THEN 1 END) STORED,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_appeal_one_pending (evaluation_id, pending_flag),
+  KEY idx_appeal_target (target_id),
+  CONSTRAINT ck_appeal_status CHECK (status IN ('PENDING', 'REMOVED', 'REJECTED'))
+);
+```
+
 ## 5. 주요 쿼리와 처리 순서
 
 ### 5.1 공모전 추천 (B-3)
@@ -590,7 +724,7 @@ SELECT COUNT(*) FROM chat_message WHERE receiver_id = :me AND read_at IS NULL;
 
 | 순서 | 담당 | 넣는 것 |
 |---|---|---|
-| 1 | A | `category` (6.1), `users`·`user_category` (6.2). id를 1~7로 직접 넣어, 시연 중 가입한 새싹이 8번이 되게 합니다 |
+| 1 | A | `category` (6.1), `users`·`user_category` (6.2). id를 2~8로 직접 넣습니다. 1번은 관리자 자리라, 시드가 끝나면 앱이 관리자 계정을 1번으로 만들고(E-1) 시연 중 가입한 새싹은 9번이 됩니다 |
 | 2 | B | `contest`, `contest_category`. JSON 스냅샷을 수집과 같은 Java upsert 코드로 넣고, 주인공 공모전은 태그를 수동으로 지정합니다 |
 | 3 | C | `room`, `room_category`, `room_member` (6.3). 방 id 1~5를 직접 넣고, 방 1~4는 주인공 공모전의 `gongmoa_id`로 `contest.id`를 찾아 넣습니다 |
 | 4 | D | `evaluation` (6.4). `bookmark`은 비워 둡니다 |
@@ -620,15 +754,15 @@ IT 밖 공모전을 위해 직무·기술 태그를 더했습니다. 이미 쓰�
 
 | id | name | 태그 (code) |
 |---|---|---|
-| 1 | 방장 김 | `it` `backend` `java` `experienced` `portfolio` |
-| 2 | 방장 이 | `it` `backend` `spring` `expert` `award` |
-| 3 | 방장 박 | `it` `app` `kotlin` `beginner` |
-| 4 | 방장 최 | `design` `uiux` `figma` `expert` |
-| 5 | 팀원 정 | `it` `frontend` `react` `beginner` `learn` |
-| 6 | 팀원 한 | `it` `frontend` `javascript` `experienced` |
-| 7 | 새싹(작년) | `it` `backend` `java` `beginner` `learn` |
+| 2 | 방장 김 | `it` `backend` `java` `experienced` `portfolio` |
+| 3 | 방장 이 | `it` `backend` `spring` `expert` `award` |
+| 4 | 방장 박 | `it` `app` `kotlin` `beginner` |
+| 5 | 방장 최 | `design` `uiux` `figma` `expert` |
+| 6 | 팀원 정 | `it` `frontend` `react` `beginner` `learn` |
+| 7 | 팀원 한 | `it` `frontend` `javascript` `experienced` |
+| 8 | 새싹(작년) | `it` `backend` `java` `beginner` `learn` |
 
-페르소나 "새싹"은 시드에 없고 시연 중에 가입합니다 (id 8부터).
+id 1은 관리자 계정(E-1)이 씁니다. 시드가 끝나면 앱이 1번으로 관리자를 만듭니다. 페르소나 "새싹"은 시드에 없고 시연 중에 가입합니다 (id 9부터).
 
 ### 6.3 방과 팀원
 
@@ -636,11 +770,11 @@ IT 밖 공모전을 위해 직무·기술 태그를 더했습니다. 이미 쓰�
 
 | id | 방 | host | capacity | status | 원하는 팀원 태그 | room_member |
 |---|---|---|---|---|---|---|
-| 1 | 초보 환영! 백엔드 같이 배워요 | 1 김 | 3 | `RECRUITING` | `it` `backend` `java` `beginner` `learn` | 1 (HOST), 5 (MEMBER) |
-| 2 | Spring 서버 개발자 구합니다 | 2 이 | 4 | `RECRUITING` | `it` `backend` `java` `spring` `award` | 2 (HOST) |
-| 3 | 앱 서비스 같이 만들 분 | 3 박 | 3 | `RECRUITING` | `it` `app` `kotlin` `beginner` | 3 (HOST) |
-| 4 | 디자인 강한 팀, 개발자 1명 | 4 최 | 4 | `RECRUITING` | `it` `uiux` `figma` `expert` | 4 (HOST) |
-| 5 | 작년 캠퍼스 해커톤 팀 | 1 김 | 3 | `CLOSED` | (없음) | 7 (MEMBER), 6 (MEMBER), 1 (HOST) |
+| 1 | 초보 환영! 백엔드 같이 배워요 | 2 김 | 3 | `RECRUITING` | `it` `backend` `java` `beginner` `learn` | 2 (HOST), 6 (MEMBER) |
+| 2 | Spring 서버 개발자 구합니다 | 3 이 | 4 | `RECRUITING` | `it` `backend` `java` `spring` `award` | 3 (HOST) |
+| 3 | 앱 서비스 같이 만들 분 | 4 박 | 3 | `RECRUITING` | `it` `app` `kotlin` `beginner` | 4 (HOST) |
+| 4 | 디자인 강한 팀, 개발자 1명 | 5 최 | 4 | `RECRUITING` | `it` `uiux` `figma` `expert` | 5 (HOST) |
+| 5 | 작년 캠퍼스 해커톤 팀 | 2 김 | 3 | `CLOSED` | (없음) | 8 (MEMBER), 7 (MEMBER), 2 (HOST) |
 
 방 1~4의 `created_at`은 1이 가장 최근이 되게 넣습니다. 그래야 겹침이 같을 때도 순서가 흔들리지 않습니다.
 
@@ -648,7 +782,7 @@ IT 밖 공모전을 위해 직무·기술 태그를 더했습니다. 이미 쓰�
 
 | room | evaluator | target | score | comment |
 |---|---|---|---|---|
-| 5 | 1 김 | 6 한 | 5 | API 연결 부분까지 같이 봐 줘서 든든했어요. |
+| 5 | 2 김 | 7 한 | 5 | API 연결 부분까지 같이 봐 줘서 든든했어요. |
 
 시연 중에 새싹(작년)이 한을 평가하면 평균 별점이 5.0 → 4.5가 됩니다.
 

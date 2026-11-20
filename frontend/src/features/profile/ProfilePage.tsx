@@ -3,6 +3,7 @@ import { Link, Navigate, useLocation, useParams } from 'react-router'
 import { api } from '../../api/client.ts'
 import { useCurrentUser } from '../../common/useCurrentUser.ts'
 import { SendMessageButton } from '../team/ChatBell.tsx'
+import MyEvaluationAppeals from '../admin/MyEvaluationAppeals.tsx'
 
 type Profile = {
   name: string
@@ -119,6 +120,7 @@ function ProfileDetails({ userId, own }: { userId: string; own: boolean }) {
           )}
         </section>
       </div>
+      {own && <MyEvaluationAppeals />}
     </div>
   )
 }

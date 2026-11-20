@@ -66,6 +66,6 @@ class TeamSeedContributorTest {
         assertThat(rooms.get(4).status()).isEqualTo("CLOSED");
         assertThat(rooms.get(4).heroContest()).isFalse();
         assertThat(rooms.get(4).members()).extracting(TeamSeedContributor.SeedMember::userId)
-                .containsExactlyInAnyOrder(1L, 6L, 7L);
+                .containsExactlyInAnyOrder(2L, 7L, 8L);
     }
 }

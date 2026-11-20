@@ -22,8 +22,8 @@ public class EvaluationSeedContributor implements SeedContributor {
             """;
 
     static final long CLOSED_ROOM_ID = 5;
-    static final long HOST_KIM_ID = 1;
-    static final long MEMBER_HAN_ID = 6;
+    static final long HOST_KIM_ID = 2;
+    static final long MEMBER_HAN_ID = 7;
 
     static final List<SeedEvaluation> SEED_EVALUATIONS = List.of(
             new SeedEvaluation(1, CLOSED_ROOM_ID, HOST_KIM_ID, MEMBER_HAN_ID, 4,

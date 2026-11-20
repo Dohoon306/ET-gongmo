@@ -21,13 +21,13 @@ public class UserSeedContributor implements SeedContributor {
     }
 
     static final List<SeedUser> SEED_USERS = List.of(
-            new SeedUser(1, "방장 김", List.of("it", "backend", "java", "experienced", "portfolio")),
-            new SeedUser(2, "방장 이", List.of("it", "backend", "spring", "expert", "award")),
-            new SeedUser(3, "방장 박", List.of("it", "app", "kotlin", "beginner")),
-            new SeedUser(4, "방장 최", List.of("design", "uiux", "figma", "expert")),
-            new SeedUser(5, "팀원 정", List.of("it", "frontend", "react", "beginner", "learn")),
-            new SeedUser(6, "팀원 한", List.of("it", "frontend", "javascript", "experienced")),
-            new SeedUser(7, "새싹(작년)", List.of("it", "backend", "java", "beginner", "learn")));
+            new SeedUser(2, "방장 김", List.of("it", "backend", "java", "experienced", "portfolio")),
+            new SeedUser(3, "방장 이", List.of("it", "backend", "spring", "expert", "award")),
+            new SeedUser(4, "방장 박", List.of("it", "app", "kotlin", "beginner")),
+            new SeedUser(5, "방장 최", List.of("design", "uiux", "figma", "expert")),
+            new SeedUser(6, "팀원 정", List.of("it", "frontend", "react", "beginner", "learn")),
+            new SeedUser(7, "팀원 한", List.of("it", "frontend", "javascript", "experienced")),
+            new SeedUser(8, "새싹(작년)", List.of("it", "backend", "java", "beginner", "learn")));
 
     static final LocalDateTime SEEDED_AT = LocalDateTime.of(2026, 11, 20, 9, 0);
 
