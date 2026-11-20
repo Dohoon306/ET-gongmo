@@ -1,6 +1,7 @@
 import { useEffect, useState, type MouseEvent, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router'
+import ProfileAvatar from '../../common/ProfileAvatar.tsx'
 import { useCurrentUser } from '../../common/useCurrentUser.ts'
 import ReportDialog, { type ReportContext } from '../admin/ReportDialog.tsx'
 import type { Tag } from './api.ts'
@@ -90,9 +91,9 @@ export function Avatar({ name, size = 'md', userId, reportContext = { source: 'P
               }
             : undefined
         }
-        className={`flex shrink-0 items-center justify-center rounded-md bg-brand-soft font-bold text-brand ${size === 'lg' ? 'h-10 w-10 text-base' : 'h-9 w-9 text-sm'}`}
+        className="flex shrink-0"
       >
-        {initial}
+        <ProfileAvatar userId={userId} name={name} initial={initial} className={size === 'lg' ? 'size-10 rounded-md text-base' : 'size-9 rounded-md text-sm'} />
       </span>
       {menu &&
         createPortal(

@@ -2,6 +2,7 @@ import { useEffect, useState, type ChangeEvent } from 'react'
 import { Link, Navigate, useLocation, useParams } from 'react-router'
 import { api } from '../../api/client.ts'
 import { CheckIcon, ChevronRightIcon, StarIcon } from '../../common/icons.tsx'
+import { refreshProfileAvatar } from '../../common/profileAvatarVersion.ts'
 import { useCurrentUser } from '../../common/useCurrentUser.ts'
 import { SendMessageButton } from '../team/ChatBell.tsx'
 import MyEvaluationAppeals from '../admin/MyEvaluationAppeals.tsx'
@@ -70,6 +71,7 @@ function ProfileDetails({ userId, own }: { userId: string; own: boolean }) {
         body: { image },
       })
       setProfile((current) => current && { ...current, image: saved.image })
+      refreshProfileAvatar(Number(userId))
     } catch (failure) {
       setImageError(failure instanceof Error ? failure.message : '프로필 이미지를 저장하지 못했어요.')
     } finally {

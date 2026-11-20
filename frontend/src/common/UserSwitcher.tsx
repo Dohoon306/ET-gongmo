@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
+import ProfileAvatar from './ProfileAvatar.tsx'
 import { getSignedUpUserIds } from './signedUpUserStorage.ts'
 import { useCurrentUser } from './useCurrentUser.ts'
 import checkIcon from './icons/check.svg'
@@ -7,19 +8,6 @@ import chevronDownIcon from './icons/chevron-down.svg'
 import plusIcon from './icons/plus.svg'
 
 const DEMO_CAST_NAMES = new Set(['관리자', '방장 김'])
-
-function avatarInitial(name: string) {
-  const lastWord = name.trim().split(/\s+/).at(-1) ?? ''
-  return lastWord.charAt(0)
-}
-
-function Avatar({ name }: { name: string }) {
-  return (
-    <span className="flex size-7 shrink-0 items-center justify-center rounded-sm bg-brand-soft text-[13px] font-bold text-brand">
-      {avatarInitial(name)}
-    </span>
-  )
-}
 
 export default function UserSwitcher() {
   const { userId, currentUser, users, usersLoadFailed, setUserId, reloadUsers } = useCurrentUser()
@@ -71,7 +59,7 @@ export default function UserSwitcher() {
         aria-expanded={open}
         className={`flex h-10 items-center gap-2 rounded-md border border-line-strong bg-white pr-2.5 hover:bg-page ${currentUser ? 'pl-1.5' : 'pl-3'}`}
       >
-        {currentUser && <Avatar name={currentUser.name} />}
+        {currentUser && <ProfileAvatar userId={currentUser.id} name={currentUser.name} className="size-7 rounded-sm text-[13px]" />}
         <span className={`whitespace-nowrap text-sm font-semibold text-ink ${currentUser ? '' : 'leading-8'}`}>
           {buttonLabel}
         </span>
@@ -104,7 +92,7 @@ export default function UserSwitcher() {
                   onClick={() => switchTo(user.id)}
                   className={`flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left ${selected ? 'bg-brand-soft' : 'hover:bg-subtle'}`}
                 >
-                  <Avatar name={user.name} />
+                  <ProfileAvatar userId={user.id} name={user.name} className="size-7 rounded-sm text-[13px]" />
                   <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">{user.name}</span>
                   {selected && <img src={checkIcon} alt="" width={16} height={16} className="shrink-0" />}
                 </button>

@@ -33,6 +33,7 @@ export function DirectChatPage() {
     <ChatView
       key={peerId}
       title={`${peerName} 님과 쪽지`}
+      titleAvatar={<Avatar name={peerName} userId={peerId} reportContext={{ source: 'DIRECT' }} />}
       subtitle="두 사람만 볼 수 있는 쪽지예요."
       backTo="/messages"
       backLabel="채팅·쪽지 목록"

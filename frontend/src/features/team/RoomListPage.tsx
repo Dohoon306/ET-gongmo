@@ -1,3 +1,4 @@
+import ProfileAvatar from '../../common/ProfileAvatar.tsx'
 import { useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { useCurrentUser } from '../../common/useCurrentUser.ts'
@@ -137,7 +138,10 @@ function RoomCard({
             <PersonIcon />
             {room.memberCount} / {room.capacity}명
           </p>
-          <p className="mt-0.5 text-[13px] text-muted">{room.hostName}</p>
+          <p className="mt-1 flex items-center gap-1.5 text-[13px] text-muted">
+            <ProfileAvatar userId={room.hostId} name={room.hostName} className="size-6 rounded-sm text-xs" />
+            <span>{room.hostName}</span>
+          </p>
         </div>
         {isHost ? (
           <Link to={`/rooms/${room.id}/requests`} className={primaryButton}>

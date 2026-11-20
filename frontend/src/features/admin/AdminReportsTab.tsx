@@ -1,3 +1,4 @@
+import ProfileAvatar from '../../common/ProfileAvatar.tsx'
 import { useGet } from '../team/api.ts'
 import { Card, ErrorText } from '../team/ui.tsx'
 import { SOURCE_LABELS, reasonLabel, type AdminReport } from './adminApi.ts'
@@ -14,8 +15,10 @@ export default function AdminReportsTab() {
           <li key={r.id}>
             <Card className="px-5 py-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-[15px] font-semibold">
-                  {r.reporterName} → <span className="text-danger">{r.targetName}</span>
+                <p className="flex flex-wrap items-center gap-2 text-[15px] font-semibold">
+                  <span className="inline-flex items-center gap-1.5"><ProfileAvatar userId={r.reporterId} name={r.reporterName} className="size-6 rounded-sm text-xs" />{r.reporterName}</span>
+                  →
+                  <span className="inline-flex items-center gap-1.5 text-danger"><ProfileAvatar userId={r.targetId} name={r.targetName} className="size-6 rounded-sm text-xs" />{r.targetName}</span>
                 </p>
                 <span className="text-xs text-muted">
                   {SOURCE_LABELS[r.source]}
@@ -37,7 +40,10 @@ export default function AdminReportsTab() {
                     {r.messages.map((m, i) => (
                       <li key={i} className={m.senderId === r.targetId ? 'font-medium text-danger' : ''}>
                         <span className="text-xs text-muted">{m.sentAt.slice(5, 16).replace('T', ' ')}</span>{' '}
-                        <span className="font-semibold">{m.senderName}</span>: {m.content}
+                        <span className="inline-flex items-center gap-1.5 align-middle font-semibold">
+                          <ProfileAvatar userId={m.senderId} name={m.senderName} className="size-5 rounded-sm text-[10px]" />
+                          {m.senderName}
+                        </span>: {m.content}
                       </li>
                     ))}
                   </ul>

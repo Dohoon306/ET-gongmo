@@ -1,3 +1,4 @@
+import ProfileAvatar from '../../common/ProfileAvatar.tsx'
 import { StarIcon } from '../../common/icons.tsx'
 import { useState } from 'react'
 import { api } from '../../api/client.ts'
@@ -29,8 +30,9 @@ export default function AdminAppealsTab() {
           <li key={a.id}>
             <Card className="px-5 py-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-[15px] font-semibold">
-                  {a.targetName ?? `#${a.targetId}`} 님의 항의
+                <p className="flex flex-wrap items-center gap-1.5 text-[15px] font-semibold">
+                  <ProfileAvatar userId={a.targetId} name={a.targetName ?? ''} className="size-6 rounded-sm text-xs" />
+                  <span>{a.targetName ?? `#${a.targetId}`} 님의 항의</span>
                   <span className="ml-2 text-xs font-medium text-muted">{a.createdAt.replace('T', ' ').slice(0, 16)}</span>
                 </p>
                 <span
@@ -43,8 +45,9 @@ export default function AdminAppealsTab() {
                 <p>
                   <span className="inline-flex items-center gap-1 align-[-2px] font-semibold tabular-nums text-accent"><StarIcon className="size-[13px]" />{a.score}</span> {a.comment ?? '(코멘트 없음)'}
                 </p>
-                <p className="mt-1 text-xs text-muted">
-                  평가한 사람 {a.evaluatorName ?? `#${a.evaluatorId}`} · 팀 {a.roomTitle ?? '-'}
+                <p className="mt-1 flex items-center gap-1.5 text-xs text-muted">
+                  <ProfileAvatar userId={a.evaluatorId} name={a.evaluatorName ?? ''} className="size-6 rounded-sm text-xs" />
+                  <span>평가한 사람 {a.evaluatorName ?? `#${a.evaluatorId}`} · 팀 {a.roomTitle ?? '-'}</span>
                 </p>
               </div>
               <p className="mt-3 text-sm">

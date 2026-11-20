@@ -1,3 +1,4 @@
+import ProfileAvatar from '../../common/ProfileAvatar.tsx'
 import { StarIcon } from '../../common/icons.tsx'
 import { useState } from 'react'
 import { api } from '../../api/client.ts'
@@ -68,8 +69,10 @@ export default function AdminEvaluationsTab() {
           <li key={e.id}>
             <Card className="flex flex-wrap items-center gap-4 px-5 py-4">
               <div className="min-w-0 flex-1 text-sm">
-                <p className="text-[15px] font-semibold">
-                  {e.evaluatorName} → {e.targetName}
+                <p className="flex flex-wrap items-center gap-2 text-[15px] font-semibold">
+                  <span className="inline-flex items-center gap-1.5"><ProfileAvatar userId={e.evaluatorId} name={e.evaluatorName} className="size-6 rounded-sm text-xs" />{e.evaluatorName}</span>
+                  →
+                  <span className="inline-flex items-center gap-1.5"><ProfileAvatar userId={e.targetId} name={e.targetName} className="size-6 rounded-sm text-xs" />{e.targetName}</span>
                   <span className="ml-2"><span className="inline-flex items-center gap-1 align-[-2px] font-semibold tabular-nums text-accent"><StarIcon className="size-[13px]" />{e.score}</span></span>
                 </p>
                 <p className="mt-1">{e.comment ?? '(코멘트 없음)'}</p>

@@ -1,3 +1,4 @@
+import ProfileAvatar from '../../common/ProfileAvatar.tsx'
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { api } from '../../api/client.ts'
@@ -35,7 +36,8 @@ export default function AdminUsersTab() {
             <Card className={`flex flex-wrap items-center gap-4 px-5 py-4 ${u.suspended ? 'border-danger' : ''}`}>
               <div className="min-w-0 flex-1">
                 <p className="flex flex-wrap items-center gap-2 text-[15px] font-semibold">
-                  <Link to={`/users/${u.id}`} className="hover:underline">
+                  <Link to={`/users/${u.id}`} className="inline-flex items-center gap-2 hover:underline">
+                    <ProfileAvatar userId={u.id} name={u.name} className="size-8 rounded-md text-sm" />
                     #{u.id} {u.name}
                   </Link>
                   {u.admin && <span className="rounded-sm bg-brand-soft px-1.5 py-0.5 text-xs text-brand">관리자</span>}

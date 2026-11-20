@@ -2,6 +2,7 @@ import { CheckIcon, StarIcon } from '../../common/icons.tsx'
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, Navigate, useParams } from 'react-router'
 import { api, ApiError } from '../../api/client.ts'
+import ProfileAvatar from '../../common/ProfileAvatar.tsx'
 import { useCurrentUser } from '../../common/useCurrentUser.ts'
 
 type ReviewTarget = { id: number; name: string; reviewed: boolean; categories: string[] }
@@ -138,7 +139,7 @@ function ReviewForm({ roomId, userId }: { roomId: string; userId: number }) {
             <li key={item.id} className={'space-y-4 rounded-lg border bg-white px-5 py-[18px] ' + (expanded ? 'border-brand' : 'border-line')}>
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-3">
-                  <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-md bg-brand-soft font-bold text-brand">{item.name.trim().split(/\s+/).at(-1)?.slice(0, 1)}</span>
+                  <ProfileAvatar userId={item.id} name={item.name} className="size-10 rounded-md" />
                   <div className="min-w-0 space-y-1">
                     <Link to={'/users/' + item.id} className="break-words font-semibold hover:text-brand hover:underline">{item.name}</Link>
                     {expanded && item.categories.length > 0 ? (
