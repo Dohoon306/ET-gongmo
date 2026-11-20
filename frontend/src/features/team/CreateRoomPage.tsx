@@ -20,6 +20,10 @@ const AXIS_LABELS: [string, string][] = [
 const MIN_CAPACITY = 2
 const MAX_CAPACITY = 10
 
+function contestLabel(c: ContestOption) {
+  return `[${c.type ?? '공고'}] ${c.title} ${c.endDate ? `· ${c.endDate.slice(5).replace('-', '.')} 마감` : '· 상시'}`
+}
+
 export default function CreateRoomPage() {
   const params = useParams()
   const [search] = useSearchParams()
@@ -82,24 +86,30 @@ function CreateRoomForm({ initialContestId }: { initialContestId: number | null 
 
       <Card className="p-7">
         <form onSubmit={submit} className="space-y-6">
-          <label className="block">
-            <span className="text-sm font-semibold">공모전</span>
-            <select
-              value={contestId ?? ''}
-              onChange={(e) => setContestId(e.target.value ? Number(e.target.value) : null)}
-              className="mt-2 h-11 w-full rounded-xl border border-(--color-line-strong) px-3 text-[15px]"
-            >
-              <option value="">공모전을 골라 주세요</option>
-              {contestId !== null && contestOptions && !contest && (
-                <option value={contestId}>공모전 {contestId}번 (접수 중인 목록에 없음)</option>
-              )}
-              {contestOptions?.map((c) => (
-                <option key={c.id} value={c.id}>
-                  [{c.type ?? '공고'}] {c.title} {c.endDate ? `· ${c.endDate.slice(5).replace('-', '.')} 마감` : '· 상시'}
-                </option>
-              ))}
-            </select>
-          </label>
+          {initialContestId !== null ? (
+            <div>
+              <span className="text-sm font-semibold">공모전</span>
+              <p className="mt-2 rounded-xl bg-(--color-subtle) px-3 py-3 text-[15px] font-medium">
+                {contest ? contestLabel(contest) : contestOptions ? `공모전 ${initialContestId}번 (접수 중인 목록에 없음)` : ' '}
+              </p>
+            </div>
+          ) : (
+            <label className="block">
+              <span className="text-sm font-semibold">공모전</span>
+              <select
+                value={contestId ?? ''}
+                onChange={(e) => setContestId(e.target.value ? Number(e.target.value) : null)}
+                className="mt-2 h-11 w-full rounded-xl border border-(--color-line-strong) px-3 text-[15px]"
+              >
+                <option value="">공모전을 골라 주세요</option>
+                {contestOptions?.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {contestLabel(c)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
 
           <label className="block">
             <span className="text-sm font-semibold">방 제목</span>
