@@ -1,3 +1,4 @@
+import ProfileAvatar from '../../common/ProfileAvatar.tsx'
 import { useState, type FormEvent } from 'react'
 import { createPortal } from 'react-dom'
 import { api } from '../../api/client.ts'
@@ -48,8 +49,9 @@ export default function ReportDialog({ targetId, targetName, context, onClose }:
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-md rounded-lg bg-white p-6 text-ink shadow-[0_12px_32px_rgba(24,33,27,0.28)]"
       >
-        <h2 id="report-title" className="text-lg font-bold tracking-[-0.01em]">
-          {targetName} 님 신고하기
+        <h2 id="report-title" className="flex items-center gap-2 text-lg font-bold tracking-[-0.01em]">
+          <ProfileAvatar userId={targetId} name={targetName} className="size-8 rounded-md text-sm" />
+          <span>{targetName} 님 신고하기</span>
         </h2>
         {done ? (
           <>

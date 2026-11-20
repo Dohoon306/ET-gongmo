@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { api } from '../../api/client.ts'
 import { ChevronLeftIcon } from '../../common/icons.tsx'
@@ -7,9 +7,17 @@ import { MESSAGES_POLL_MS, type ChatMessage } from './chatApi.ts'
 import type { ReportContext } from '../admin/ReportDialog.tsx'
 import { Avatar, Card, ErrorText, TeamPage, primaryButton } from './ui.tsx'
 
-type Props = { title: string; subtitle: string; backTo: string; backLabel: string; path: string; reportContext: ReportContext }
+type Props = {
+  title: string
+  titleAvatar?: ReactNode
+  subtitle: string
+  backTo: string
+  backLabel: string
+  path: string
+  reportContext: ReportContext
+}
 
-export default function ChatView({ title, subtitle, backTo, backLabel, path, reportContext }: Props) {
+export default function ChatView({ title, titleAvatar, subtitle, backTo, backLabel, path, reportContext }: Props) {
   const { userId } = useCurrentUser()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -72,7 +80,10 @@ export default function ChatView({ title, subtitle, backTo, backLabel, path, rep
       <Link to={backTo} className="mb-3 inline-flex min-h-8 items-center gap-1.5 text-sm font-medium text-muted hover:text-ink">
         <ChevronLeftIcon />{backLabel}
       </Link>
-      <h1 className="text-[26px] font-bold leading-[1.3] tracking-[-0.02em]">{title}</h1>
+      <div className="flex items-center gap-2.5">
+        {titleAvatar}
+        <h1 className="text-[26px] font-bold leading-[1.3] tracking-[-0.02em]">{title}</h1>
+      </div>
       <p className="mt-1 mb-5 text-[15px] text-muted">{subtitle}</p>
       <ErrorText message={error} />
 
@@ -89,7 +100,7 @@ export default function ChatView({ title, subtitle, backTo, backLabel, path, rep
               </p>
             ) : (
             <div key={m.id} className={`flex items-end gap-2.5 ${m.mine ? 'flex-row-reverse' : ''}`}>
-              {!m.mine && <Avatar name={m.senderName} userId={m.senderId} reportContext={reportContext} />}
+              <Avatar name={m.senderName} userId={m.senderId} reportContext={reportContext} />
               <div className={`max-w-[70%] ${m.mine ? 'text-right' : ''}`}>
                 {!m.mine && <p className="mb-1 text-xs font-semibold text-muted">{m.senderName}</p>}
                 <p

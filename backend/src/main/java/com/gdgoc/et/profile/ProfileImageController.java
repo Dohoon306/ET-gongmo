@@ -8,14 +8,20 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Base64;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReadParam;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.MemoryCacheImageInputStream;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.DigestUtils;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -32,6 +38,22 @@ public class ProfileImageController {
 
     public ProfileImageController(JdbcTemplate jdbc) {
         this.jdbc = jdbc;
+    }
+
+    @GetMapping("/api/users/{userId}/profile-image")
+    public ResponseEntity<byte[]> findImage(@PathVariable long userId) {
+        var images = jdbc.query("SELECT image_png FROM user_profile_image WHERE user_id = ?",
+                (rs, rowNum) -> rs.getBytes("image_png"), userId);
+        var cache = CacheControl.maxAge(Duration.ofSeconds(30)).cachePrivate();
+        if (images.isEmpty()) {
+            return ResponseEntity.noContent().cacheControl(cache).build();
+        }
+        byte[] image = images.get(0);
+        return ResponseEntity.ok()
+                .cacheControl(cache)
+                .eTag(DigestUtils.md5DigestAsHex(image))
+                .contentType(MediaType.IMAGE_PNG)
+                .body(image);
     }
 
     @PutMapping("/api/users/{userId}/profile-image")

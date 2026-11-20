@@ -1,3 +1,4 @@
+import ProfileAvatar from '../../common/ProfileAvatar.tsx'
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../../api/client.ts'
 import type { Room } from './api.ts'
@@ -67,8 +68,9 @@ export default function JoinDialog({ room, onClose, onSent }: { room: Room; onCl
             <h2 id="join-title" className="mt-1 text-xl font-bold tracking-[-0.01em]">
               {room.title}
             </h2>
-            <p className="mt-1 text-sm tabular-nums text-muted">
-              {room.hostName} · {room.memberCount} / {room.capacity}명
+            <p className="mt-1 flex items-center gap-1.5 text-sm tabular-nums text-muted">
+              <ProfileAvatar userId={room.hostId} name={room.hostName} className="size-6 rounded-sm text-xs" />
+              <span>{room.hostName} · {room.memberCount} / {room.capacity}명</span>
             </p>
           </div>
           <button onClick={close} aria-label="닫기" className="-mt-2 -mr-2 flex size-11 shrink-0 items-center justify-center rounded-md text-muted hover:bg-subtle">

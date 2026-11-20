@@ -1,3 +1,4 @@
+import ProfileAvatar from '../../common/ProfileAvatar.tsx'
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { api } from '../../api/client.ts'
@@ -80,9 +81,12 @@ export default function AdminRoomsTab() {
                   )}
                   {r.contestEndDate ? ` · ${r.contestEndDate} 마감` : ''}
                 </p>
-                <p className="mt-1 text-xs text-muted">
-                  방장 {r.hostName} · {r.memberCount} / {r.capacity}명
-                  {r.pendingRequests > 0 ? ` · 대기 요청 ${r.pendingRequests}건` : ''} · 만든 날 {r.createdAt.slice(0, 10)}
+                <p className="mt-1 flex items-center gap-1.5 text-xs text-muted">
+                  <ProfileAvatar userId={r.hostId} name={r.hostName} className="size-6 rounded-sm text-xs" />
+                  <span>
+                    방장 {r.hostName} · {r.memberCount} / {r.capacity}명
+                    {r.pendingRequests > 0 ? ` · 대기 요청 ${r.pendingRequests}건` : ''} · 만든 날 {r.createdAt.slice(0, 10)}
+                  </span>
                 </p>
               </div>
               {r.status !== 'CLOSED' && (
