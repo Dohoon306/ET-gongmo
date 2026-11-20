@@ -19,12 +19,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class TeamService {
 
-    static final String DRAFT_FALLBACK = "안녕하세요! 학교 과제로 Java를 써 봤고, 이번 공모전에서 백엔드를 제대로 배워 보고 싶어 지원합니다. "
-            + "공모전은 처음이지만 맡은 부분은 끝까지 해내겠습니다.";
-
     private final RoomRepository rooms;
     private final RoomMemberRepository members;
     private final JoinRequestRepository requests;
+    private final JoinDraftWriter draftWriter;
 
     public record Tag(Long id, String name, String axis, boolean matched) {}
 
@@ -69,9 +67,13 @@ public class TeamService {
         return toViews(List.of(row), userId, true).get(0);
     }
 
-    public String draftMessage(Long roomId) {
-        rooms.findById(roomId).orElseThrow(() -> notFound("방"));
-        return DRAFT_FALLBACK;
+    public String draftMessage(Long roomId, Long userId) {
+        RoomRow room = rooms.findRoomRow(roomId, userId).orElseThrow(() -> notFound("방"));
+        List<String> roomTags = rooms.findRoomTags(List.of(roomId)).stream().map(TagRow::getName).toList();
+        List<String> userTags = rooms.findUserTags(List.of(userId)).stream().map(TagRow::getName).toList();
+        String userName = rooms.findUserName(userId).orElseThrow(() -> notFound("사용자"));
+        return draftWriter.write(new JoinDraftWriter.DraftInput(roomId, room.getTitle(), room.getIntro(), roomTags,
+                userName, userTags));
     }
 
     @Transactional
