@@ -2,6 +2,7 @@ package com.gdgoc.et.contest;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Set;
 
 public record ContestRecord(
         long gongmoaId,
@@ -17,5 +18,6 @@ public record ContestRecord(
         String gongmoaUrl,
         String sourceUrl,
         String rawText,
-        LocalDateTime fetchedAt) {
+        LocalDateTime fetchedAt,
+        Set<String> fieldCodes) {
 }
