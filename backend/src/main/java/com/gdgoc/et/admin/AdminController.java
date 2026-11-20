@@ -85,6 +85,24 @@ public class AdminController {
         return admin.reports();
     }
 
+    @GetMapping("/rooms")
+    public List<AdminService.RoomRow> rooms(@CurrentUser Long userId) {
+        admin.requireAdmin(userId);
+        return admin.rooms();
+    }
+
+    @PostMapping("/rooms/{roomId}/close")
+    public void closeRoom(@CurrentUser Long userId, @PathVariable long roomId) {
+        admin.requireAdmin(userId);
+        admin.closeRoom(roomId);
+    }
+
+    @DeleteMapping("/rooms/{roomId}")
+    public void deleteRoom(@CurrentUser Long userId, @PathVariable long roomId) {
+        admin.requireAdmin(userId);
+        admin.deleteRoom(roomId);
+    }
+
     @GetMapping("/contests")
     public List<AdminService.ContestRow> contests(@CurrentUser Long userId) {
         admin.requireAdmin(userId);

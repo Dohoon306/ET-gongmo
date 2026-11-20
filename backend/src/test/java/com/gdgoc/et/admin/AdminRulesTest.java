@@ -75,6 +75,20 @@ class AdminRulesTest {
     }
 
     @Test
+    void closingRoomRejectsPendingRequestsAndRefusesTwice() {
+        when(jdbc.queryForList(anyString(), eq(String.class), eq(3L))).thenReturn(List.of("RECRUITING"));
+        admin.closeRoom(3L);
+        org.mockito.Mockito.verify(jdbc).update("UPDATE room SET status = 'CLOSED' WHERE id = ?", 3L);
+        org.mockito.Mockito.verify(jdbc).update(org.mockito.ArgumentMatchers.contains("status = 'REJECTED'"), eq(3L));
+
+        when(jdbc.queryForList(anyString(), eq(String.class), eq(5L))).thenReturn(List.of("CLOSED"));
+        assertThatThrownBy(() -> admin.closeRoom(5L)).satisfies(e -> assertThat(statusOf(e)).isEqualTo(HttpStatus.CONFLICT));
+
+        when(jdbc.queryForList(anyString(), eq(String.class), eq(9L))).thenReturn(List.of());
+        assertThatThrownBy(() -> admin.closeRoom(9L)).satisfies(e -> assertThat(statusOf(e)).isEqualTo(HttpStatus.NOT_FOUND));
+    }
+
+    @Test
     void suspendedHeaderParsing() {
         assertThat(SuspensionInterceptor.parseUserId(" 12 ")).isEqualTo(12L);
         assertThat(SuspensionInterceptor.parseUserId("abc")).isNull();
