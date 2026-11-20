@@ -22,6 +22,11 @@ class CurrentUserArgumentResolverTest {
         String echo(@CurrentUser Long userId) {
             return String.valueOf(userId);
         }
+
+        @GetMapping("/echo-primitive")
+        String echoPrimitive(@CurrentUser long userId) {
+            return String.valueOf(userId);
+        }
     }
 
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(new EchoController())
@@ -32,6 +37,14 @@ class CurrentUserArgumentResolverTest {
     @Test
     void readsHeader() throws Exception {
         String body = mvc.perform(get("/echo").header("X-User-Id", "7"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        assertThat(body).isEqualTo("7");
+    }
+
+    @Test
+    void readsHeaderIntoPrimitiveLongIgnoringQueryParameter() throws Exception {
+        String body = mvc.perform(get("/echo-primitive").header("X-User-Id", "7").param("userId", "3"))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         assertThat(body).isEqualTo("7");
