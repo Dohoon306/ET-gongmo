@@ -19,7 +19,8 @@ class TeamServiceTest {
     private final RoomRepository rooms = mock(RoomRepository.class);
     private final RoomMemberRepository members = mock(RoomMemberRepository.class);
     private final JoinRequestRepository requests = mock(JoinRequestRepository.class);
-    private final TeamService service = new TeamService(rooms, members, requests);
+    private final JoinDraftWriter draftWriter = mock(JoinDraftWriter.class);
+    private final TeamService service = new TeamService(rooms, members, requests, draftWriter);
 
     private Room room(long hostId, int capacity) {
         Room room = new Room();

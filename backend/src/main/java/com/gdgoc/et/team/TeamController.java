@@ -47,7 +47,7 @@ public class TeamController {
 
     @PostMapping("/rooms/{roomId}/join-requests/draft")
     public Map<String, String> draft(@PathVariable Long roomId, @CurrentUser Long userId) {
-        return Map.of("message", teamService.draftMessage(roomId));
+        return Map.of("message", teamService.draftMessage(roomId, userId));
     }
 
     @PostMapping("/rooms/{roomId}/join-requests")

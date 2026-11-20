@@ -106,6 +106,9 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
             """)
     List<TagRow> findUserTags(Collection<Long> userIds);
 
+    @Query(nativeQuery = true, value = "SELECT name FROM users WHERE id = :userId")
+    Optional<String> findUserName(Long userId);
+
     @Query(nativeQuery = true, value = "SELECT id, title, end_date AS endDate, COALESCE(source_url, gongmoa_url) AS applyUrl FROM contest WHERE id = :contestId")
     Optional<ContestRow> findContest(Long contestId);
 
