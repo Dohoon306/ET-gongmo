@@ -25,4 +25,4 @@ server:
 
 app:
   ai:
-    api-key: ${AI_API_KEY:}
+    api-key: ${ET_GPT_API_KEY:}
