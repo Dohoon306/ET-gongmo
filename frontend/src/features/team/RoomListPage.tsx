@@ -47,7 +47,14 @@ function RoomListView({ contestId, initialJoinRoomId }: { contestId: number; ini
         {data?.contest && <DDayBadge endDate={data.contest.endDate} />}
       </Link>
 
-      <h1 className="mt-8 text-[28px] font-bold">팀원 모집 방 {data?.rooms.length ?? 0}개</h1>
+      <div className="mt-8 flex items-center justify-between gap-4">
+        <h1 className="text-[28px] font-bold">팀원 모집 방 {data?.rooms.length ?? 0}개</h1>
+        {userId !== null && (
+          <Link to={`/contests/${contestId}/rooms/new`} className={primaryButton}>
+            방 만들기
+          </Link>
+        )}
+      </div>
       <p className="mt-2 mb-6 text-[15px] text-(--color-muted)">
         방이 원하는 팀원 태그와 내 태그가 많이 겹치는 방부터 보여요. 모집이 끝난 방은 맨 아래에 있어요.
       </p>
