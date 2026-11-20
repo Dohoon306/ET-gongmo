@@ -58,10 +58,10 @@ E.T 공모전은 이런 진입 장벽을 낮춰, 누구나 자신의 관심 분�
 
 | 영역 | 선택 | 비고 |
 |---|---|---|
-| 백엔드 | Java 17 + Spring Boot 3.5.x | Gradle, 단일 애플리케이션 |
+| 백엔드 | Java 17 + Spring Boot 3.5.16 | Gradle 8.14 (wrapper 포함), 단일 애플리케이션 |
 | DB 접근 | Spring Data JPA | 추천·방 목록 정렬은 `@Query(nativeQuery = true)` |
-| DB | MySQL 8 (Docker) | `utf8mb4`, 로컬은 `docker compose`로 실행 |
-| 프론트엔드 | React 19 + Vite + TypeScript | React Router, Tailwind CSS |
+| DB | MySQL 8.4 (Docker) | `utf8mb4`, 로컬은 `docker compose`로 실행 |
+| 프론트엔드 | React 19 + Vite 8 + TypeScript | React Router 7, Tailwind CSS 4 |
 | API 문서 | springdoc-openapi (Swagger UI) | 기능 사이 API를 화면으로 맞춰 봄 |
 | AI | 공통 인터페이스 `AiClient` + 대체 응답 | 제공자는 회의에서 확정 (X-3) |
 | 공모전 수집 | 백엔드 안의 수집 기능 (Java `RestClient`) | 공모아뷰 MCP 호출 → 파싱 → upsert (B-1) |
@@ -69,7 +69,7 @@ E.T 공모전은 이런 진입 장벽을 낮춰, 누구나 자신의 관심 분�
 ### 백엔드
 
 - **Java 17**: 팀 PC에 이미 깔려 있는 버전(Corretto 17)에 맞춥니다.
-- **Spring Boot 3.5.x**: 자료와 예제가 가장 많은 3.x 마지막 버전입니다.
+- **Spring Boot 3.5.16**: 자료와 예제가 가장 많은 3.x 마지막 버전입니다. Spring Initializr에는 이제 4.x만 있으니 새로 만들지 말고 저장소의 `build.gradle`을 그대로 씁니다.
 - 의존성: Spring Web, Spring Data JPA, MySQL Driver, Validation, Lombok, springdoc-openapi
 - 사용자·방·요청·평가는 단순 CRUD라 JPA로 만들고, 겹침 점수 정렬(B-3, C-2)은 [기능 명세서](docs/feature-spec.md)의 SQL을 그대로 native query로 씁니다.
 - **현재 사용자 (X-1)**: 로그인 대신 프론트가 모든 요청에 `X-User-Id` 헤더를 붙이고, 백엔드는 이 값을 현재 사용자로 씁니다. Spring Security는 넣지 않습니다.
@@ -77,7 +77,7 @@ E.T 공모전은 이런 진입 장벽을 낮춰, 누구나 자신의 관심 분�
 담당자끼리 같은 파일을 덜 건드리도록 패키지는 계층이 아니라 기능으로 나눕니다.
 
 ```
-backend/src/main/java/.../et/
+backend/src/main/java/com/gdgoc/et/
 ├── common/     # X: 현재 사용자, 카테고리, AiClient, 예외 처리, 시드
 ├── user/       # A: 가입, 카테고리 확정, 평가, 프로필
 ├── contest/    # B: 수집, 분류, 추천, 상세
@@ -88,13 +88,39 @@ backend/src/main/java/.../et/
 
 - **MySQL 8**을 `docker compose`로 띄웁니다. 각자 PC에 MySQL을 설치하지 않아도 같은 환경이 됩니다.
 - 문자셋은 `utf8mb4`입니다.
-- `schema.sql`로 테이블을 만들고(JPA `ddl-auto=none`), `seed` 프로필로 실행하면 DB가 시연 시작 상태로 돌아갑니다 (X-5). 공모전 시드는 JSON 스냅샷을 읽어 수집과 **같은 upsert 코드**로 넣습니다.
+- `backend/src/main/resources/db/schema.sql`로 테이블을 만들고(JPA `ddl-auto=none`, 앱을 켤 때마다 실행), `seed` 프로필로 실행하면 DB가 시연 시작 상태로 돌아갑니다 (X-5). 공모전 시드는 JSON 스냅샷을 읽어 수집과 **같은 upsert 코드**로 넣습니다.
 
 ### 프론트엔드
 
 - **React + Vite + TypeScript**: 헤더 사용자 전환, 태그 빼고 더하기, AI 초안 채우기, 수락 후 모집 완료처럼 상태가 바뀌는 화면이 많아 React로 만듭니다. 태그 칩·방 카드 같은 컴포넌트는 세 사람이 같이 씁니다.
 - **React Router**로 화면을 이동하고, **Tailwind CSS** 설정에 디자인의 색·간격을 한 번 넣어 같이 씁니다.
-- 현재 사용자는 React Context에 두고 `localStorage`에 저장합니다. `fetch`를 감싼 `api.ts` 함수 하나에서 `X-User-Id`를 붙입니다.
+- 현재 사용자는 React Context에 두고 `localStorage`에 저장합니다. `fetch`를 감싼 `src/api/client.ts`의 `api()` 함수 하나에서 `X-User-Id`를 붙입니다.
+
+화면 경로는 기능 폴더의 `routes.tsx`에만 추가합니다. `App.tsx`는 고치지 않아도 되게 만들어 두었습니다.
+
+```
+frontend/src/
+├── api/client.ts         # API 호출 (X-User-Id 자동)
+├── common/               # X: 공통 레이아웃·헤더, 현재 사용자 (useCurrentUser)
+└── features/
+    ├── user/routes.tsx     # A
+    ├── contest/routes.tsx  # B
+    └── team/routes.tsx     # C
+```
+
+### 공통 코드 쓰는 법
+
+코드에는 주석을 쓰지 않으므로([AGENTS.md](AGENTS.md)) 공통 코드 사용법은 여기에 적습니다.
+
+| 하고 싶은 것 | 쓰는 법 |
+|---|---|
+| 백엔드에서 현재 사용자 ID 받기 | 컨트롤러 파라미터에 `@CurrentUser Long userId`. 헤더가 없으면 400. 없어도 되면 `@CurrentUser(required = false)` |
+| 백엔드에서 에러 응답 | `throw new ApiException(HttpStatus.BAD_REQUEST, "메시지")` → `{"message": "메시지"}` |
+| 테이블 만들기 | `backend/src/main/resources/db/schema.sql`에 추가 ([DB 명세서](docs/db-spec.md) 기준). 파일이 없으면 건너뜀 |
+| 프론트에서 API 호출 | `await api<Contest[]>('/api/contests/recommended')`, `await api('/api/...', { method: 'POST', body: {...} })`. 실패하면 `ApiError` (`status`, `message`) |
+| 프론트에서 현재 사용자 | `const { userId, setUserId } = useCurrentUser()` |
+| 화면 추가 | 내 기능 폴더의 `routes.tsx`에 `{ path, label, element }` 한 줄. 첫 화면(개발용 화면 목록)에 자동으로 링크가 생김 |
+| 디자인 색 쓰기 | `frontend/src/index.css`의 `@theme`에 토큰 추가 → `bg-brand`, `text-brand`, `border-line`처럼 사용 |
 
 ## 저장소 구조
 
@@ -103,16 +129,66 @@ backend/src/main/java/.../et/
 ├── backend/            # Spring Boot (Gradle)
 ├── frontend/           # React + Vite
 ├── docker-compose.yml  # MySQL
-└── docs/               # 기능 명세서, 시연용 데이터
+├── .env.example        # DB 포트·비밀번호, AI 키 예시
+└── docs/               # 기능 명세서, 시연용 데이터, DB 명세서
 ```
 
-## 실행 방법
+## 로컬 개발 환경
 
-```
-docker compose up -d        # MySQL 3306
-cd backend && ./gradlew bootRun   # Spring 8080
-cd frontend && npm run dev        # Vite 5173, /api 요청은 8080으로 프록시
+### 준비물
+
+| 도구 | 버전 | 확인 명령 |
+|---|---|---|
+| JDK | 17 | `java -version` |
+| Node.js | 20.19 이상 (권장 22 또는 24) | `node -v` |
+| Docker Desktop | 최신 | `docker --version` (Docker Desktop을 **켜 둔 상태**여야 합니다) |
+| Git | 아무 버전 | `git --version` |
+
+Gradle과 MySQL은 따로 설치하지 않습니다. Gradle은 wrapper가 내려받고, MySQL은 Docker로 띄웁니다.
+
+### 처음 한 번
+
+```powershell
+git clone https://github.com/Dohoon306/ET-gongmo.git
+cd ET-gongmo
+copy .env.example .env        # macOS: cp .env.example .env
+cd frontend
+npm install
 ```
 
-- Vite 프록시를 쓰므로 CORS 설정이 필요 없습니다.
+PC에 MySQL이 이미 깔려 있어 3306 포트를 쓰고 있다면, `.env`의 `DB_PORT=3306`을 `DB_PORT=3307`로 바꿉니다. Docker와 백엔드가 같은 값을 읽으므로 다른 곳은 고칠 필요가 없습니다.
+
+### 실행 (터미널 3개)
+
+```powershell
+# 1. 저장소 루트: MySQL
+docker compose up -d
+
+# 2. backend 폴더: Spring 8080 (macOS: ./gradlew bootRun)
+.\gradlew.bat bootRun
+
+# 3. frontend 폴더: Vite 5173
+npm run dev
+```
+
+IntelliJ에서 `backend` 폴더를 열고 `EtApplication`을 실행해도 됩니다.
+
+### 잘 됐는지 확인
+
+- http://localhost:5173 을 열면 헤더 오른쪽에 초록색 **서버·DB 연결됨**이 보입니다.
+- http://localhost:8080/swagger-ui.html 에서 API 목록을 봅니다.
+- `.\gradlew.bat test`는 DB 없이도 통과합니다.
+
+| 증상 | 해결 |
+|---|---|
+| `docker compose up`에서 `ports are not available` | 3306을 다른 프로그램이 쓰는 중입니다. `.env`의 `DB_PORT`를 3307로 바꾸고 다시 실행 |
+| `docker` 명령이 `pipe` 오류를 냄 | Docker Desktop이 꺼져 있습니다. 켜고 고래 아이콘이 멈출 때까지 기다리기 |
+| 헤더에 **서버 연결 안 됨** | 백엔드(8080)가 안 떠 있습니다 |
+| 헤더에 **DB 연결 안 됨** | MySQL 컨테이너가 꺼져 있거나 `.env` 값이 다릅니다. `docker compose ps`로 확인 |
+| DB를 처음 상태로 지우고 싶음 | `docker compose down -v` 후 다시 `docker compose up -d` |
+
+### 그 밖에
+
+- `/api` 요청은 Vite가 8080으로 넘기므로 CORS 설정이 필요 없습니다.
 - 시연 당일에는 `npm run build` 결과를 Spring의 `static/`에 넣어 8080 하나로 띄울 수도 있습니다.
+- 줄바꿈은 `.gitattributes`로 LF로 맞춰 두었습니다.
