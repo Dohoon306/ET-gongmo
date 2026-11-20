@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router'
 import { useCurrentUser } from '../../common/useCurrentUser.ts'
 import ReportDialog, { type ReportContext } from '../admin/ReportDialog.tsx'
+import { photoUrl, usePhotoVersions } from '../profile/userPhotos.ts'
 import type { Tag } from './api.ts'
 
 export function TeamPage({ children }: { children: ReactNode }) {
@@ -54,6 +55,8 @@ export function Avatar({ name, size = 'md', userId, reportContext = { source: 'P
   const navigate = useNavigate()
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null)
   const [reporting, setReporting] = useState(false)
+  const photoVersions = usePhotoVersions()
+  const photoVersion = userId === undefined ? undefined : photoVersions[userId]
   const canMessage = userId !== undefined && currentUserId !== null && currentUserId !== userId
 
   useEffect(() => {
@@ -90,9 +93,11 @@ export function Avatar({ name, size = 'md', userId, reportContext = { source: 'P
               }
             : undefined
         }
-        className={`flex shrink-0 items-center justify-center rounded-md bg-brand-soft font-bold text-brand ${size === 'lg' ? 'h-10 w-10 text-base' : 'h-9 w-9 text-sm'}`}
+        className={`flex shrink-0 items-center justify-center overflow-hidden rounded-md bg-brand-soft font-bold text-brand ${size === 'lg' ? 'h-10 w-10 text-base' : 'h-9 w-9 text-sm'}`}
       >
-        {initial}
+        {userId !== undefined && photoVersion !== undefined
+          ? <img src={photoUrl(userId, photoVersion)} alt="" className="size-full object-cover" />
+          : initial}
       </span>
       {menu &&
         createPortal(

@@ -5,9 +5,13 @@ import { CheckIcon, ChevronRightIcon, StarIcon } from '../../common/icons.tsx'
 import { useCurrentUser } from '../../common/useCurrentUser.ts'
 import { SendMessageButton } from '../team/ChatBell.tsx'
 import MyEvaluationAppeals from '../admin/MyEvaluationAppeals.tsx'
+import { IntroField, NameField, ProfilePhoto, TagField, type MyAccount } from './ProfileEdit.tsx'
+import { refreshPhotoVersions } from './userPhotos.ts'
 
 type Profile = {
   name: string
+  intro: string | null
+  photoVersion: number | null
   categories: string[]
   teams: { id: number; title: string; status: string; memberCount: number }[]
   rating: { avgScore: number | null; evalCount: number }
@@ -33,6 +37,9 @@ export default function ProfilePage() {
 function ProfileDetails({ userId, own }: { userId: string; own: boolean }) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [account, setAccount] = useState<MyAccount | null>(null)
+  const [version, setVersion] = useState(0)
+  const { reloadUsers } = useCurrentUser()
   const { state } = useLocation()
   const reviewRoomId = state?.reviewRoomId
 
@@ -41,14 +48,18 @@ function ProfileDetails({ userId, own }: { userId: string; own: boolean }) {
     api<Profile>('/api/users/' + userId + '/profile', { signal: request.signal })
       .then(setProfile)
       .catch((failure: Error) => { if (!request.signal.aborted) setError(failure.message) })
+    if (own) {
+      api<MyAccount>('/api/users/me', { signal: request.signal }).then(setAccount).catch(() => {})
+    }
     return () => request.abort()
-  }, [userId])
+  }, [userId, own, version])
+
+  const reload = () => setVersion((v) => v + 1)
 
   if (error) return <p role="alert" className="text-danger">{error}</p>
   if (profile === null) return <p role="status">프로필을 불러오는 중이에요.</p>
 
   const { avgScore, evalCount } = profile.rating
-  const initial = profile.name.trim().split(/\s+/).at(-1)?.slice(0, 1)
   return (
     <div className="space-y-5 text-ink">
       {Number.isSafeInteger(reviewRoomId) && reviewRoomId > 0 && (
@@ -60,17 +71,16 @@ function ProfileDetails({ userId, own }: { userId: string; own: boolean }) {
       <div className="grid items-start gap-5 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
         <section className="min-w-0 space-y-4 rounded-lg border border-line bg-white p-6">
           <div className="flex items-start justify-between gap-3">
-            <span aria-hidden="true" className="grid size-[52px] place-items-center rounded-md bg-brand-soft text-xl font-bold text-brand">{initial}</span>
+            <ProfilePhoto userId={userId} name={profile.name} version={profile.photoVersion} own={own} onChanged={() => { refreshPhotoVersions(); reload() }} />
             {!own && <SendMessageButton userId={Number(userId)} />}
           </div>
           <div>
-            <h1 className="break-words text-2xl font-bold leading-[1.3] tracking-[-0.02em]">{profile.name}</h1>
+            <NameField key={profile.name} name={profile.name} own={own} account={account} onSaved={() => { reload(); void reloadUsers() }} />
             <p className="mt-1 text-sm text-muted">함께한 팀 {profile.teams.length}개</p>
           </div>
-          {profile.categories.length > 0 && (
-            <ul aria-label="카테고리" className="flex flex-wrap gap-1.5">
-              {profile.categories.map((name) => <li key={name} className="inline-flex h-[26px] items-center rounded-sm border border-line px-2 text-[13px] font-medium text-ink-2">{name}</li>)}
-            </ul>
+          <IntroField intro={profile.intro} own={own} onSaved={reload} />
+          {(own || profile.categories.length > 0) && (
+            <TagField tags={profile.categories} own={own} account={account} onSaved={reload} />
           )}
           <div className="space-y-2 border-t border-line pt-4">
             <h2 className="text-sm font-bold">함께한 팀</h2>

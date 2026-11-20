@@ -23,3 +23,19 @@ CREATE TABLE IF NOT EXISTS user_category (
   CONSTRAINT fk_uc_user     FOREIGN KEY (user_id)     REFERENCES users (id)    ON DELETE CASCADE,
   CONSTRAINT fk_uc_category FOREIGN KEY (category_id) REFERENCES category (id)
 );
+
+CREATE TABLE IF NOT EXISTS user_name_change (
+  user_id     BIGINT    NOT NULL,
+  changed_at  DATETIME  NOT NULL,
+  PRIMARY KEY (user_id),
+  CONSTRAINT fk_unc_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS user_photo (
+  user_id       BIGINT       NOT NULL,
+  content_type  VARCHAR(20)  NOT NULL,
+  data          MEDIUMBLOB   NOT NULL,
+  updated_at    DATETIME     NOT NULL,
+  PRIMARY KEY (user_id),
+  CONSTRAINT fk_photo_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+);
