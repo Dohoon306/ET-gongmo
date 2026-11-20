@@ -25,3 +25,6 @@ frontend/dist/
 # Claude Code (개인 설정)
 .claude/launch.json
 .claude/settings.local.json
+
+# 작업 계획 (개인)
+plan/
