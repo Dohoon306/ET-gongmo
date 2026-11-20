@@ -48,7 +48,7 @@ function Recommendations({ userId }: { userId: number }) {
   const [attempt, setAttempt] = useState(0)
   const [query, setQuery] = useState('')
   const [sortOrder, setSortOrder] = useState<SortOrder>('recommended')
-  const [field, setField] = useState(ALL)
+  const [selectedFields, setSelectedFields] = useState<ReadonlySet<string>>(() => new Set())
   const [level, setLevel] = useState(ALL)
   const [interestOnly, setInterestOnly] = useState(false)
   const [bookmarksOnly, setBookmarksOnly] = useState(false)
@@ -75,14 +75,14 @@ function Recommendations({ userId }: { userId: number }) {
     const filtered = (contests ?? []).filter((contest) => {
       const searchable = `${contest.title} ${contest.host ?? ''} ${contest.tags.map((tag) => tag.name).join(' ')}`.toLocaleLowerCase()
       const matchesQuery = !keyword || searchable.includes(keyword)
-      const matchesField = field === ALL || hasTag(contest, 'FIELD', field)
+      const matchesField = selectedFields.size === 0 || contest.tags.some((tag) => tag.axis === 'FIELD' && selectedFields.has(tag.name))
       const matchesLevel = level === ALL || hasTag(contest, 'LEVEL', level)
       const matchesInterest = !interestOnly || contest.overlap > 0
       const matchesBookmark = !bookmarksOnly || bookmarkIds.has(contest.id)
       return matchesQuery && matchesField && matchesLevel && matchesInterest && matchesBookmark
     })
     return sortOrder === 'deadline' ? [...filtered].sort((left, right) => left.endDate.localeCompare(right.endDate)) : filtered
-  }, [bookmarkIds, bookmarksOnly, contests, field, interestOnly, level, query, sortOrder])
+  }, [bookmarkIds, bookmarksOnly, contests, interestOnly, level, query, selectedFields, sortOrder])
 
   const pageCount = Math.max(1, Math.ceil(visibleContests.length / PAGE_SIZE))
   const page = Math.min(requestedPage, pageCount)
@@ -91,6 +91,16 @@ function Recommendations({ userId }: { userId: number }) {
   const fromFirstPage = <Value,>(apply: (value: Value) => void) => (value: Value) => {
     apply(value)
     setRequestedPage(1)
+  }
+
+  const selectField = (field: string) => {
+    setSelectedFields((current) => {
+      if (field === ALL) return new Set()
+      const next = new Set(current)
+      if (next.has(field)) next.delete(field)
+      else next.add(field)
+      return next
+    })
   }
 
   const goToPage = (next: number) => {
@@ -130,9 +140,9 @@ function Recommendations({ userId }: { userId: number }) {
             <option value="deadline">마감 임박순</option>
           </select>
         </div>
-        {fields.length > 0 && <FilterRow label="분야" values={[ALL, ...fields]} selected={field} onSelect={fromFirstPage(setField)} />}
+        {fields.length > 0 && <FilterRow label="분야" values={[ALL, ...fields]} isSelected={(field) => field === ALL ? selectedFields.size === 0 : selectedFields.has(field)} onSelect={fromFirstPage(selectField)} />}
         <div className="mt-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-          {levels.length > 0 ? <FilterRow label="난이도" values={[ALL, ...levels]} selected={level} onSelect={fromFirstPage(setLevel)} compact /> : <span />}
+          {levels.length > 0 ? <FilterRow label="난이도" values={[ALL, ...levels]} isSelected={(value) => value === level} onSelect={fromFirstPage(setLevel)} compact /> : <span />}
           <div className="flex flex-wrap gap-2 xl:justify-end">
             <ToggleButton active={interestOnly} onClick={() => fromFirstPage(setInterestOnly)(!interestOnly)}>내 관심 분야만</ToggleButton>
             <ToggleButton active={bookmarksOnly} onClick={() => fromFirstPage(setBookmarksOnly)(!bookmarksOnly)}>북마크만</ToggleButton>
@@ -175,11 +185,18 @@ function Notice({ children }: { children: string }) {
   return <p role="status" className="rounded-3xl border border-[#d9e2f0] bg-white px-6 py-12 text-center text-sm text-slate-500">{children}</p>
 }
 
-function FilterRow({ label, values, selected, onSelect, compact = false }: { label: string; values: string[]; selected: string; onSelect: (value: string) => void; compact?: boolean }) {
+function FilterRow({ label, values, isSelected, onSelect, compact = false }: { label: string; values: string[]; isSelected: (value: string) => boolean; onSelect: (value: string) => void; compact?: boolean }) {
   return (
-    <div className={`mt-4 flex flex-wrap items-center gap-2 ${compact ? 'mt-0' : ''}`}>
+    <div role="group" aria-label={label} className={`flex flex-wrap items-center gap-2 ${compact ? '' : 'mt-4'}`}>
       <span className="mr-2 text-xs font-medium text-slate-500">{label}</span>
-      {values.map((value) => <button key={value} type="button" onClick={() => onSelect(value)} className={`h-10 rounded-full border px-4 text-sm font-medium transition ${selected === value ? 'border-[#1d6a43] bg-[#1d6a43] text-white' : 'border-[#c9d1c6] bg-white text-slate-700 hover:border-[#1d6a43]'}`}>{selected === value ? '✓ ' : ''}{value}</button>)}
+      {values.map((value) => {
+        const selected = isSelected(value)
+        return (
+          <button key={value} type="button" aria-pressed={selected} onClick={() => onSelect(value)} className={`h-10 rounded-full border px-4 text-sm font-medium transition ${selected ? 'border-[#1d6a43] bg-[#1d6a43] text-white' : 'border-[#c9d1c6] bg-white text-slate-700 hover:border-[#1d6a43]'}`}>
+            {selected && <span aria-hidden="true">✓ </span>}{value}
+          </button>
+        )
+      })}
     </div>
   )
 }
