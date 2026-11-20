@@ -126,7 +126,7 @@ frontend/src/
 | 백엔드에서 현재 사용자 ID 받기 | 컨트롤러 파라미터에 `@CurrentUser Long userId`. 헤더가 없으면 400. 없어도 되면 `@CurrentUser(required = false)` |
 | 백엔드에서 에러 응답 | `throw new ApiException(HttpStatus.BAD_REQUEST, "메시지")` → `{"message": "메시지"}` |
 | 백엔드에서 AI 호출 | `AiClient`를 생성자로 주입받아 `aiClient.ask(프롬프트, 대체응답)`. 예외를 던지지 않고, 키(`ET_GPT_API_KEY`)가 없거나 호출이 실패·시간 초과·빈 응답이면 넘긴 대체 응답을 그대로 돌려줍니다. 모델·타임아웃은 `application.yml`의 `app.ai.model`·`app.ai.timeout`(기본 5초) |
-| 카테고리 목록 받기 (X-2) | `GET /api/categories` → `[{ id, axis, code, name, sortOrder }]` 31개. 축 순서(`FIELD`→`ROLE`→`SKILL`→`LEVEL`→`GOAL`), 축 안에서는 `sortOrder` 순. 헤더 없이 불립니다. ID는 [DB 명세서 6.1](docs/db-spec.md#61-카테고리-시드) 순서대로 1~31로 고정이고(`it`=1, `backend`=13, `java`=19, `beginner`=26, `learn`=29), 앱이 뜰 때 `category` 테이블에 빠진 행을 채웁니다 |
+| 카테고리 목록 받기 (X-2) | `GET /api/categories` → `[{ id, axis, code, name, sortOrder }]` 45개. 축 순서(`FIELD`→`ROLE`→`SKILL`→`LEVEL`→`GOAL`), 축 안에서는 `sortOrder` 순. 헤더 없이 불립니다. ID는 [DB 명세서 6.1](docs/db-spec.md#61-카테고리-시드) 순서대로 1~31로 고정이고(`it`=1, `backend`=13, `java`=19, `beginner`=26, `learn`=29), IT 밖 직무·기술 태그 14개는 32~45로 뒤에 붙습니다. 앱이 뜰 때 `category` 테이블에 빠진 행을 채웁니다 |
 | 테이블 만들기 | `backend/src/main/resources/db/schema/`의 내 담당 파일에 추가 ([DB 명세서 4장](docs/db-spec.md#4-ddl-dbschemasql) 기준). 파일이 없으면 건너뜀 |
 | 시드 넣기 (X-5) | `SeedContributor`(`common/seed`)를 구현한 `@Component`를 내 패키지에 만들고 `seed()`에서 **내 테이블만** 넣습니다. 순서는 `@Order`로 정합니다 (A=1, B=2, C=3, D=4). `./gradlew bootRun --args='--spring.profiles.active=seed'`로 켜면 러너가 현재 스키마의 모든 테이블을 비운 뒤 순서대로 부르고, 앱은 그대로 떠 있습니다. `seed` 프로필이 아니면 아무것도 하지 않습니다 |
 | 프론트에서 API 호출 | `await api<Contest[]>('/api/contests/recommended')`, `await api('/api/...', { method: 'POST', body: {...} })`. 실패하면 `ApiError` (`status`, `message`) |

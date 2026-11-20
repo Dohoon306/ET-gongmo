@@ -16,10 +16,12 @@ import org.springframework.transaction.annotation.Transactional;
 class ContestClassificationService {
 
     private static final Set<String> FIELD_CODES = Set.of("it", "idea", "design", "art", "video", "writing", "naming", "marketing", "startup", "supporters", "volunteer", "etc");
-    private static final Set<String> AI_CODES = Set.of("backend", "frontend", "app", "ai_data", "uiux", "planning", "java", "spring", "python", "javascript", "react", "kotlin", "figma", "beginner", "experienced", "expert", "learn", "portfolio", "award");
+    private static final Set<String> AI_CODES = Set.of("backend", "frontend", "app", "ai_data", "uiux", "planning", "graphic_design", "illustration", "video_editing", "shooting", "copywriting", "promotion", "research", "presentation", "java", "spring", "python", "javascript", "react", "kotlin", "figma", "photoshop", "illustrator", "premiere", "after_effects", "powerpoint", "excel", "beginner", "experienced", "expert", "learn", "portfolio", "award");
     private static final Map<String, String> CODE_BY_NAME = Map.ofEntries(
             Map.entry("백엔드", "backend"), Map.entry("프론트엔드", "frontend"), Map.entry("앱", "app"), Map.entry("AI·데이터", "ai_data"), Map.entry("UI/UX", "uiux"), Map.entry("기획", "planning"),
+            Map.entry("그래픽 디자인", "graphic_design"), Map.entry("일러스트", "illustration"), Map.entry("영상 편집", "video_editing"), Map.entry("촬영", "shooting"), Map.entry("글쓰기·카피", "copywriting"), Map.entry("홍보·SNS", "promotion"), Map.entry("자료 조사", "research"), Map.entry("발표", "presentation"),
             Map.entry("Java", "java"), Map.entry("Spring", "spring"), Map.entry("Python", "python"), Map.entry("JavaScript", "javascript"), Map.entry("React", "react"), Map.entry("Kotlin", "kotlin"), Map.entry("Figma", "figma"),
+            Map.entry("Photoshop", "photoshop"), Map.entry("Illustrator", "illustrator"), Map.entry("Premiere Pro", "premiere"), Map.entry("After Effects", "after_effects"), Map.entry("PowerPoint", "powerpoint"), Map.entry("Excel", "excel"),
             Map.entry("초보", "beginner"), Map.entry("경험 있음", "experienced"), Map.entry("숙련", "expert"), Map.entry("배우고 싶음", "learn"), Map.entry("포트폴리오", "portfolio"), Map.entry("수상 목표", "award"));
     private static final Map<String, String> FIELD_BY_DETAIL = Map.ofEntries(
             Map.entry("게임/소프트웨어", "it"), Map.entry("IT", "it"), Map.entry("기획", "idea"), Map.entry("디자인", "design"), Map.entry("미술", "art"), Map.entry("음악", "art"), Map.entry("영상", "video"), Map.entry("사진", "video"), Map.entry("문학", "writing"), Map.entry("논문", "writing"), Map.entry("마케팅", "marketing"), Map.entry("창업", "startup"), Map.entry("서포터즈", "supporters"), Map.entry("봉사", "volunteer"));
