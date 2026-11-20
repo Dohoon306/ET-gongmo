@@ -11,10 +11,10 @@ import org.junit.jupiter.api.Test;
 class CategoryCatalogTest {
 
     @Test
-    void hasThirtyOneCategoriesWithIdsOneToThirtyOneInOrder() {
-        assertThat(CategoryCatalog.ALL).hasSize(31);
+    void hasFortyFiveCategoriesWithIdsOneToFortyFiveInOrder() {
+        assertThat(CategoryCatalog.ALL).hasSize(45);
         assertThat(CategoryCatalog.ALL.stream().map(CategorySeed::id))
-                .containsExactlyElementsOf(LongStream.rangeClosed(1, 31).boxed().toList());
+                .containsExactlyElementsOf(LongStream.rangeClosed(1, 45).boxed().toList());
     }
 
     @Test
@@ -38,8 +38,25 @@ class CategoryCatalogTest {
     }
 
     @Test
-    void axesAppearInOrderAndSortOrderStartsAtOneWithinEachAxis() {
-        assertThat(CategoryCatalog.ALL.stream().map(CategorySeed::axis).distinct())
+    void addedCategoriesFollowTheOriginalThirtyOne() {
+        Map<String, Long> idByCode = CategoryCatalog.ALL.stream()
+                .collect(Collectors.toMap(CategorySeed::code, CategorySeed::id));
+
+        assertThat(idByCode)
+                .containsEntry("graphic_design", 32L)
+                .containsEntry("presentation", 39L)
+                .containsEntry("photoshop", 40L)
+                .containsEntry("excel", 45L);
+    }
+
+    @Test
+    void codesUseOnlyLowercaseLettersAndUnderscores() {
+        assertThat(CategoryCatalog.ALL.stream().map(CategorySeed::code)).allMatch(code -> code.matches("[a-z_]+"));
+    }
+
+    @Test
+    void originalAxesAppearInOrderAndSortOrderStartsAtOneWithinEachAxis() {
+        assertThat(CategoryCatalog.ALL.stream().limit(31).map(CategorySeed::axis).distinct())
                 .containsExactly(CategoryAxis.values());
 
         Map<CategoryAxis, List<Integer>> sortOrdersByAxis = CategoryCatalog.ALL.stream()
@@ -47,8 +64,10 @@ class CategoryCatalogTest {
                         CategorySeed::axis, Collectors.mapping(CategorySeed::sortOrder, Collectors.toList())));
 
         assertThat(sortOrdersByAxis.get(CategoryAxis.FIELD)).containsExactly(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12);
-        assertThat(sortOrdersByAxis.get(CategoryAxis.ROLE)).containsExactly(1, 2, 3, 4, 5, 6);
-        assertThat(sortOrdersByAxis.get(CategoryAxis.SKILL)).containsExactly(1, 2, 3, 4, 5, 6, 7);
+        assertThat(sortOrdersByAxis.get(CategoryAxis.ROLE))
+                .containsExactly(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14);
+        assertThat(sortOrdersByAxis.get(CategoryAxis.SKILL))
+                .containsExactly(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13);
         assertThat(sortOrdersByAxis.get(CategoryAxis.LEVEL)).containsExactly(1, 2, 3);
         assertThat(sortOrdersByAxis.get(CategoryAxis.GOAL)).containsExactly(1, 2, 3);
     }

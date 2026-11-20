@@ -67,7 +67,9 @@ function Recommendations({ userId }: { userId: number }) {
     return () => request.abort()
   }, [userId, attempt])
 
-  const fields = useMemo(() => tagNames(contests, 'FIELD'), [contests])
+  const fields = useMemo(() => tagNames(contests, 'FIELD').sort(
+    (left, right) => Number(left === '기타') - Number(right === '기타'),
+  ), [contests])
   const levels = useMemo(() => tagNames(contests, 'LEVEL'), [contests])
 
   const visibleContests = useMemo(() => {

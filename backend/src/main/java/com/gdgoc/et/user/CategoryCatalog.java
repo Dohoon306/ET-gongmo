@@ -48,13 +48,33 @@ public final class CategoryCatalog {
                 "learn", "배우고 싶음",
                 "portfolio", "포트폴리오",
                 "award", "수상 목표");
+        addAxis(seeds, CategoryAxis.ROLE,
+                "graphic_design", "그래픽 디자인",
+                "illustration", "일러스트",
+                "video_editing", "영상 편집",
+                "shooting", "촬영",
+                "copywriting", "글쓰기·카피",
+                "promotion", "홍보·SNS",
+                "research", "자료 조사",
+                "presentation", "발표");
+        addAxis(seeds, CategoryAxis.SKILL,
+                "photoshop", "Photoshop",
+                "illustrator", "Illustrator",
+                "premiere", "Premiere Pro",
+                "after_effects", "After Effects",
+                "powerpoint", "PowerPoint",
+                "excel", "Excel");
         return List.copyOf(seeds);
     }
 
     private static void addAxis(List<CategorySeed> seeds, CategoryAxis axis, String... codeAndNamePairs) {
         for (int i = 0; i < codeAndNamePairs.length; i += 2) {
             seeds.add(new CategorySeed(
-                    seeds.size() + 1L, axis, codeAndNamePairs[i], codeAndNamePairs[i + 1], i / 2 + 1));
+                    seeds.size() + 1L, axis, codeAndNamePairs[i], codeAndNamePairs[i + 1], nextSortOrder(seeds, axis)));
         }
+    }
+
+    private static int nextSortOrder(List<CategorySeed> seeds, CategoryAxis axis) {
+        return (int) seeds.stream().filter(seed -> seed.axis() == axis).count() + 1;
     }
 }
