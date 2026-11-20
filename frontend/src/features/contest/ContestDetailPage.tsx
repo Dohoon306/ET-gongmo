@@ -86,6 +86,7 @@ function ContestContent({ contest }: { contest: ContestDetail }) {
         <div className="mt-4 grid gap-2">
           <a href={supportUrl} target="_blank" rel="noreferrer" className="flex h-12 items-center justify-center rounded-xl bg-white px-4 text-sm font-bold text-[#183322] transition hover:bg-[#f0f6f1]">주최 측 원문에서 지원하기</a>
           <Link to={`/contests/${contest.id}/rooms`} className="flex h-12 items-center justify-center rounded-xl border border-white/60 bg-white/10 px-4 text-sm font-bold transition hover:bg-white/20">이 공모전의 모집 방 보기</Link>
+          <Link to={`/contests/${contest.id}/rooms/new`} className="flex h-12 items-center justify-center rounded-xl border border-white/60 bg-white/10 px-4 text-sm font-bold transition hover:bg-white/20">이 공모전에 방 만들기</Link>
           <div className="flex justify-center rounded-xl border border-white/60 bg-white/10 py-1 [&_button]:border-0 [&_button]:bg-transparent [&_button]:text-white [&_button]:hover:bg-white/10"><BookmarkButton contestId={contest.id} /></div>
         </div>
       </aside>
