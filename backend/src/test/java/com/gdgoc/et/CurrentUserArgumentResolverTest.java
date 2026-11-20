@@ -14,7 +14,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** DB 없이 도는 테스트. X-User-Id 헤더가 @CurrentUser로 들어오는지 확인합니다. */
 class CurrentUserArgumentResolverTest {
 
     @RestController
