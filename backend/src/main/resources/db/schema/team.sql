@@ -1,0 +1,55 @@
+CREATE TABLE IF NOT EXISTS room (
+  id          BIGINT        NOT NULL AUTO_INCREMENT,
+  contest_id  BIGINT        NULL,
+  host_id     BIGINT        NOT NULL,
+  title       VARCHAR(100)  NOT NULL,
+  intro       TEXT          NULL,
+  capacity    TINYINT       NOT NULL,
+  status      VARCHAR(20)   NOT NULL DEFAULT 'RECRUITING',
+  created_at  DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_room_contest (contest_id, status),
+  CONSTRAINT fk_room_contest FOREIGN KEY (contest_id) REFERENCES contest (id),
+  CONSTRAINT fk_room_host    FOREIGN KEY (host_id)    REFERENCES users (id),
+  CONSTRAINT ck_room_capacity CHECK (capacity BETWEEN 2 AND 10),
+  CONSTRAINT ck_room_status   CHECK (status IN ('RECRUITING', 'FULL', 'CLOSED'))
+);
+
+CREATE TABLE IF NOT EXISTS room_category (
+  room_id      BIGINT NOT NULL,
+  category_id  BIGINT NOT NULL,
+  PRIMARY KEY (room_id, category_id),
+  CONSTRAINT fk_rc_room     FOREIGN KEY (room_id)     REFERENCES room (id)     ON DELETE CASCADE,
+  CONSTRAINT fk_rc_category FOREIGN KEY (category_id) REFERENCES category (id)
+);
+
+CREATE TABLE IF NOT EXISTS room_member (
+  id         BIGINT       NOT NULL AUTO_INCREMENT,
+  room_id    BIGINT       NOT NULL,
+  user_id    BIGINT       NOT NULL,
+  role       VARCHAR(20)  NOT NULL,
+  joined_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_member_room_user (room_id, user_id),
+  KEY idx_member_user (user_id),
+  CONSTRAINT fk_member_room FOREIGN KEY (room_id) REFERENCES room (id) ON DELETE CASCADE,
+  CONSTRAINT fk_member_user FOREIGN KEY (user_id) REFERENCES users (id),
+  CONSTRAINT ck_member_role CHECK (role IN ('HOST', 'MEMBER'))
+);
+
+CREATE TABLE IF NOT EXISTS join_request (
+  id            BIGINT       NOT NULL AUTO_INCREMENT,
+  room_id       BIGINT       NOT NULL,
+  user_id       BIGINT       NOT NULL,
+  message       TEXT         NOT NULL,
+  status        VARCHAR(20)  NOT NULL DEFAULT 'PENDING',
+  created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  decided_at    DATETIME     NULL,
+  pending_flag  TINYINT GENERATED ALWAYS AS (CASE WHEN status = 'PENDING' THEN 1 END) STORED,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_request_one_pending (room_id, user_id, pending_flag),
+  KEY idx_request_room_status (room_id, status),
+  CONSTRAINT fk_request_room FOREIGN KEY (room_id) REFERENCES room (id) ON DELETE CASCADE,
+  CONSTRAINT fk_request_user FOREIGN KEY (user_id) REFERENCES users (id),
+  CONSTRAINT ck_request_status CHECK (status IN ('PENDING', 'ACCEPTED', 'REJECTED'))
+);
