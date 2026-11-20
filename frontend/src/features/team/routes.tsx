@@ -8,6 +8,7 @@ import RoomListPage, { JoinEntryPage } from './RoomListPage.tsx'
 export const teamRoutes: FeatureRoute[] = [
   { path: '/contests/:contestId/rooms', label: '3 모집 방 목록', element: <RoomListPage /> },
   { path: '/contests/:contestId/rooms/new', label: '방 만들기', element: <CreateRoomPage /> },
+  { path: '/teams/new', label: '방 만들기 (공모전 선택)', element: <CreateRoomPage /> },
   { path: '/rooms/:roomId/join', label: '4 참가 요청', element: <JoinEntryPage /> },
   { path: '/rooms/:roomId/requests', label: '5-1 받은 요청', element: <ReceivedRequestsPage /> },
   { path: '/rooms/:roomId/members', label: '5-2 팀원 목록', element: <MembersPage /> },

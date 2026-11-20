@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -26,6 +27,11 @@ public class RoomCreateController {
             @Size(max = 1000) String intro,
             int capacity,
             @NotNull List<Long> categoryIds) {}
+
+    @GetMapping("/api/rooms/contest-options")
+    public List<RoomCreateService.ContestOption> contestOptions() {
+        return roomCreateService.openContests();
+    }
 
     @PostMapping("/api/rooms")
     @ResponseStatus(HttpStatus.CREATED)

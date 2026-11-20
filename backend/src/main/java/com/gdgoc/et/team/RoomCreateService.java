@@ -26,6 +26,18 @@ public class RoomCreateService {
 
     public record NewRoom(Long contestId, String title, String intro, int capacity, List<Long> categoryIds) {}
 
+    public record ContestOption(Long id, String title, String type, String endDate) {}
+
+    public List<ContestOption> openContests() {
+        return jdbc.query("""
+                SELECT id, title, type, end_date
+                FROM contest
+                WHERE end_date IS NULL OR end_date >= CURRENT_DATE
+                ORDER BY end_date IS NULL, end_date, id
+                """, (rs, i) -> new ContestOption(rs.getLong("id"), rs.getString("title"), rs.getString("type"),
+                rs.getString("end_date")));
+    }
+
     @Transactional
     public Long create(Long hostId, NewRoom room) {
         List<Long> categoryIds = room.categoryIds() == null ? List.of() : room.categoryIds().stream().distinct().toList();
