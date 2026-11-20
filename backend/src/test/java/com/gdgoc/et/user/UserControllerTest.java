@@ -6,6 +6,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -24,7 +25,10 @@ class UserControllerTest {
 
     private final UserRepository userRepository = mock(UserRepository.class);
 
-    private final MockMvc mvc = MockMvcBuilders.standaloneSetup(new UserController(userRepository))
+    private final UserDeletionService userDeletionService = mock(UserDeletionService.class);
+
+    private final MockMvc mvc = MockMvcBuilders
+            .standaloneSetup(new UserController(userRepository, userDeletionService))
             .setControllerAdvice(new GlobalExceptionHandler())
             .build();
 
@@ -93,5 +97,13 @@ class UserControllerTest {
                         .content("{\"name\": \"새싹\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("intro: 자기소개를 입력해 주세요"));
+    }
+
+    @Test
+    void deleteRemovesTheUserAndReturnsNoContent() throws Exception {
+        mvc.perform(delete("/api/users/9"))
+                .andExpect(status().isNoContent());
+
+        verify(userDeletionService).delete(9L);
     }
 }
