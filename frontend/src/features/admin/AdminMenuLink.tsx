@@ -10,7 +10,7 @@ export default function AdminMenuLink() {
     <Link
       to="/admin"
       aria-current={current ? 'page' : undefined}
-      className={`flex h-10 items-center whitespace-nowrap rounded-lg px-3 text-[15px] ${current ? 'bg-brand-soft font-semibold text-brand' : 'font-medium text-red-700 hover:bg-gray-100'}`}
+      className={`flex h-11 items-center whitespace-nowrap border-b-2 px-3 text-[15px] md:h-[60px] ${current ? 'border-brand font-semibold text-ink' : 'border-transparent font-medium text-muted hover:text-ink'}`}
     >
       관리자
     </Link>

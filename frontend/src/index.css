@@ -1,12 +1,37 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 
 @theme {
-  --color-brand: #2563eb;
-  --color-brand-soft: #dbeafe;
-  --color-line: #e5e7eb;
-  --font-sans: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --color-brand: #1d6a43;
+  --color-brand-strong: #175536;
+  --color-brand-soft: #e5f0e8;
+  --color-ink: #18211b;
+  --color-ink-2: #3b4840;
+  --color-muted: #56635b;
+  --color-line: #dce2da;
+  --color-line-strong: #c9d1c6;
+  --color-subtle: #eef1ec;
+  --color-page: #f6f7f3;
+  --color-accent: #9a4508;
+  --color-accent-soft: #fbefe3;
+  --color-danger: #b42318;
+  --color-danger-soft: #fdecea;
+  --font-sans: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
 }
 
 body {
-  @apply bg-gray-50 text-gray-900 antialiased;
+  @apply bg-white text-ink antialiased;
+}
+
+@layer base {
+  a,
+  button {
+    @apply focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand;
+  }
+
+  input,
+  select,
+  textarea {
+    @apply focus-visible:outline-2 focus-visible:outline-brand;
+  }
 }

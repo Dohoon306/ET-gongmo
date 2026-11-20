@@ -57,14 +57,14 @@ export function InboxPage() {
 
   return (
     <TeamPage>
-      <h1 className="text-[28px] font-bold">채팅·쪽지</h1>
-      <p className="mt-2 mb-6 text-[15px] text-(--color-muted)">새 메시지가 오면 빨간 숫자로 알려 드려요.</p>
+      <h1 className="text-[26px] font-bold leading-[1.3] tracking-[-0.02em]">채팅·쪽지</h1>
+      <p className="mt-1.5 mb-[26px] text-[15px] text-muted">새 메시지가 오면 빨간 숫자로 알려 드려요.</p>
 
-      <h2 className="mb-3 text-[13px] font-medium text-(--color-muted)">팀 채팅</h2>
+      <h2 className="mb-2.5 text-[13px] font-semibold text-muted">팀 채팅</h2>
       {unread && unread.rooms.length === 0 && (
-        <Card className="mb-8 px-6 py-8 text-center text-sm text-(--color-muted)">아직 속한 팀이 없어요.</Card>
+        <Card className="mb-8 px-6 py-8 text-center text-sm text-muted">아직 속한 팀이 없어요.</Card>
       )}
-      <ul className="mb-8 space-y-3">
+      <ul className="mb-[30px] divide-y divide-line overflow-hidden rounded-lg border border-line empty:hidden">
         {unread?.rooms.map((r) => (
           <li key={r.roomId}>
             <Row to={`/rooms/${r.roomId}/chat`} title={r.title} preview={r.lastContent ?? '아직 메시지가 없어요'} count={r.unread} />
@@ -72,13 +72,13 @@ export function InboxPage() {
         ))}
       </ul>
 
-      <h2 className="mb-3 text-[13px] font-medium text-(--color-muted)">쪽지</h2>
+      <h2 className="mb-2.5 text-[13px] font-semibold text-muted">쪽지</h2>
       {conversations.data && conversations.data.length === 0 && (
-        <Card className="px-6 py-8 text-center text-sm text-(--color-muted)">
+        <Card className="px-6 py-8 text-center text-sm text-muted">
           주고받은 쪽지가 없어요. 팀원 사진을 우클릭하거나 프로필에서 쪽지를 보낼 수 있어요.
         </Card>
       )}
-      <ul className="space-y-3">
+      <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line empty:hidden">
         {conversations.data?.map((c) => (
           <li key={c.peerId}>
             <Row
@@ -105,16 +105,14 @@ function Row({ to, title, preview, count, avatar, time }: {
   time?: string
 }) {
   return (
-    <Link to={to} className="block">
-      <Card className="flex items-center gap-4 px-5 py-4 hover:border-(--color-line-strong)">
+    <Link to={to} className="flex min-h-[68px] items-center gap-3.5 bg-white px-[18px] py-3 hover:bg-page">
         {avatar}
         <div className="min-w-0 flex-1">
           <p className="truncate text-[15px] font-semibold">{title}</p>
-          <p className="truncate text-sm text-(--color-muted)">{preview}</p>
+          <p className="truncate text-sm text-muted">{preview}</p>
         </div>
-        {time && <span className="shrink-0 text-xs text-(--color-muted)">{time}</span>}
+        {time && <span className="shrink-0 text-xs text-muted">{time}</span>}
         <UnreadBadge count={count} floating={false} />
-      </Card>
     </Link>
   )
 }

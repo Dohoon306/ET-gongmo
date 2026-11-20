@@ -1,8 +1,0 @@
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap");
-
-.bookmark-page {
-  background: #f7f9fd;
-  box-shadow: 0 0 0 100vmax #f7f9fd;
-  clip-path: inset(0 -100vmax -100vmax);
-  font-family: "IBM Plex Sans KR", "Malgun Gothic", sans-serif;
-}

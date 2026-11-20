@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router'
 import { api } from '../../api/client.ts'
 import DDayBadge from '../../common/DDayBadge.tsx'
+import { CheckIcon } from '../../common/icons.tsx'
 import { useCurrentUser } from '../../common/useCurrentUser.ts'
 import BookmarkButton from '../bookmark/BookmarkButton.tsx'
 
@@ -26,12 +27,11 @@ const PAGE_SIZE = 12
 export default function ContestRecommendationPage() {
   const { userId } = useCurrentUser()
   return (
-    <section className="-mx-4 -my-8 min-h-[calc(100vh-73px)] bg-[#f7f9fd] px-4 py-10 sm:px-8 lg:px-12">
-      <div className="mx-auto max-w-6xl">
+    <section>
+      <div>
         <div className="mb-6">
-          <p className="text-sm font-bold text-brand">추천 공모전</p>
-          <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-[#102a5e] sm:text-4xl">나에게 맞는 공모전 찾기</h1>
-          <p className="mt-2 text-sm text-slate-500 sm:text-base">관심 분야와 난이도를 걸러보고, 마음에 드는 공모전은 북마크해 두세요.</p>
+          <h1 className="text-[26px] font-bold leading-[1.3] tracking-[-0.02em] text-ink">나에게 맞는 공모전 찾기</h1>
+          <p className="mt-1.5 text-[15px] text-muted">관심 분야와 난이도를 걸러보고, 마음에 드는 공모전은 북마크해 두세요.</p>
         </div>
         {userId === null
           ? <Notice>추천 공모전을 보려면 오른쪽 위에서 현재 사용자를 선택해 주세요.</Notice>
@@ -121,9 +121,9 @@ function Recommendations({ userId }: { userId: number }) {
 
   if (error !== null) {
     return (
-      <div className="rounded-3xl border border-[#d9e2f0] bg-white p-6">
-        <p role="alert" className="text-sm text-red-700">{error}</p>
-        <button type="button" className="mt-4 rounded-xl border border-[#c9d1c6] px-4 py-2.5 text-sm font-semibold text-[#1d6a43]" onClick={() => { setError(null); setAttempt((value) => value + 1) }}>다시 시도</button>
+      <div className="rounded-lg border border-line bg-white p-6">
+        <p role="alert" className="text-sm text-danger">{error}</p>
+        <button type="button" className="mt-4 rounded-md border border-line-strong px-4 py-2.5 text-sm font-semibold text-brand" onClick={() => { setError(null); setAttempt((value) => value + 1) }}>다시 시도</button>
       </div>
     )
   }
@@ -131,19 +131,19 @@ function Recommendations({ userId }: { userId: number }) {
 
   return (
     <>
-      <div className="rounded-3xl border border-[#d9e2f0] bg-white p-5 shadow-[0_4px_12px_rgba(16,42,94,0.05)]">
-        <div className="flex flex-col gap-3 md:flex-row">
-          <label className="flex h-12 flex-1 items-center gap-3 rounded-xl border border-[#d9e2f0] px-4 text-slate-500">
+      <div className="rounded-lg border border-line bg-page p-4">
+        <div className="flex flex-col gap-2.5 md:flex-row">
+          <label className="flex h-11 shrink-0 items-center gap-2.5 rounded-md border border-line-strong bg-white px-3.5 text-muted md:flex-1">
             <SearchIcon />
-            <input value={query} onChange={(event) => fromFirstPage(setQuery)(event.target.value)} placeholder="공모전명, 주최, 키워드 검색" className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400" />
+            <input value={query} onChange={(event) => fromFirstPage(setQuery)(event.target.value)} placeholder="공모전명, 주최, 키워드 검색" className="w-full bg-transparent text-sm outline-none placeholder:text-muted" />
           </label>
-          <select aria-label="정렬 기준" value={sortOrder} onChange={(event) => fromFirstPage(setSortOrder)(event.target.value as SortOrder)} className="h-12 rounded-xl border border-[#d9e2f0] bg-white px-4 text-sm font-medium text-[#0f234c] outline-none md:w-52">
+          <select aria-label="정렬 기준" value={sortOrder} onChange={(event) => fromFirstPage(setSortOrder)(event.target.value as SortOrder)} className="h-11 rounded-md border border-line-strong bg-white px-3 text-sm font-medium text-ink outline-none md:w-52">
             <option value="recommended">맞춤 추천순</option>
             <option value="deadline">마감 임박순</option>
           </select>
         </div>
         {fields.length > 0 && <FilterRow label="분야" values={[ALL, ...fields]} isSelected={(field) => field === ALL ? selectedFields.size === 0 : selectedFields.has(field)} onSelect={fromFirstPage(selectField)} />}
-        <div className="mt-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+        <div className="mt-3.5 flex flex-col gap-2.5 xl:flex-row xl:items-center xl:justify-between">
           {levels.length > 0 ? <FilterRow label="난이도" values={[ALL, ...levels]} isSelected={(value) => value === level} onSelect={fromFirstPage(setLevel)} compact /> : <span />}
           <div className="flex flex-wrap gap-2 xl:justify-end">
             <ToggleButton active={interestOnly} onClick={() => fromFirstPage(setInterestOnly)(!interestOnly)}>내 관심 분야만</ToggleButton>
@@ -153,24 +153,24 @@ function Recommendations({ userId }: { userId: number }) {
       </div>
 
       <div ref={resultsTop} className="mt-7 flex scroll-mt-24 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm font-semibold text-slate-700">총 <span className="text-brand">{visibleContests.length}</span>개의 공모전</p>
-        <div className="flex flex-wrap gap-2 text-xs">
-          <span className="rounded-full bg-[#1d6a43] px-3 py-1.5 font-semibold text-white">✓ 나와 겹치는 태그</span>
-          <span className="rounded-full bg-[#eef1ec] px-3 py-1.5 font-medium text-slate-600">그 외 태그</span>
+        <p className="text-sm font-semibold text-ink">총 <span className="tabular-nums text-brand">{visibleContests.length}</span>개의 공모전</p>
+        <div className="flex flex-wrap gap-1.5 text-xs">
+          <span className="inline-flex h-6 items-center gap-1 rounded-sm bg-brand-soft px-2 font-semibold text-brand"><CheckIcon className="size-[11px]" />나와 겹치는 태그</span>
+          <span className="inline-flex h-6 items-center rounded-sm border border-line bg-white px-2 font-medium text-ink-2">그 외 태그</span>
         </div>
       </div>
 
       {visibleContests.length ? (
-        <div className="mt-4 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-3.5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {pageContests.map((contest) => <ContestCard key={contest.id} contest={contest} onBookmark={(saved) => markBookmark(contest.id, saved)} />)}
         </div>
       ) : (
-        <div className="mt-4 rounded-3xl border border-dashed border-[#d9e2f0] bg-white px-6 py-16 text-center text-slate-500">조건에 맞는 공모전이 없어요. 필터를 바꿔 보세요.</div>
+        <div className="mt-4 rounded-lg border border-dashed border-line bg-white px-6 py-16 text-center text-muted">조건에 맞는 공모전이 없어요. 필터를 바꿔 보세요.</div>
       )}
 
       {pageCount > 1 && <PageNumbers page={page} pageCount={pageCount} onSelect={goToPage} />}
 
-      <p className="mt-7 text-xs text-slate-500">공고 정보 출처: 공모아뷰 · 지원과 접수는 각 공고의 주최 측 원문에서 해요.</p>
+      <p className="mt-7 text-xs text-muted">공고 정보 출처: 공모아뷰 · 지원과 접수는 각 공고의 주최 측 원문에서 해요.</p>
     </>
   )
 }
@@ -184,18 +184,18 @@ function hasTag(contest: Contest, axis: string, name: string) {
 }
 
 function Notice({ children }: { children: string }) {
-  return <p role="status" className="rounded-3xl border border-[#d9e2f0] bg-white px-6 py-12 text-center text-sm text-slate-500">{children}</p>
+  return <p role="status" className="rounded-lg border border-line bg-white px-6 py-12 text-center text-sm text-muted">{children}</p>
 }
 
 function FilterRow({ label, values, isSelected, onSelect, compact = false }: { label: string; values: string[]; isSelected: (value: string) => boolean; onSelect: (value: string) => void; compact?: boolean }) {
   return (
-    <div role="group" aria-label={label} className={`flex flex-wrap items-center gap-2 ${compact ? '' : 'mt-4'}`}>
-      <span className="mr-2 text-xs font-medium text-slate-500">{label}</span>
+    <div role="group" aria-label={label} className={`flex flex-wrap items-center gap-1.5 ${compact ? '' : 'mt-3.5'}`}>
+      <span className="w-[52px] text-[13px] font-medium text-muted">{label}</span>
       {values.map((value) => {
         const selected = isSelected(value)
         return (
-          <button key={value} type="button" aria-pressed={selected} onClick={() => onSelect(value)} className={`h-10 rounded-full border px-4 text-sm font-medium transition ${selected ? 'border-[#1d6a43] bg-[#1d6a43] text-white' : 'border-[#c9d1c6] bg-white text-slate-700 hover:border-[#1d6a43]'}`}>
-            {selected && <span aria-hidden="true">✓ </span>}{value}
+          <button key={value} type="button" aria-pressed={selected} onClick={() => onSelect(value)} className={`inline-flex h-10 items-center gap-1.5 rounded-md border px-3.5 text-sm font-medium transition ${selected ? 'border-brand bg-brand text-white' : 'border-line-strong bg-white text-ink-2 hover:border-brand'}`}>
+            {selected && <CheckIcon />}{value}
           </button>
         )
       })}
@@ -204,12 +204,12 @@ function FilterRow({ label, values, isSelected, onSelect, compact = false }: { l
 }
 
 function PageNumbers({ page, pageCount, onSelect }: { page: number; pageCount: number; onSelect: (page: number) => void }) {
-  const stepClass = 'h-10 rounded-xl border border-[#c9d1c6] bg-white px-3 text-sm font-medium text-slate-700 transition hover:border-[#1d6a43] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-[#c9d1c6]'
+  const stepClass = 'h-10 rounded-md border border-line-strong bg-white px-3 text-sm font-medium text-ink-2 transition hover:border-brand disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-line-strong'
   return (
     <nav aria-label="공모전 목록 페이지" className="mt-8 flex flex-wrap items-center justify-center gap-2">
       <button type="button" disabled={page === 1} onClick={() => onSelect(page - 1)} className={stepClass}>이전</button>
       {Array.from({ length: pageCount }, (_, index) => index + 1).map((number) => (
-        <button key={number} type="button" aria-label={`${number}페이지`} aria-current={number === page ? 'page' : undefined} onClick={() => onSelect(number)} className={`h-10 min-w-10 rounded-xl border px-3 text-sm font-semibold transition ${number === page ? 'border-[#1d6a43] bg-[#1d6a43] text-white' : 'border-[#c9d1c6] bg-white text-slate-700 hover:border-[#1d6a43]'}`}>{number}</button>
+        <button key={number} type="button" aria-label={`${number}페이지`} aria-current={number === page ? 'page' : undefined} onClick={() => onSelect(number)} className={`h-10 min-w-10 rounded-md border px-3 text-sm font-semibold transition ${number === page ? 'border-brand bg-brand text-white' : 'border-line-strong bg-white text-ink-2 hover:border-brand'}`}>{number}</button>
       ))}
       <button type="button" disabled={page === pageCount} onClick={() => onSelect(page + 1)} className={stepClass}>다음</button>
     </nav>
@@ -217,24 +217,24 @@ function PageNumbers({ page, pageCount, onSelect }: { page: number; pageCount: n
 }
 
 function ToggleButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: string }) {
-  return <button type="button" onClick={onClick} className={`h-12 rounded-xl border px-5 text-sm font-semibold transition ${active ? 'border-[#1d6a43] bg-[#e5f0e8] text-[#1d6a43]' : 'border-[#c9d1c6] bg-white text-slate-800 hover:border-[#1d6a43]'}`}>{active ? '✓ ' : ''}{children}</button>
+  return <button type="button" onClick={onClick} className={`inline-flex h-10 items-center gap-1.5 rounded-md border px-3.5 text-sm font-semibold transition ${active ? 'border-brand bg-brand-soft text-brand' : 'border-line-strong bg-white text-ink hover:border-brand'}`}>{active && <CheckIcon />}{children}</button>
 }
 
 function ContestCard({ contest, onBookmark }: { contest: Contest; onBookmark: (saved: boolean) => void }) {
   const reward = contest.prize ? `1등 ${contest.prize}` : contest.benefit ?? '상금 정보 없음'
   return (
-    <article className="flex min-h-56 flex-col rounded-3xl border border-[#d9e2f0] bg-white p-5 shadow-[0_4px_12px_rgba(16,42,94,0.06)]">
+    <article className="flex min-h-52 flex-col rounded-lg border border-line bg-white p-[18px]">
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-wrap gap-1.5">
-          {contest.overlap > 0 && <span className="rounded-full bg-[#102a5e] px-2.5 py-1 text-[11px] font-bold text-white">맞춤 추천 · {contest.overlap}개 겹침</span>}
+          {contest.overlap > 0 && <span className="inline-flex h-6 items-center whitespace-nowrap rounded-sm bg-ink px-2 text-xs font-semibold text-white">맞춤 추천 · {contest.overlap}개 겹침</span>}
           {contest.tags.map((tag) => (
-            <span key={`${tag.axis}:${tag.name}`} className={`rounded-full px-2.5 py-1 text-[11px] ${tag.matched ? 'bg-[#1d6a43] font-semibold text-white' : 'bg-[#eef1ec] font-medium text-slate-600'}`}>{tag.matched ? '✓ ' : ''}{tag.name}</span>
+            <span key={`${tag.axis}:${tag.name}`} className={`inline-flex h-6 items-center gap-1 whitespace-nowrap rounded-sm border px-2 text-xs ${tag.matched ? 'border-brand-soft bg-brand-soft font-semibold text-brand' : 'border-line bg-white font-medium text-ink-2'}`}>{tag.matched && <CheckIcon className="size-[11px]" />}{tag.name}</span>
           ))}
         </div>
         <div className="shrink-0"><BookmarkButton contestId={contest.id} onChange={onBookmark} /></div>
       </div>
-      <Link to={`/contests/${contest.id}`} className="mt-4 line-clamp-2 text-lg font-extrabold leading-7 text-[#0f234c] hover:text-brand">{contest.title}</Link>
-      <p className="mt-2 text-xs text-slate-500">{contest.host ?? '주최 정보 없음'} · {reward}</p>
+      <Link to={`/contests/${contest.id}`} className="mt-3.5 line-clamp-2 break-keep text-[17px] font-semibold leading-[1.45] tracking-[-0.01em] text-ink hover:text-brand">{contest.title}</Link>
+      <p className="mt-1.5 text-[13px] text-muted">{contest.host ?? '주최 정보 없음'} · {reward}</p>
       <div className="mt-auto pt-4"><DDayBadge endDate={contest.endDate} /></div>
     </article>
   )

@@ -4,7 +4,6 @@ import { api, ApiError } from '../../api/client.ts'
 import { useCurrentUser } from '../../common/useCurrentUser.ts'
 import checkIcon from './icons/check-on-brand.svg'
 import chevronLeftIcon from './icons/chevron-left.svg'
-import sparkleIcon from './icons/sparkle-brand.svg'
 
 type Axis = 'FIELD' | 'ROLE' | 'SKILL' | 'LEVEL' | 'GOAL'
 type Category = { id: number; axis: Axis; code: string; name: string; sortOrder: number }
@@ -51,8 +50,8 @@ export default function SignupTagsPage() {
 
   if (userId === null) {
     return (
-      <div className="rounded-2xl border border-line bg-white p-8 text-center">
-        <p className="text-gray-600">태그를 정리하려면 먼저 자기소개를 써 주세요.</p>
+      <div className="rounded-lg border border-line bg-white p-8 text-center">
+        <p className="text-muted">태그를 정리하려면 먼저 자기소개를 써 주세요.</p>
         <Link to="/signup" className="mt-3 inline-block text-sm font-semibold text-brand hover:underline">
           자기소개 쓰러 가기
         </Link>
@@ -62,14 +61,14 @@ export default function SignupTagsPage() {
 
   if (loadError !== null) {
     return (
-      <p role="alert" className="rounded-2xl border border-line bg-white p-8 text-center text-red-700">
+      <p role="alert" className="rounded-lg border border-line bg-white p-8 text-center text-danger">
         {loadError}
       </p>
     )
   }
 
   if (loaded === null) {
-    return <p className="p-8 text-center text-gray-600">AI가 자기소개를 읽고 있어요</p>
+    return <p className="p-8 text-center text-muted">AI가 자기소개를 읽고 있어요</p>
   }
 
   const { categories, suggestion } = loaded
@@ -111,32 +110,31 @@ export default function SignupTagsPage() {
 
       <div className="flex flex-col gap-2">
         <p className="text-sm font-semibold text-brand">2단계 · 태그 확인</p>
-        <h1 className="text-[32px] leading-[1.35] font-bold tracking-[-0.64px]">AI가 이렇게 정리했어요</h1>
-        <p className="leading-[1.7] text-gray-600">
+        <h1 className="text-[30px] leading-[1.35] font-bold tracking-[-0.02em]">AI가 이렇게 정리했어요</h1>
+        <p className="break-keep leading-[1.7] text-muted">
           맞지 않는 태그는 빼고, 빠진 태그는 눌러서 더해 주세요. 확정한 태그로 공모전과 팀을 찾아요.
         </p>
       </div>
 
-      <section className="flex flex-col gap-5 rounded-2xl border border-line bg-white p-6 sm:flex-row sm:items-start">
+      <section className="flex flex-col gap-6 rounded-lg border border-line bg-page px-6 py-[22px] sm:flex-row sm:items-start">
         <div className="flex min-w-0 flex-1 flex-col gap-2">
-          <h2 className="text-[13px] font-semibold text-gray-600">내가 쓴 자기소개</h2>
-          <p className="leading-[1.7] break-words">
+          <h2 className="text-[13px] font-semibold text-muted">내가 쓴 자기소개</h2>
+          <p className="leading-[1.7] break-keep">
             {suggestion.intro ? `“${suggestion.intro}”` : '아직 자기소개를 쓰지 않았어요.'}
           </p>
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-2.5">
-          <h2 className="flex items-center gap-1.5 text-[13px] font-semibold text-brand">
-            <img src={sparkleIcon} alt="" />
+          <h2 className="text-[13px] font-semibold text-brand">
             AI가 고른 태그
           </h2>
           {suggested.length === 0 ? (
-            <p className="text-sm leading-[1.6] text-gray-600">AI가 고른 태그가 없어요. 아래에서 직접 골라 주세요.</p>
+            <p className="text-sm leading-[1.6] text-muted">AI가 고른 태그가 없어요. 아래에서 직접 골라 주세요.</p>
           ) : (
-            <ul className="flex flex-wrap gap-2">
+            <ul className="flex flex-wrap gap-1.5">
               {suggested.map((category) => (
                 <li
                   key={category.id}
-                  className="flex h-7 items-center rounded-full bg-brand-soft px-2.5 text-[13px] font-semibold text-brand"
+                  className="flex h-7 items-center rounded-sm bg-brand-soft px-2.5 text-[13px] font-semibold text-brand"
                 >
                   {category.name}
                 </li>
@@ -146,15 +144,15 @@ export default function SignupTagsPage() {
         </div>
       </section>
 
-      <section className="flex flex-col rounded-2xl border border-line bg-white px-6 pt-6 pb-2">
-        <h2 className="pb-3 text-lg font-bold">태그 고르기</h2>
+      <section className="flex flex-col rounded-lg border border-line bg-white px-6 pt-6 pb-2">
+        <h2 className="pb-3 text-lg font-bold tracking-[-0.01em]">태그 고르기</h2>
         {axes.map(({ axis, label, hint }) => (
-          <div key={axis} role="group" aria-label={label} className="flex flex-col gap-3 border-t border-gray-100 py-4 sm:flex-row sm:gap-6">
+          <div key={axis} role="group" aria-label={label} className="flex flex-col gap-3 border-t border-line py-4 sm:flex-row sm:gap-6">
             <div className="flex w-[120px] shrink-0 flex-col gap-0.5">
               <p className="text-[15px] font-semibold">{label}</p>
-              <p className="text-xs text-gray-600">{hint}</p>
+              <p className="text-xs text-muted">{hint}</p>
             </div>
-            <div className="flex min-w-0 flex-1 flex-wrap gap-2">
+            <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
               {categories
                 .filter((category) => category.axis === axis)
                 .map((category) => {
@@ -165,10 +163,10 @@ export default function SignupTagsPage() {
                       type="button"
                       aria-pressed={selected}
                       onClick={() => toggle(category)}
-                      className={`flex h-10 items-center rounded-full border px-3.5 text-sm ${
+                      className={`flex h-10 items-center rounded-md border px-3.5 text-sm ${
                         selected
                           ? 'gap-1.5 border-brand bg-brand font-semibold text-white'
-                          : 'border-gray-300 bg-white font-medium text-gray-700 hover:bg-gray-50'
+                          : 'border-line-strong bg-white font-medium text-ink-2 hover:bg-page'
                       }`}
                     >
                       {selected && <img src={checkIcon} alt="" />}
@@ -181,12 +179,12 @@ export default function SignupTagsPage() {
         ))}
       </section>
 
-      <p className="text-[13px] leading-[1.6] text-gray-600">
+      <p className="text-[13px] leading-[1.6] text-muted">
         태그는 정해진 목록 안에서만 골라요. 그래야 공모전, 모집 방과 정확히 비교할 수 있어요.
       </p>
 
       {saveError !== null && (
-        <p role="alert" className="text-sm text-red-700">
+        <p role="alert" className="text-sm text-danger">
           {saveError}
         </p>
       )}
@@ -194,13 +192,13 @@ export default function SignupTagsPage() {
       <div className="flex flex-wrap items-center justify-between gap-4 border-t border-line pt-5">
         <p className="flex items-center gap-1.5 text-[15px]">
           선택한 태그
-          <span className="font-semibold text-brand">{selectedIds.length}개</span>
+          <span className="font-bold tabular-nums text-brand">{selectedIds.length}개</span>
         </p>
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-2.5">
           <button
             type="button"
             onClick={() => setSelectedIds(suggestion.categoryIds)}
-            className="flex h-12 items-center justify-center rounded-xl border border-gray-300 bg-white px-6 text-[15px] font-semibold hover:bg-gray-50"
+            className="flex h-12 items-center justify-center rounded-md border border-line-strong bg-white px-5 text-[15px] font-semibold hover:bg-subtle"
           >
             AI 제안으로 되돌리기
           </button>
@@ -208,7 +206,7 @@ export default function SignupTagsPage() {
             type="button"
             onClick={confirm}
             disabled={selectedIds.length === 0 || saving}
-            className="flex h-12 items-center justify-center rounded-xl bg-brand px-6 text-[15px] font-semibold text-white hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:brightness-100"
+            className="flex h-12 items-center justify-center rounded-md bg-brand px-5 text-[15px] font-semibold text-white hover:bg-brand-strong disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-brand"
           >
             {saving ? '저장하는 중이에요' : '이대로 확정하기'}
           </button>

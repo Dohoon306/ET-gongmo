@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { api } from '../../api/client.ts'
-import DDayBadge from '../../common/DDayBadge.tsx'
+import { getDeadline } from '../../common/deadline.ts'
+import { ChevronLeftIcon } from '../../common/icons.tsx'
 import BookmarkButton from '../bookmark/BookmarkButton.tsx'
 
 type ContestDetail = {
@@ -42,9 +43,9 @@ function ContestDetailLoader({ contestId }: { contestId?: string }) {
   }, [contestId])
 
   return (
-    <section className="-mx-4 -my-8 min-h-[calc(100vh-73px)] bg-[#f7f9fd] px-4 py-8 sm:px-8 lg:px-12">
-      <div className="mx-auto max-w-6xl">
-        <Link to="/contests" className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-[#1d6a43]"><span aria-hidden="true">←</span> 추천 공모전으로</Link>
+    <section>
+      <div>
+        <Link to="/contests" className="inline-flex min-h-8 items-center gap-1.5 text-sm font-medium text-muted transition hover:text-ink"><ChevronLeftIcon />추천 공모전으로</Link>
         {!contest && !error && <StatusCard title="공모전 정보를 불러오는 중이에요." />}
         {error && <StatusCard title={error} />}
         {contest && <ContestContent contest={contest} />}
@@ -71,6 +72,7 @@ function ContestContent({ contest }: { contest: ContestDetail }) {
   const primaryReward = contest.prize || contest.benefit
   const supportUrl = getOrganizerUrl(contest.sourceUrl)
   const period = formatPeriod(contest.startDate, contest.endDate)
+  const deadline = getDeadline(contest.endDate)
   const optionalDetails = [
     ['활동 기간', contest.activityPeriod],
     ['장소·방식', contest.locationMethod],
@@ -78,65 +80,68 @@ function ContestContent({ contest }: { contest: ContestDetail }) {
   ].filter((detail): detail is [string, string] => Boolean(detail[1]))
 
   return <>
-    <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
-      <article className="rounded-[28px] border border-[#dce2da] bg-white p-6 shadow-[0_4px_12px_rgba(16,42,94,0.05)] sm:p-7">
-        <div className="flex flex-wrap gap-2">
+    <div className="mt-4 grid items-start gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
+      <article className="rounded-lg border border-line bg-white p-6 sm:p-7">
+        <div className="flex flex-wrap gap-1.5">
           {contest.type && <Tag>{contest.type}</Tag>}
           {contest.categories.map((category) => <Tag key={category}>{category}</Tag>)}
         </div>
-        <h1 className="mt-5 break-keep text-2xl font-extrabold leading-9 text-[#102a5e] sm:text-[27px]">{contest.title}</h1>
-        <p className="mt-2 text-sm font-medium text-slate-500">{contest.host || '주최 정보 없음'}</p>
-        <div className="mt-6 grid gap-3 sm:grid-cols-2">
-          <InfoCard icon="🏆" label={contest.prize ? '1등 상금' : '혜택'} value={primaryReward || '상세 공고 확인'} />
-          <InfoCard icon="▣" label="접수 기간" value={period || '상시 모집'} />
-          <InfoCard icon="◎" label="대상" value={contest.target || '상세 공고 확인'} />
-          <InfoCard icon="◈" label="분야" value={contest.categories.length ? contest.categories.join(' · ') : '분류 준비 중'} />
-        </div>
+        <h1 className="mt-[18px] break-keep text-[26px] font-bold leading-[1.4] tracking-[-0.02em] text-ink">{contest.title}</h1>
+        <p className="mt-2 text-sm font-medium text-muted">{contest.host || '주최 정보 없음'}</p>
+        <dl className="mt-6 grid gap-x-7 border-t border-line sm:grid-cols-2">
+          <InfoItem label={contest.prize ? '1등 상금' : '혜택'} value={primaryReward || '상세 공고 확인'} />
+          <InfoItem label="접수 기간" value={period || '상시 모집'} />
+          <InfoItem label="대상" value={contest.target || '상세 공고 확인'} />
+          <InfoItem label="분야" value={contest.categories.length ? contest.categories.join(' · ') : '분류 준비 중'} />
+        </dl>
       </article>
 
-      <aside className="h-fit rounded-[28px] bg-[#1d6a43] p-[22px] text-white shadow-[0_8px_16px_rgba(16,42,94,0.14)]">
-        <p className="text-[13px] font-medium text-[#d5eadc]">마감까지</p>
-        <div className="mt-1"><DDayBadge endDate={contest.endDate} /></div>
-        <div className="mt-4 grid gap-2">
+      <aside className="rounded-lg border border-line bg-page p-[22px]">
+        <p className="text-[13px] font-medium text-muted">마감까지</p>
+        <p className="mt-0.5 flex flex-wrap items-baseline gap-2.5 tabular-nums">
+          <strong className={`text-[40px] font-bold leading-[1.2] tracking-[-0.02em] ${deadline.urgent ? 'text-accent' : deadline.expired ? 'text-muted' : 'text-ink'}`}>{deadline.label}</strong>
+          {deadline.date && <time dateTime={contest.endDate ?? undefined} className="text-sm text-muted">{deadline.date}</time>}
+        </p>
+        <div className="mt-[18px] grid gap-2">
           {supportUrl ? (
-            <a href={supportUrl} target="_blank" rel="noreferrer" className="flex h-12 items-center justify-center rounded-xl bg-white px-4 text-sm font-bold text-[#183322] transition hover:bg-[#f0f6f1]">주최 측 원문에서 지원하기</a>
+            <a href={supportUrl} target="_blank" rel="noreferrer" className="flex h-12 items-center justify-center rounded-md bg-brand px-4 text-[15px] font-semibold text-white transition hover:bg-brand-strong">주최 측 원문에서 지원하기</a>
           ) : (
-            <p className="rounded-xl bg-white/10 px-4 py-3 text-center text-sm">주최 측 지원 링크를 확인할 수 없어요.</p>
+            <p className="rounded-md bg-subtle px-4 py-3 text-center text-sm text-muted">주최 측 지원 링크를 확인할 수 없어요.</p>
           )}
-          <Link to={`/contests/${contest.id}/rooms`} className="flex h-12 items-center justify-center rounded-xl border border-white/60 bg-white/10 px-4 text-sm font-bold transition hover:bg-white/20">이 공모전의 모집 방 보기</Link>
-          <Link to={`/contests/${contest.id}/rooms/new`} className="flex h-12 items-center justify-center rounded-xl border border-white/60 bg-white/10 px-4 text-sm font-bold transition hover:bg-white/20">이 공모전에 방 만들기</Link>
-          <div className="flex justify-center rounded-xl border border-white/60 bg-white/10 py-1 [&_button]:border-0 [&_button]:bg-transparent [&_button]:text-white [&_button]:hover:bg-white/10"><BookmarkButton contestId={contest.id} /></div>
+          <Link to={`/contests/${contest.id}/rooms`} className="flex h-11 items-center justify-center rounded-md border border-line-strong bg-white px-4 text-sm font-semibold text-ink transition hover:bg-subtle">이 공모전의 모집 방 보기</Link>
+          <Link to={`/contests/${contest.id}/rooms/new`} className="flex h-11 items-center justify-center rounded-md border border-line-strong bg-white px-4 text-sm font-semibold text-ink transition hover:bg-subtle">이 공모전에 방 만들기</Link>
+          <div className="[&_button]:h-11 [&_button]:w-full [&_button]:text-sm"><BookmarkButton contestId={contest.id} /></div>
         </div>
       </aside>
     </div>
 
-    <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
-      <article className="rounded-[28px] border border-[#dce2da] bg-white p-6 shadow-[0_4px_12px_rgba(16,42,94,0.05)] sm:p-7">
-        <h2 className="text-[19px] font-bold text-[#0f234c]">공모전 안내</h2>
-        <p className="mt-4 break-keep text-sm leading-6 text-slate-700">공모아뷰는 공고 본문 설명을 제공하지 않아요. 지원 조건과 상세 내용은 주최 측 원문에서 확인해 주세요.</p>
-        {contest.periodMismatch && <p role="alert" className="mt-4 rounded-xl bg-[#fff4e5] px-4 py-3 text-sm font-medium text-[#9a4508]">출처마다 접수 기간이 다를 수 있어요. 지원 전 원문 공고를 꼭 확인해 주세요.</p>}
-        {optionalDetails.length > 0 && <dl className="mt-6 grid gap-3 border-t border-[#e6ebe3] pt-5 sm:grid-cols-3">{optionalDetails.map(([label, value]) => <div key={label}><dt className="text-xs text-slate-500">{label}</dt><dd className="mt-1 text-sm font-bold text-[#0f234c]">{value}</dd></div>)}</dl>}
+    <div className="mt-5 grid items-start gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
+      <article className="rounded-lg border border-line bg-white p-6 sm:p-7">
+        <h2 className="text-lg font-bold tracking-[-0.01em] text-ink">공모전 안내</h2>
+        <p className="mt-3 break-keep text-sm leading-[1.7] text-ink-2">공모아뷰는 공고 본문 설명을 제공하지 않아요. 지원 조건과 상세 내용은 주최 측 원문에서 확인해 주세요.</p>
+        {contest.periodMismatch && <p role="alert" className="mt-4 rounded-md bg-accent-soft px-4 py-3 text-sm font-medium text-accent">출처마다 접수 기간이 다를 수 있어요. 지원 전 원문 공고를 꼭 확인해 주세요.</p>}
+        {optionalDetails.length > 0 && <dl className="mt-6 grid gap-3 border-t border-line pt-5 sm:grid-cols-3">{optionalDetails.map(([label, value]) => <div key={label}><dt className="text-xs text-muted">{label}</dt><dd className="mt-1 text-sm font-semibold text-ink">{value}</dd></div>)}</dl>}
       </article>
 
-      <aside className="h-fit rounded-[22px] border border-[#dce2da] bg-white p-[22px] shadow-[0_4px_12px_rgba(16,42,94,0.05)]">
-        <h2 className="text-[15px] font-bold text-[#0f234c]">공고 출처</h2>
-        <p className="mt-3 text-[13px] leading-5 text-slate-500">공모아뷰에서 수집한 공고예요. 원문 공고에서 최신 정보와 지원 방법을 확인할 수 있어요.</p>
-        <a href={contest.gongmoaUrl} target="_blank" rel="noreferrer" className="mt-4 inline-flex text-sm font-bold text-[#1d6a43] underline underline-offset-4">공모아뷰 공고 보기</a>
+      <aside className="rounded-lg border border-line bg-white p-[22px]">
+        <h2 className="text-[15px] font-bold text-ink">공고 출처</h2>
+        <p className="mt-3 text-[13px] leading-5 text-muted">공모아뷰에서 수집한 공고예요. 원문 공고에서 최신 정보와 지원 방법을 확인할 수 있어요.</p>
+        <a href={contest.gongmoaUrl} target="_blank" rel="noreferrer" className="mt-2.5 inline-flex min-h-8 items-center text-sm font-semibold text-brand underline underline-offset-4 hover:text-brand-strong">공모아뷰 공고 보기</a>
       </aside>
     </div>
   </>
 }
 
 function StatusCard({ title }: { title: string }) {
-  return <div className="mt-5 rounded-[28px] border border-[#dce2da] bg-white px-6 py-16 text-center shadow-[0_4px_12px_rgba(16,42,94,0.05)]"><h1 className="text-xl font-bold text-[#0f234c]">{title}</h1><p className="mt-2 text-sm text-slate-500">추천 공모전 목록에서 다른 공고를 선택해 주세요.</p></div>
+  return <div className="mt-4 rounded-lg border border-line bg-white px-6 py-16 text-center"><h1 className="text-xl font-bold text-ink">{title}</h1><p className="mt-2 text-sm text-muted">추천 공모전 목록에서 다른 공고를 선택해 주세요.</p></div>
 }
 
 function Tag({ children }: { children: string }) {
-  return <span className="inline-flex h-7 items-center rounded-full bg-[#eef1ec] px-3 text-[13px] font-medium text-[#3b4840]">{children}</span>
+  return <span className="inline-flex h-[26px] items-center rounded-sm border border-line px-2 text-[13px] font-medium text-ink-2">{children}</span>
 }
 
-function InfoCard({ icon, label, value }: { icon: string; label: string; value: string }) {
-  return <div className="flex min-h-[80px] items-center gap-3 rounded-[18px] bg-[#f3f6f2] px-[18px] py-4"><span className="text-lg text-[#1d6a43]" aria-hidden="true">{icon}</span><div><p className="text-xs text-slate-500">{label}</p><p className="mt-1 break-keep text-sm font-bold text-[#0f234c]">{value}</p></div></div>
+function InfoItem({ label, value }: { label: string; value: string }) {
+  return <div className="border-b border-line py-4"><dt className="text-xs font-medium text-muted">{label}</dt><dd className="mt-1 break-keep text-base font-semibold text-ink">{value}</dd></div>
 }
 
 function formatPeriod(startDate: string | null, endDate: string | null) {

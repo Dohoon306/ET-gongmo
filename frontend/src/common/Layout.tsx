@@ -8,7 +8,7 @@ export default function Layout() {
   return (
     <div className="min-h-screen">
       <Header />
-      <main key={userId ?? 'no-user'} className="mx-auto max-w-5xl px-4 py-8">
+      <main key={userId ?? 'no-user'} className="mx-auto max-w-[1120px] px-6 py-9">
         <Outlet />
       </main>
     </div>

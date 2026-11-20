@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import { api } from '../../api/client.ts'
+import { ChevronLeftIcon } from '../../common/icons.tsx'
 import { useCurrentUser } from '../../common/useCurrentUser.ts'
 import { MESSAGES_POLL_MS, type ChatMessage } from './chatApi.ts'
 import type { ReportContext } from '../admin/ReportDialog.tsx'
@@ -68,42 +69,42 @@ export default function ChatView({ title, subtitle, backTo, backLabel, path, rep
 
   return (
     <TeamPage>
-      <Link to={backTo} className="mb-4 inline-flex items-center gap-1 text-sm text-(--color-muted) hover:text-(--color-ink)">
-        ‹ {backLabel}
+      <Link to={backTo} className="mb-3 inline-flex min-h-8 items-center gap-1.5 text-sm font-medium text-muted hover:text-ink">
+        <ChevronLeftIcon />{backLabel}
       </Link>
-      <h1 className="text-[28px] font-bold">{title}</h1>
-      <p className="mt-1 mb-5 text-[15px] text-(--color-muted)">{subtitle}</p>
+      <h1 className="text-[26px] font-bold leading-[1.3] tracking-[-0.02em]">{title}</h1>
+      <p className="mt-1 mb-5 text-[15px] text-muted">{subtitle}</p>
       <ErrorText message={error} />
 
       <Card className="flex h-[60vh] min-h-[360px] flex-col">
         <div className="flex-1 space-y-4 overflow-y-auto px-6 py-5" aria-live="polite">
           {messages.length === 0 && (
-            <p className="py-16 text-center text-sm text-(--color-muted)">아직 메시지가 없어요. 첫 메시지를 보내 보세요.</p>
+            <p className="py-16 text-center text-sm text-muted">아직 메시지가 없어요. 첫 메시지를 보내 보세요.</p>
           )}
           {messages.map((m) =>
             m.notice ? (
-              <p key={m.id} role="status" className="mx-auto w-fit max-w-[90%] rounded-full bg-(--color-subtle) px-4 py-1.5 text-center text-[13px] text-(--color-ink-2)">
+              <p key={m.id} role="status" className="mx-auto w-fit max-w-[90%] rounded-sm bg-subtle px-3 py-1.5 text-center text-[13px] text-ink-2">
                 {m.content}
-                <span className="ml-2 text-[11px] text-(--color-muted)">{m.createdAt.slice(11, 16)}</span>
+                <span className="ml-2 text-[11px] text-muted">{m.createdAt.slice(11, 16)}</span>
               </p>
             ) : (
             <div key={m.id} className={`flex items-end gap-2.5 ${m.mine ? 'flex-row-reverse' : ''}`}>
               {!m.mine && <Avatar name={m.senderName} userId={m.senderId} reportContext={reportContext} />}
               <div className={`max-w-[70%] ${m.mine ? 'text-right' : ''}`}>
-                {!m.mine && <p className="mb-1 text-xs font-medium text-(--color-muted)">{m.senderName}</p>}
+                {!m.mine && <p className="mb-1 text-xs font-semibold text-muted">{m.senderName}</p>}
                 <p
-                  className={`inline-block rounded-2xl px-4 py-2.5 text-left text-[15px] break-words whitespace-pre-wrap ${m.mine ? 'bg-brand text-white' : 'bg-(--color-subtle) text-(--color-ink)'}`}
+                  className={`inline-block rounded-lg px-3.5 py-2.5 text-left text-[15px] break-words whitespace-pre-wrap ${m.mine ? 'bg-brand text-white' : 'bg-subtle text-ink'}`}
                 >
                   {m.content}
                 </p>
-                <p className="mt-1 text-[11px] text-(--color-muted)">{m.createdAt.slice(11, 16)}</p>
+                <p className="mt-1 text-[11px] tabular-nums text-muted">{m.createdAt.slice(11, 16)}</p>
               </div>
             </div>
             ),
           )}
           <div ref={bottom} />
         </div>
-        <form onSubmit={send} className="flex gap-2 border-t border-line p-4">
+        <form onSubmit={send} className="flex gap-2 rounded-b-lg border-t border-line bg-page px-4 py-3.5">
           <label htmlFor="chat-input" className="sr-only">
             메시지
           </label>
@@ -113,7 +114,7 @@ export default function ChatView({ title, subtitle, backTo, backLabel, path, rep
             onChange={(e) => setText(e.target.value)}
             maxLength={1000}
             placeholder="메시지를 입력하세요"
-            className="h-11 flex-1 rounded-xl border border-(--color-line-strong) px-3 text-[15px]"
+            className="h-11 min-w-0 flex-1 rounded-md border border-line-strong bg-white px-3.5 text-[15px]"
           />
           <button type="submit" disabled={!text.trim() || sending} className={primaryButton}>
             보내기

@@ -40,25 +40,25 @@ export default function ReportDialog({ targetId, targetName, context, onClose }:
       role="dialog"
       aria-modal="true"
       aria-labelledby="report-title"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/70 px-4"
       onClick={onClose}
       onKeyDown={(e) => e.key === 'Escape' && onClose()}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md rounded-2xl bg-white p-6 text-[#18211B] shadow-xl [font-family:'IBM_Plex_Sans_KR',sans-serif]"
+        className="w-full max-w-md rounded-lg bg-white p-6 text-ink shadow-[0_12px_32px_rgba(24,33,27,0.28)]"
       >
-        <h2 id="report-title" className="text-lg font-bold">
+        <h2 id="report-title" className="text-lg font-bold tracking-[-0.01em]">
           {targetName} 님 신고하기
         </h2>
         {done ? (
           <>
-            <p className="mt-3 text-sm text-[#3B4840]">신고가 접수됐어요. 관리자가 확인할게요.</p>
+            <p className="mt-3 text-sm text-ink-2">신고가 접수됐어요. 관리자가 확인할게요.</p>
             {context.source !== 'PROFILE' && (
-              <p className="mt-1 text-xs text-[#56635B]">최근 대화 내용도 함께 관리자에게 전달됐어요.</p>
+              <p className="mt-1 text-xs text-muted">최근 대화 내용도 함께 관리자에게 전달됐어요.</p>
             )}
             <div className="mt-5 flex justify-end">
-              <button autoFocus onClick={onClose} className="h-10 rounded-xl bg-[#1D6A43] px-4 text-[15px] font-semibold text-white">
+              <button autoFocus onClick={onClose} className="h-11 rounded-md bg-brand px-4 text-[15px] font-semibold text-white hover:bg-brand-strong">
                 닫기
               </button>
             </div>
@@ -70,7 +70,7 @@ export default function ReportDialog({ targetId, targetName, context, onClose }:
               <div className="mt-2 space-y-2">
                 {REPORT_REASONS.map((r) => (
                   <label key={r.code} className="flex items-center gap-2 text-[15px]">
-                    <input type="checkbox" checked={reasons.includes(r.code)} onChange={() => toggle(r.code)} className="h-4 w-4 accent-[#1D6A43]" />
+                    <input type="checkbox" checked={reasons.includes(r.code)} onChange={() => toggle(r.code)} className="h-4 w-4 accent-brand" />
                     {r.label}
                   </label>
                 ))}
@@ -84,21 +84,21 @@ export default function ReportDialog({ targetId, targetName, context, onClose }:
                 maxLength={1000}
                 rows={4}
                 placeholder="어떤 일이 있었는지 적어 주세요"
-                className="mt-2 w-full rounded-xl border border-[#C9D1C6] px-3 py-2 text-[15px]"
+                className="mt-2 w-full rounded-md border border-line-strong px-3 py-2 text-[15px]"
               />
             </label>
             {context.source !== 'PROFILE' && (
-              <p className="mt-1 text-xs text-[#56635B]">이 대화의 최근 메시지가 관리자에게 함께 전달돼요.</p>
+              <p className="mt-1 text-xs text-muted">이 대화의 최근 메시지가 관리자에게 함께 전달돼요.</p>
             )}
-            {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+            {error && <p className="mt-2 text-sm text-danger">{error}</p>}
             <div className="mt-5 flex justify-end gap-2">
-              <button type="button" onClick={onClose} className="h-10 rounded-xl border border-[#C9D1C6] px-4 text-[15px] font-semibold">
+              <button type="button" onClick={onClose} className="h-11 rounded-md border border-line-strong bg-white px-4 text-[15px] font-semibold hover:bg-subtle">
                 취소
               </button>
               <button
                 type="submit"
                 disabled={reasons.length === 0 || needsDetail || sending}
-                className="h-10 rounded-xl bg-red-600 px-4 text-[15px] font-semibold text-white disabled:opacity-40"
+                className="h-11 rounded-md bg-danger px-4 text-[15px] font-semibold text-white disabled:opacity-40"
               >
                 신고하기
               </button>

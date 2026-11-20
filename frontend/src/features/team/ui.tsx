@@ -1,30 +1,13 @@
-import { useEffect, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react'
+import { useEffect, useState, type MouseEvent, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router'
 import { useCurrentUser } from '../../common/useCurrentUser.ts'
 import ReportDialog, { type ReportContext } from '../admin/ReportDialog.tsx'
 import type { Tag } from './api.ts'
-import './team.css'
-
-const FIGMA_TOKENS = {
-  '--color-brand': '#1D6A43',
-  '--color-brand-soft': '#E5F0E8',
-  '--color-line': '#DCE2DA',
-  '--color-line-strong': '#C9D1C6',
-  '--color-subtle': '#EEF1EC',
-  '--color-page': '#F6F7F3',
-  '--color-accent': '#9A4508',
-  '--color-accent-soft': '#FBEFE3',
-  '--color-ink': '#18211B',
-  '--color-ink-2': '#3B4840',
-  '--color-muted': '#56635B',
-  fontFamily: '"IBM Plex Sans KR", sans-serif',
-} as CSSProperties
-
 
 export function TeamPage({ children }: { children: ReactNode }) {
   return (
-    <div style={FIGMA_TOKENS} className="-mx-4 -my-8 min-h-[calc(100vh-65px)] bg-(--color-page) px-4 py-8 text-(--color-ink)">
+    <div className="text-ink">
       {children}
     </div>
   )
@@ -36,7 +19,7 @@ export function Tags({ tags }: { tags: Tag[] }) {
       {tags.map((t) => (
         <li
           key={t.id}
-          className={`inline-flex h-6 items-center gap-1 rounded-full px-2.5 text-[13px] font-medium ${t.matched ? 'bg-brand text-white' : 'bg-(--color-subtle) text-(--color-ink-2)'}`}
+          className={`inline-flex h-6 items-center gap-1 whitespace-nowrap rounded-sm border px-2 text-[13px] ${t.matched ? 'border-brand-soft bg-brand-soft font-semibold text-brand' : 'border-line bg-white font-medium text-ink-2'}`}
         >
           {t.matched && <Check />}
           {t.name}
@@ -48,7 +31,7 @@ export function Tags({ tags }: { tags: Tag[] }) {
 
 function Check() {
   return (
-    <svg aria-label="겹침" viewBox="0 0 12 12" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <svg aria-label="겹침" viewBox="0 0 12 12" className="size-[11px] shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8">
       <path d="M2.5 6.2 5 8.5l4.5-5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
@@ -56,7 +39,7 @@ function Check() {
 
 export function Card({ children, className = '', muted = false }: { children: ReactNode; className?: string; muted?: boolean }) {
   return (
-    <div className={`rounded-2xl border border-line ${muted ? 'bg-(--color-page)' : 'bg-white'} ${className}`}>{children}</div>
+    <div className={`rounded-lg border border-line ${muted ? 'bg-page' : 'bg-white'} ${className}`}>{children}</div>
   )
 }
 
@@ -107,7 +90,7 @@ export function Avatar({ name, size = 'md', userId, reportContext = { source: 'P
               }
             : undefined
         }
-        className={`flex shrink-0 items-center justify-center rounded-full bg-brand-soft font-semibold text-brand ${size === 'lg' ? 'h-10 w-10 text-base' : 'h-9 w-9 text-sm'}`}
+        className={`flex shrink-0 items-center justify-center rounded-md bg-brand-soft font-bold text-brand ${size === 'lg' ? 'h-10 w-10 text-base' : 'h-9 w-9 text-sm'}`}
       >
         {initial}
       </span>
@@ -117,12 +100,12 @@ export function Avatar({ name, size = 'md', userId, reportContext = { source: 'P
             role="menu"
             aria-label={`${name} 메뉴`}
             style={{ left: menu.x, top: menu.y }}
-            className="fixed z-50 min-w-36 overflow-hidden rounded-xl border border-[#DCE2DA] bg-white py-1 text-sm text-[#18211B] shadow-lg"
+            className="fixed z-50 min-w-36 overflow-hidden rounded-md border border-line bg-white py-1 text-sm text-ink shadow-lg"
           >
-            <button role="menuitem" autoFocus onClick={go(`/messages/${userId}`)} className="block w-full px-4 py-2 text-left hover:bg-[#EEF1EC]">
+            <button role="menuitem" autoFocus onClick={go(`/messages/${userId}`)} className="block w-full px-4 py-2 text-left hover:bg-subtle">
               쪽지 보내기
             </button>
-            <button role="menuitem" onClick={go(`/users/${userId}`)} className="block w-full px-4 py-2 text-left hover:bg-[#EEF1EC]">
+            <button role="menuitem" onClick={go(`/users/${userId}`)} className="block w-full px-4 py-2 text-left hover:bg-subtle">
               프로필 보기
             </button>
             <button
@@ -133,7 +116,7 @@ export function Avatar({ name, size = 'md', userId, reportContext = { source: 'P
                 setMenu(null)
                 setReporting(true)
               }}
-              className="block w-full border-t border-[#DCE2DA] px-4 py-2 text-left text-red-700 hover:bg-red-50"
+              className="block w-full border-t border-line px-4 py-2 text-left text-danger hover:bg-danger-soft"
             >
               유저 신고
             </button>
@@ -152,7 +135,7 @@ export function Avatar({ name, size = 'md', userId, reportContext = { source: 'P
 export function StatusChip({ full }: { full: boolean }) {
   return (
     <span
-      className={`rounded-md px-1.5 py-0.5 text-xs font-medium ${full ? 'bg-(--color-subtle) text-(--color-muted)' : 'bg-brand-soft text-brand'}`}
+      className={`inline-flex h-[22px] shrink-0 items-center rounded-sm px-[7px] text-xs font-semibold ${full ? 'bg-subtle text-muted' : 'bg-brand-soft text-brand'}`}
     >
       {full ? '모집 완료' : '모집 중'}
     </span>
@@ -169,12 +152,12 @@ export function PersonIcon() {
 }
 
 export function ErrorText({ message }: { message: string | null }) {
-  return message ? <p className="mb-3 text-sm text-red-600">{message}</p> : null
+  return message ? <p className="mb-3 text-sm text-danger">{message}</p> : null
 }
 
 export function EmptyState({ title, children }: { title: string; children?: ReactNode }) {
   return (
-    <Card className="px-6 py-14 text-center">
+    <Card className="border-dashed border-line-strong px-6 py-14 text-center">
       <p className="text-base font-semibold">{title}</p>
       {children}
     </Card>
@@ -194,6 +177,7 @@ export function MissingId({ what, sample }: { what: string; sample: string }) {
 }
 
 const buttonBase =
-  'inline-flex h-10 items-center justify-center gap-1.5 rounded-xl px-4 text-[15px] font-semibold disabled:cursor-not-allowed disabled:opacity-40'
-export const primaryButton = `${buttonBase} bg-brand text-white hover:opacity-90`
-export const secondaryButton = `${buttonBase} border border-(--color-line-strong) bg-white text-(--color-ink) hover:bg-(--color-subtle)`
+  'inline-flex h-11 items-center justify-center gap-1.5 rounded-md px-4 text-[15px] font-semibold disabled:cursor-not-allowed disabled:opacity-40'
+export const primaryButton = `${buttonBase} bg-brand text-white hover:bg-brand-strong`
+export const secondaryButton = `${buttonBase} border border-line-strong bg-white text-ink hover:bg-subtle`
+export const dangerButton = `${buttonBase} border border-line-strong bg-white text-danger hover:bg-danger-soft`
