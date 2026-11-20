@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: et-backend
+  config:
+    # 저장소 루트의 .env를 읽습니다 (없으면 아래 기본값)
+    import: optional:file:./.env[.properties],optional:file:../.env[.properties]
+  datasource:
+    url: jdbc:mysql://localhost:${DB_PORT:3306}/${DB_NAME:et}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: ${DB_USERNAME:et}
+    password: ${DB_PASSWORD:et1234}
+  jpa:
+    hibernate:
+      ddl-auto: none        # 테이블은 db/schema.sql로 만듭니다
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+  sql:
+    init:
+      mode: always
+      # DB 명세서가 정해지면 db/schema.sql을 추가합니다. 파일이 없으면 건너뜁니다
+      schema-locations: optional:classpath:db/schema.sql
+      encoding: UTF-8
+
+server:
+  port: 8080
+
+app:
+  ai:
+    api-key: ${AI_API_KEY:}
