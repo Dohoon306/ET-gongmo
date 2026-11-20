@@ -3,6 +3,7 @@ package com.gdgoc.et.profile;
 import com.gdgoc.et.common.error.ApiException;
 import com.gdgoc.et.common.error.ErrorResponse;
 import java.math.BigDecimal;
+import java.util.Base64;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +26,11 @@ public class ProfileController {
     @GetMapping("/api/users/{userId}/profile")
     @Transactional(readOnly = true)
     public Profile profile(@PathVariable long userId) {
-        String name = jdbc.queryForList("SELECT name FROM users WHERE id = ?", String.class, userId)
+        ProfileIdentity identity = jdbc.query("""
+                SELECT u.name, image.image_png
+                FROM users u LEFT JOIN user_profile_image image ON image.user_id = u.id
+                WHERE u.id = ?
+                """, (row, index) -> new ProfileIdentity(row.getString("name"), row.getBytes("image_png")), userId)
                 .stream().findFirst()
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
         List<String> categories = jdbc.queryForList("""
@@ -53,7 +58,8 @@ public class ProfileController {
                 WHERE target_id = ? AND comment IS NOT NULL
                 ORDER BY score DESC, comment ASC
                 """, (row, index) -> new ReviewComment(row.getInt("score"), row.getString("comment")), userId);
-        return new Profile(userId, name, categories, teams, rating, comments);
+        String image = identity.image() == null ? null : Base64.getEncoder().encodeToString(identity.image());
+        return new Profile(userId, identity.name(), categories, teams, rating, comments, image);
     }
 
     @ExceptionHandler(BadSqlGrammarException.class)
@@ -66,7 +72,10 @@ public class ProfileController {
     }
 
     public record Profile(long id, String name, List<String> categories, List<Team> teams, Rating rating,
-                          List<ReviewComment> comments) {
+                          List<ReviewComment> comments, String image) {
+    }
+
+    private record ProfileIdentity(String name, byte[] image) {
     }
 
     public record Team(long id, String title, String status, int memberCount) {

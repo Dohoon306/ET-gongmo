@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ChangeEvent } from 'react'
 import { Link, Navigate, useLocation, useParams } from 'react-router'
 import { api } from '../../api/client.ts'
 import { CheckIcon, ChevronRightIcon, StarIcon } from '../../common/icons.tsx'
@@ -6,7 +6,10 @@ import { useCurrentUser } from '../../common/useCurrentUser.ts'
 import { SendMessageButton } from '../team/ChatBell.tsx'
 import MyEvaluationAppeals from '../admin/MyEvaluationAppeals.tsx'
 
+const MAX_PROFILE_IMAGE_BYTES = 2 * 1024 * 1024
+
 type Profile = {
+  image?: string | null
   name: string
   categories: string[]
   teams: { id: number; title: string; status: string; memberCount: number }[]
@@ -33,6 +36,8 @@ export default function ProfilePage() {
 function ProfileDetails({ userId, own }: { userId: string; own: boolean }) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [imageSaving, setImageSaving] = useState(false)
+  const [imageError, setImageError] = useState<string | null>(null)
   const { state } = useLocation()
   const reviewRoomId = state?.reviewRoomId
 
@@ -43,6 +48,34 @@ function ProfileDetails({ userId, own }: { userId: string; own: boolean }) {
       .catch((failure: Error) => { if (!request.signal.aborted) setError(failure.message) })
     return () => request.abort()
   }, [userId])
+
+  async function changeProfileImage(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.currentTarget.files?.[0]
+    event.currentTarget.value = ''
+    if (!file || !own || imageSaving) return
+    setImageError(null)
+    if (file.size > MAX_PROFILE_IMAGE_BYTES) {
+      setImageError('2MB 이하의 이미지를 선택해 주세요.')
+      return
+    }
+    if (file.type !== 'image/jpeg' && file.type !== 'image/png') {
+      setImageError('JPG 또는 PNG 이미지를 선택해 주세요.')
+      return
+    }
+    setImageSaving(true)
+    try {
+      const image = await readImageBase64(file)
+      const saved = await api<{ image: string }>('/api/users/' + userId + '/profile-image', {
+        method: 'PUT',
+        body: { image },
+      })
+      setProfile((current) => current && { ...current, image: saved.image })
+    } catch (failure) {
+      setImageError(failure instanceof Error ? failure.message : '프로필 이미지를 저장하지 못했어요.')
+    } finally {
+      setImageSaving(false)
+    }
+  }
 
   if (error) return <p role="alert" className="text-danger">{error}</p>
   if (profile === null) return <p role="status">프로필을 불러오는 중이에요.</p>
@@ -60,9 +93,23 @@ function ProfileDetails({ userId, own }: { userId: string; own: boolean }) {
       <div className="grid items-start gap-5 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
         <section className="min-w-0 space-y-4 rounded-lg border border-line bg-white p-6">
           <div className="flex items-start justify-between gap-3">
-            <span aria-hidden="true" className="grid size-[52px] place-items-center rounded-md bg-brand-soft text-xl font-bold text-brand">{initial}</span>
+            <div className="flex flex-wrap items-center gap-3">
+              {profile.image ? (
+                <img src={'data:image/png;base64,' + profile.image} alt={profile.name + ' 프로필 이미지'}
+                  width={52} height={52} className="size-[52px] shrink-0 rounded-md object-cover" />
+              ) : (
+                <span aria-hidden="true" className="grid size-[52px] place-items-center rounded-md bg-brand-soft text-xl font-bold text-brand">{initial}</span>
+              )}
+              {own && (
+                <label className="inline-flex min-h-9 cursor-pointer items-center rounded-md border border-line-strong px-3 text-sm font-semibold text-brand hover:bg-brand-soft focus-within:outline-2 focus-within:outline-brand has-disabled:cursor-wait has-disabled:opacity-60">
+                  <input type="file" className="sr-only" accept="image/jpeg,image/png" disabled={imageSaving} onChange={changeProfileImage} />
+                  {imageSaving ? '이미지 저장 중…' : profile.image ? '이미지 변경' : '이미지 추가'}
+                </label>
+              )}
+            </div>
             {!own && <SendMessageButton userId={Number(userId)} />}
           </div>
+          {imageError && <p role="alert" className="text-sm text-danger">{imageError}</p>}
           <div>
             <h1 className="break-words text-2xl font-bold leading-[1.3] tracking-[-0.02em]">{profile.name}</h1>
             <p className="mt-1 text-sm text-muted">함께한 팀 {profile.teams.length}개</p>
@@ -124,6 +171,19 @@ function ProfileDetails({ userId, own }: { userId: string; own: boolean }) {
       {own && <MyEvaluationAppeals />}
     </div>
   )
+}
+
+function readImageBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      const data = reader.result
+      if (typeof data === 'string') resolve(data.slice(data.indexOf(',') + 1))
+      else reject(new Error('이미지를 읽지 못했어요.'))
+    }
+    reader.onerror = () => reject(new Error('이미지를 읽지 못했어요.'))
+    reader.readAsDataURL(file)
+  })
 }
 
 function StarRow() {
