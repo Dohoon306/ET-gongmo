@@ -132,7 +132,7 @@ frontend/src/
 | 프론트에서 API 호출 | `await api<Contest[]>('/api/contests/recommended')`, `await api('/api/...', { method: 'POST', body: {...} })`. 실패하면 `ApiError` (`status`, `message`) |
 | 프론트에서 현재 사용자 | `const { userId, currentUser, setUserId } = useCurrentUser()`. `currentUser`는 `{ id, name }`. 헤더에서 사용자를 바꾸면 보고 있던 화면이 처음부터 다시 그려지므로, 화면은 처음 그릴 때 API를 부르기만 하면 됩니다 |
 | 사용자를 새로 만든 뒤 (A-1) | `setUserId(새 ID)`. 헤더 사용자 목록에 없는 ID면 목록을 알아서 다시 받습니다 |
-| 화면 추가 | 내 기능 폴더의 `routes.tsx`에 `{ path, label, element }` 한 줄. 첫 화면(개발용 화면 목록)에 자동으로 링크가 생김 |
+| 화면 추가 | 내 기능 폴더의 `routes.tsx`에 `{ path, label, element }` 한 줄. 개발용 화면 목록(`/dev`)에 자동으로 링크가 생김 |
 | 디자인 색 쓰기 | `frontend/src/index.css`의 `@theme`에 토큰 추가 → `bg-brand`, `text-brand`, `border-line`처럼 사용 |
 
 ## 저장소 구조
