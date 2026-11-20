@@ -79,7 +79,7 @@ export default function ReceivedRequestsPage() {
             <Card key={req.id} className="p-6">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <Avatar name={req.name} size="lg" />
+                  <Avatar name={req.name} size="lg" userId={req.userId} />
                   <div>
                     <Link to={`/users/${req.userId}`} className="text-lg font-bold hover:underline">
                       {req.name}

@@ -53,3 +53,29 @@ CREATE TABLE IF NOT EXISTS join_request (
   CONSTRAINT fk_request_user FOREIGN KEY (user_id) REFERENCES users (id),
   CONSTRAINT ck_request_status CHECK (status IN ('PENDING', 'ACCEPTED', 'REJECTED'))
 );
+
+CREATE TABLE IF NOT EXISTS chat_message (
+  id           BIGINT         NOT NULL AUTO_INCREMENT,
+  room_id      BIGINT         NULL,
+  sender_id    BIGINT         NOT NULL,
+  receiver_id  BIGINT         NULL,
+  content      VARCHAR(1000)  NOT NULL,
+  created_at   DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  read_at      DATETIME       NULL,
+  PRIMARY KEY (id),
+  KEY idx_chat_room (room_id, id),
+  KEY idx_chat_direct (receiver_id, sender_id, read_at),
+  CONSTRAINT fk_chat_room     FOREIGN KEY (room_id)     REFERENCES room (id)  ON DELETE CASCADE,
+  CONSTRAINT fk_chat_sender   FOREIGN KEY (sender_id)   REFERENCES users (id),
+  CONSTRAINT fk_chat_receiver FOREIGN KEY (receiver_id) REFERENCES users (id),
+  CONSTRAINT ck_chat_target CHECK ((room_id IS NULL) <> (receiver_id IS NULL))
+);
+
+CREATE TABLE IF NOT EXISTS chat_read (
+  room_id       BIGINT NOT NULL,
+  user_id       BIGINT NOT NULL,
+  last_read_id  BIGINT NOT NULL DEFAULT 0,
+  PRIMARY KEY (room_id, user_id),
+  CONSTRAINT fk_chat_read_room FOREIGN KEY (room_id) REFERENCES room (id)  ON DELETE CASCADE,
+  CONSTRAINT fk_chat_read_user FOREIGN KEY (user_id) REFERENCES users (id)
+);

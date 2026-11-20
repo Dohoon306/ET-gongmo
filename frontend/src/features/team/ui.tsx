@@ -1,5 +1,7 @@
-import type { CSSProperties, ReactNode } from 'react'
-import { Link } from 'react-router'
+import { useEffect, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
+import { Link, useNavigate } from 'react-router'
+import { useCurrentUser } from '../../common/useCurrentUser.ts'
 import type { Tag } from './api.ts'
 import './team.css'
 
@@ -57,14 +59,69 @@ export function Card({ children, className = '', muted = false }: { children: Re
   )
 }
 
-export function Avatar({ name, size = 'md' }: { name: string; size?: 'md' | 'lg' }) {
+export function Avatar({ name, size = 'md', userId }: { name: string; size?: 'md' | 'lg'; userId?: number }) {
   const initial = name.replace(/^(방장|팀원)\s*/, '').slice(0, 1)
+  const { userId: currentUserId } = useCurrentUser()
+  const navigate = useNavigate()
+  const [menu, setMenu] = useState<{ x: number; y: number } | null>(null)
+  const canMessage = userId !== undefined && currentUserId !== null && currentUserId !== userId
+
+  useEffect(() => {
+    if (!menu) return
+    const close = () => setMenu(null)
+    const closeOnEscape = (e: KeyboardEvent) => e.key === 'Escape' && close()
+    window.addEventListener('click', close)
+    window.addEventListener('scroll', close, true)
+    window.addEventListener('keydown', closeOnEscape)
+    return () => {
+      window.removeEventListener('click', close)
+      window.removeEventListener('scroll', close, true)
+      window.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [menu])
+
+  const go = (path: string) => (e: MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setMenu(null)
+    navigate(path)
+  }
+
   return (
-    <span
-      className={`flex shrink-0 items-center justify-center rounded-full bg-brand-soft font-semibold text-brand ${size === 'lg' ? 'h-10 w-10 text-base' : 'h-9 w-9 text-sm'}`}
-    >
-      {initial}
-    </span>
+    <>
+      <span
+        title={canMessage ? '우클릭해서 쪽지 보내기' : undefined}
+        onContextMenu={
+          canMessage
+            ? (e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setMenu({ x: e.clientX, y: e.clientY })
+              }
+            : undefined
+        }
+        className={`flex shrink-0 items-center justify-center rounded-full bg-brand-soft font-semibold text-brand ${size === 'lg' ? 'h-10 w-10 text-base' : 'h-9 w-9 text-sm'}`}
+      >
+        {initial}
+      </span>
+      {menu &&
+        createPortal(
+          <div
+            role="menu"
+            aria-label={`${name} 메뉴`}
+            style={{ left: menu.x, top: menu.y }}
+            className="fixed z-50 min-w-36 overflow-hidden rounded-xl border border-[#DCE2DA] bg-white py-1 text-sm text-[#18211B] shadow-lg"
+          >
+            <button role="menuitem" autoFocus onClick={go(`/messages/${userId}`)} className="block w-full px-4 py-2 text-left hover:bg-[#EEF1EC]">
+              쪽지 보내기
+            </button>
+            <button role="menuitem" onClick={go(`/users/${userId}`)} className="block w-full px-4 py-2 text-left hover:bg-[#EEF1EC]">
+              프로필 보기
+            </button>
+          </div>,
+          document.body,
+        )}
+    </>
   )
 }
 

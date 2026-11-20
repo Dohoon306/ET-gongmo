@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, Navigate, useLocation, useParams } from 'react-router'
 import { api } from '../../api/client.ts'
 import { useCurrentUser } from '../../common/useCurrentUser.ts'
+import { SendMessageButton } from '../team/ChatBell.tsx'
 
 type Profile = {
   name: string
@@ -56,7 +57,10 @@ function ProfileDetails({ userId, own }: { userId: string; own: boolean }) {
       )}
       <div className="grid items-start gap-5 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
         <section className="min-w-0 space-y-4 rounded-2xl border border-[#DCE2DA] bg-white p-6">
-          <span aria-hidden="true" className="grid size-14 place-items-center rounded-full bg-[#E5F0E8] text-xl font-bold text-[#1D6A43]">{initial}</span>
+          <div className="flex items-start justify-between gap-3">
+            <span aria-hidden="true" className="grid size-14 place-items-center rounded-full bg-[#E5F0E8] text-xl font-bold text-[#1D6A43]">{initial}</span>
+            {!own && <SendMessageButton userId={Number(userId)} />}
+          </div>
           <div>
             <h1 className="break-words text-2xl font-bold">{profile.name}</h1>
             <p className="mt-1 text-sm text-[#56635B]">함께한 팀 {profile.teams.length}개</p>

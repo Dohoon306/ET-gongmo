@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router'
 import { api } from '../api/client.ts'
 import { useCurrentUser } from './useCurrentUser.ts'
 import UserSwitcher from './UserSwitcher.tsx'
+import ChatBell from '../features/team/ChatBell.tsx'
 import sproutIcon from './icons/sprout.svg'
 
 type MenuItem = {
@@ -49,6 +50,7 @@ export default function Header() {
         )}
 
         <div className="min-w-0 flex-1" />
+        {!menuHidden && <ChatBell />}
         <ServerStatus />
         <UserSwitcher />
       </div>

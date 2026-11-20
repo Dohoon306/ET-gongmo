@@ -65,7 +65,7 @@ export default function MembersPage() {
             <ul className="divide-y divide-line">
               {members.data.map((m) => (
                 <li key={m.id} className="flex items-center gap-4 py-5">
-                  <Avatar name={m.name} size="lg" />
+                  <Avatar name={m.name} size="lg" userId={m.userId} />
                   <div className="min-w-0 flex-1">
                     <p className="mb-2 text-[15px] font-semibold">
                       <Link to={`/users/${m.userId}`} className="hover:underline">
