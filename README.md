@@ -125,6 +125,7 @@ frontend/src/
 |---|---|
 | 백엔드에서 현재 사용자 ID 받기 | 컨트롤러 파라미터에 `@CurrentUser Long userId`. 헤더가 없으면 400. 없어도 되면 `@CurrentUser(required = false)` |
 | 백엔드에서 에러 응답 | `throw new ApiException(HttpStatus.BAD_REQUEST, "메시지")` → `{"message": "메시지"}` |
+| 카테고리 목록 받기 (X-2) | `GET /api/categories` → `[{ id, axis, code, name, sortOrder }]` 31개. 축 순서(`FIELD`→`ROLE`→`SKILL`→`LEVEL`→`GOAL`), 축 안에서는 `sortOrder` 순. 헤더 없이 불립니다. ID는 [DB 명세서 6.1](docs/db-spec.md#61-카테고리-시드) 순서대로 1~31로 고정이고(`it`=1, `backend`=13, `java`=19, `beginner`=26, `learn`=29), 앱이 뜰 때 `category` 테이블에 빠진 행을 채웁니다 |
 | 테이블 만들기 | `backend/src/main/resources/db/schema/`의 내 담당 파일에 추가 ([DB 명세서 4장](docs/db-spec.md#4-ddl-dbschemasql) 기준). 파일이 없으면 건너뜀 |
 | 프론트에서 API 호출 | `await api<Contest[]>('/api/contests/recommended')`, `await api('/api/...', { method: 'POST', body: {...} })`. 실패하면 `ApiError` (`status`, `message`) |
 | 프론트에서 현재 사용자 | `const { userId, currentUser, setUserId } = useCurrentUser()`. `currentUser`는 `{ id, name }`. 헤더에서 사용자를 바꾸면 보고 있던 화면이 처음부터 다시 그려지므로, 화면은 처음 그릴 때 API를 부르기만 하면 됩니다 |
