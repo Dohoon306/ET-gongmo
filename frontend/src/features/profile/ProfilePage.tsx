@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Link, useLocation, useParams } from 'react-router'
+import { Link, Navigate, useLocation, useParams } from 'react-router'
 import { api } from '../../api/client.ts'
+import { useCurrentUser } from '../../common/useCurrentUser.ts'
 
 type Profile = {
   name: string
@@ -12,8 +13,17 @@ type Profile = {
 
 export default function ProfilePage() {
   const { userId } = useParams()
-  return userId && /^[1-9][0-9]*$/.test(userId)
-    ? <ProfileDetails key={userId} userId={userId} />
+  const { userId: currentUserId } = useCurrentUser()
+  if (userId === ':userId') {
+    return <Navigate replace to="/users/me" />
+  }
+  if (userId === 'me' && currentUserId === null) {
+    return <p>내 프로필을 보려면 현재 사용자를 선택해 주세요.</p>
+  }
+
+  const profileUserId = userId === 'me' ? String(currentUserId) : userId
+  return profileUserId && /^[1-9][0-9]*$/.test(profileUserId)
+    ? <ProfileDetails key={profileUserId} userId={profileUserId} />
     : <p role="alert" className="text-red-700">유효한 사용자를 선택해 주세요.</p>
 }
 
