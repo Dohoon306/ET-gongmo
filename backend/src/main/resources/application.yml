@@ -36,7 +36,7 @@ app:
     limit: 20
     snapshot-directory: ${CONTEST_SNAPSHOT_DIRECTORY:data/contest-snapshots}
   contest-classification:
-    hero-gongmoa-id: ${HERO_GONGMOA_ID:0}
+    hero-gongmoa-id: ${HERO_GONGMOA_ID:100049285}
   ai:
     api-key: ${ET_GPT_API_KEY:}
     model: ${ET_GPT_MODEL:gpt-6.2-astra}
