@@ -1,7 +1,7 @@
 # DB 명세서 (초안)
 
 > 상태: 초안 · 팀 검토 전
-> 기준: [기능 명세서 v0.2](feature-spec.md), [시연용 데이터](demo-data.md), [README 기술 스택](../README.md#기술-스택)
+> 기준: [기능 명세서 v0.3](feature-spec.md), [시연용 데이터](demo-data.md), [README 기술 스택](../README.md#기술-스택)
 > DB: MySQL 8 · InnoDB · `utf8mb4` / `utf8mb4_0900_ai_ci` · JPA `ddl-auto=none`, 테이블은 아래 DDL을 `schema.sql`로 만듭니다.
 
 ## 1. 한눈에 보기
@@ -22,6 +22,8 @@ erDiagram
     users ||--o{ join_request : "요청자"
     room ||--o{ evaluation : "평가가 일어난 팀"
     users ||--o{ evaluation : "평가한 사람 / 받은 사람"
+    users ||--o{ bookmark : "관심 공고"
+    contest ||--o{ bookmark : ""
 ```
 
 | 테이블 | 내용 | 만드는 사람 | 읽는 기능 |
@@ -35,7 +37,8 @@ erDiagram
 | `room_category` | 방이 원하는 팀원 태그 | C | C-2 |
 | `room_member` | 팀원, 방장 포함 (C-5) | C | A-5, A-6 |
 | `join_request` | 참가 요청 (C-4, C-5) | C | - |
-| `evaluation` | 팀원 평가 (A-5) | A | A-6 |
+| `evaluation` | 팀원 평가 (A-5), 익명 | A | A-6 |
+| `bookmark` | 관심 공고 (D-1) | D | D-2 |
 
 "만드는 사람"이 테이블과 JPA 엔티티를 만들고 고칩니다. 다른 사람 테이블은 읽기만 하고, 바꿔야 하면 그 사람에게 요청합니다.
 
@@ -52,7 +55,7 @@ erDiagram
 
 JPA 매핑:
 - 태그 연결 테이블(`user_category`, `contest_category`, `room_category`)은 엔티티 없이 `@ManyToMany` + `@JoinTable`로 매핑합니다.
-- 컬럼이 더 있는 `room_member`, `join_request`, `evaluation`은 엔티티로 만듭니다.
+- 컬럼이 더 있는 `room_member`, `join_request`, `evaluation`, `bookmark`은 엔티티로 만듭니다.
 
 ## 3. 테이블
 
@@ -183,7 +186,7 @@ MySQL에는 조건부 UNIQUE가 없어서 생성 컬럼을 씁니다. 대기 중
 |---|---|---|---|
 | `id` | BIGINT | PK | |
 | `room_id` | BIGINT | NOT NULL, FK → `room.id` | 평가가 일어난 팀 (종료된 팀) |
-| `evaluator_id` | BIGINT | NOT NULL, FK → `users.id` | 평가한 사람 |
+| `evaluator_id` | BIGINT | NOT NULL, FK → `users.id` | 평가한 사람. **익명이라 API 응답에 내보내지 않음** |
 | `target_id` | BIGINT | NOT NULL, FK → `users.id` | 평가받은 사람 |
 | `score` | TINYINT | NOT NULL, 1~5 | 별점 (평가 항목은 회의에서 확정, 지금은 가정) |
 | `comment` | VARCHAR(200) | NULL | 한 줄 코멘트 |
@@ -192,6 +195,20 @@ MySQL에는 조건부 UNIQUE가 없어서 생성 컬럼을 씁니다. 대기 중
 | | | CHECK (`evaluator_id <> target_id`) | 자기 자신은 평가할 수 없음 |
 
 "종료된 팀이어야 한다", "두 사람 다 그 팀원이어야 한다"는 앱에서 확인합니다 ([5.4](#54-팀원-평가-a-5)).
+
+평가는 익명입니다 ([기능 명세서 익명 평가 규칙](feature-spec.md#익명-평가-규칙)). `evaluator_id`는 중복 평가와 팀원 여부를 확인하는 데만 쓰고, 프로필(A-6) 응답 DTO에 넣지 않습니다. 엔티티를 그대로 JSON으로 내보내지 말고 `score`, `comment`만 담은 DTO로 돌려줍니다.
+
+### 3.11 `bookmark` — 관심 공고 (D, D-1)
+
+| 컬럼 | 타입 | 제약 | 설명 |
+|---|---|---|---|
+| `user_id` | BIGINT | PK, FK → `users.id` | 저장한 사용자 |
+| `contest_id` | BIGINT | PK, FK → `contest.id` | 저장한 공모전 |
+| `created_at` | DATETIME | NOT NULL, 기본 현재 시각 | 저장한 시각 |
+
+- `(user_id, contest_id)` 복합 키라 같은 공모전을 두 번 저장할 수 없습니다. 저장은 `INSERT IGNORE`처럼 이미 있으면 그대로 두고, 해제는 행을 지웁니다.
+- 공모전은 마감돼도 지우지 않으므로(3.4) 마감된 관심 공고도 목록에 남습니다.
+- 시드에는 넣지 않습니다. 시연 중 장면 2에서 처음 저장합니다.
 
 ## 4. DDL (`schema.sql`)
 
@@ -324,6 +341,16 @@ CREATE TABLE evaluation (
   CONSTRAINT ck_eval_score CHECK (score BETWEEN 1 AND 5),
   CONSTRAINT ck_eval_not_self CHECK (evaluator_id <> target_id)
 );
+
+CREATE TABLE bookmark (
+  user_id     BIGINT    NOT NULL,
+  contest_id  BIGINT    NOT NULL,
+  created_at  DATETIME  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, contest_id),
+  KEY idx_bookmark_contest (contest_id),
+  CONSTRAINT fk_bookmark_user    FOREIGN KEY (user_id)    REFERENCES users (id)   ON DELETE CASCADE,
+  CONSTRAINT fk_bookmark_contest FOREIGN KEY (contest_id) REFERENCES contest (id) ON DELETE CASCADE
+);
 ```
 
 ## 5. 주요 쿼리와 처리 순서
@@ -387,6 +414,33 @@ FROM evaluation
 WHERE target_id = :userId;
 ```
 
+코멘트 목록은 평가한 사람과 팀을 빼고 별점·내용만 가져옵니다 (익명).
+
+```sql
+SELECT score, comment
+FROM evaluation
+WHERE target_id = :userId AND comment IS NOT NULL
+ORDER BY created_at DESC;
+```
+
+### 5.6 관심 공고 목록 (D-2)
+
+접수 중인 공고가 먼저 마감 임박순으로 오고, 마감이 지났거나 마감일이 없는 공고는 아래로 갑니다. D-Day 배지는 프론트가 `end_date`로 계산합니다 ([기능 명세서 마감일 표시](feature-spec.md#마감일-표시)).
+
+```sql
+SELECT c.*, b.created_at AS saved_at
+FROM bookmark b
+JOIN contest c ON c.id = b.contest_id
+WHERE b.user_id = :userId
+ORDER BY (c.end_date >= CURDATE()) DESC, c.end_date ASC;
+```
+
+B-3·B-4 화면의 저장 버튼 상태는 이 ID 목록으로 표시합니다. 추천 쿼리(5.1)는 고치지 않습니다.
+
+```sql
+SELECT contest_id FROM bookmark WHERE user_id = :userId;
+```
+
 ## 6. 시드 데이터 (X-5)
 
 [시연용 데이터](demo-data.md)를 테이블로 옮긴 것입니다.
@@ -442,6 +496,7 @@ WHERE target_id = :userId;
 ## 7. 맞춰야 할 것
 
 - [ ] **방4 인원이 디자인과 달라요.** 디자인 화면은 방4를 "3 / 4명"(디자이너 3명)으로 그렸는데, 시연 데이터에는 방장 최만 있어서 시드로는 "1 / 4명"이 됩니다. 시드에 디자이너 2명을 더하거나, 디자인을 1 / 4명으로 고칩니다.
+- [ ] 시드 사용자에 담당 D 시연용 관심 공고를 미리 넣을지 정합니다 (초안은 비워 두고 시연 중 저장).
 - [ ] 평가 항목이 회의에서 바뀌면 `evaluation`의 `score`, `comment` 컬럼을 고칩니다.
 - [ ] 방과 공모전을 1:1로 확정하지 않으면 `room.contest_id` 대신 연결 테이블이 필요합니다.
 - [ ] 수준 태그를 사용자당 1개로 제한할지 정합니다. 제한하면 A-3에서 막습니다 (DB 제약은 걸지 않음).
