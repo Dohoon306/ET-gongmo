@@ -24,6 +24,10 @@ erDiagram
     users ||--o{ evaluation : "평가한 사람 / 받은 사람"
     users ||--o{ bookmark : "관심 공고"
     contest ||--o{ bookmark : ""
+    room |o--o{ chat_message : "팀 채팅"
+    users ||--o{ chat_message : "보낸 사람 / 쪽지 받는 사람"
+    room ||--o{ chat_read : "팀 채팅 읽은 위치"
+    users ||--o{ chat_read : ""
 ```
 
 | 테이블 | 내용 | 만드는 사람 | 읽는 기능 |
@@ -39,6 +43,8 @@ erDiagram
 | `join_request` | 참가 요청 (C-4, C-5) | C | - |
 | `evaluation` | 팀원 평가 (D-3), 익명 | D | D-4 |
 | `bookmark` | 관심 공고 (D-1) | D | D-2 |
+| `chat_message` | 팀 채팅·쪽지 메시지 (C-8, C-9) | C | - |
+| `chat_read` | 팀 채팅을 어디까지 읽었는지 (C-8) | C | - |
 
 "만드는 사람"이 테이블과 JPA 엔티티, DDL 파일, 시드 조각을 만들고 고칩니다. 다른 사람 테이블은 **native SQL로 읽기만** 하고, 그 담당의 엔티티·리포지토리 클래스는 import하지 않습니다. 컬럼을 바꿔야 하면 그 사람에게 요청합니다.
 
@@ -213,6 +219,31 @@ MySQL에는 조건부 UNIQUE가 없어서 생성 컬럼을 씁니다. 대기 중
 - 공모전은 마감돼도 지우지 않으므로(3.4) 마감된 관심 공고도 목록에 남습니다.
 - 시드에는 넣지 않습니다. 시연 중 장면 2에서 처음 저장합니다.
 
+### 3.12 `chat_message` — 채팅·쪽지 (C, C-8·C-9)
+
+| 컬럼 | 타입 | 제약 | 설명 |
+|---|---|---|---|
+| `id` | BIGINT | PK | 커질수록 새 메시지. 화면은 `after` 이후 것만 다시 받음 |
+| `room_id` | BIGINT | NULL, FK → `room.id` (방 지우면 같이 삭제) | 팀 채팅이면 방 ID |
+| `sender_id` | BIGINT | NOT NULL, FK → `users.id` | 보낸 사람 |
+| `receiver_id` | BIGINT | NULL, FK → `users.id` | 쪽지면 받는 사람 |
+| `content` | VARCHAR(1000) | NOT NULL | 앞뒤 공백을 지운 본문 |
+| `created_at` | DATETIME | NOT NULL, 기본 현재 시각 | |
+| `read_at` | DATETIME | NULL | 쪽지를 받는 사람이 읽은 시각. 팀 채팅은 `chat_read`로 셈 |
+| | | CHECK (`room_id`와 `receiver_id` 중 정확히 하나만 값) | 팀 채팅과 쪽지를 한 테이블에 둠 |
+
+### 3.13 `chat_read` — 팀 채팅 읽은 위치 (C, C-8)
+
+| 컬럼 | 타입 | 제약 | 설명 |
+|---|---|---|---|
+| `room_id` | BIGINT | PK, FK → `room.id` (방 지우면 같이 삭제) | |
+| `user_id` | BIGINT | PK, FK → `users.id` | |
+| `last_read_id` | BIGINT | NOT NULL, 기본 0 | 이 사용자가 이 방에서 마지막으로 본 `chat_message.id` |
+
+- 팀 채팅의 안 읽은 수는 "그 방에서 내가 아닌 사람이 보낸, `last_read_id`보다 큰 메시지 수"입니다 ([5.8](#58-안-읽은-메시지-수-c-8c-9)).
+- 팀 채팅 메시지를 사람마다 따로 표시하지 않고 읽은 위치 하나만 저장해서, 팀원이 늘어도 행이 늘지 않습니다.
+- 시드에는 넣지 않습니다. 시드 러너가 다른 테이블과 함께 비웁니다.
+
 ## 4. DDL (`db/schema/*.sql`)
 
 DDL은 담당별 파일 5개로 나눠 `backend/src/main/resources/db/schema/`에 둡니다. 4명이 한 파일을 고치다 충돌하지 않게 하기 위해서입니다. 앱을 켤 때마다 `application.yml`의 `spring.sql.init.schema-locations`에 적은 순서대로 실행되므로(`spring.sql.init.mode=always`) 모든 테이블을 `CREATE TABLE IF NOT EXISTS`로 만듭니다. 이미 있는 테이블은 건너뛰므로, 컬럼을 바꾸면 `docker compose down -v`로 DB를 지우고 다시 띄워야 반영됩니다.
@@ -347,6 +378,32 @@ CREATE TABLE IF NOT EXISTS join_request (
   CONSTRAINT fk_request_room FOREIGN KEY (room_id) REFERENCES room (id) ON DELETE CASCADE,
   CONSTRAINT fk_request_user FOREIGN KEY (user_id) REFERENCES users (id),
   CONSTRAINT ck_request_status CHECK (status IN ('PENDING', 'ACCEPTED', 'REJECTED'))
+);
+
+CREATE TABLE IF NOT EXISTS chat_message (
+  id           BIGINT         NOT NULL AUTO_INCREMENT,
+  room_id      BIGINT         NULL,
+  sender_id    BIGINT         NOT NULL,
+  receiver_id  BIGINT         NULL,
+  content      VARCHAR(1000)  NOT NULL,
+  created_at   DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  read_at      DATETIME       NULL,
+  PRIMARY KEY (id),
+  KEY idx_chat_room (room_id, id),
+  KEY idx_chat_direct (receiver_id, sender_id, read_at),
+  CONSTRAINT fk_chat_room     FOREIGN KEY (room_id)     REFERENCES room (id)  ON DELETE CASCADE,
+  CONSTRAINT fk_chat_sender   FOREIGN KEY (sender_id)   REFERENCES users (id),
+  CONSTRAINT fk_chat_receiver FOREIGN KEY (receiver_id) REFERENCES users (id),
+  CONSTRAINT ck_chat_target CHECK ((room_id IS NULL) <> (receiver_id IS NULL))
+);
+
+CREATE TABLE IF NOT EXISTS chat_read (
+  room_id       BIGINT NOT NULL,
+  user_id       BIGINT NOT NULL,
+  last_read_id  BIGINT NOT NULL DEFAULT 0,
+  PRIMARY KEY (room_id, user_id),
+  CONSTRAINT fk_chat_read_room FOREIGN KEY (room_id) REFERENCES room (id)  ON DELETE CASCADE,
+  CONSTRAINT fk_chat_read_user FOREIGN KEY (user_id) REFERENCES users (id)
 );
 ```
 
@@ -504,6 +561,26 @@ LIMIT 1;
 ```
 
 결과가 없으면 화면에서 "아직 속한 팀이 없어요" 안내를 보여 줍니다. 시드 기준으로 방장 김은 방 1이 나오고(방 5는 종료라 빠짐), 새싹(작년)은 결과가 없습니다.
+
+### 5.8 안 읽은 메시지 수 (C-8·C-9)
+
+헤더 채팅 아이콘과 내 팀의 "채팅방 열기" 배지가 5초마다 부릅니다 (`GET /api/chat/unread`).
+
+```sql
+SELECT r.id, r.title,
+       (SELECT COUNT(*) FROM chat_message c
+        WHERE c.room_id = r.id AND c.sender_id <> :me
+          AND c.id > COALESCE((SELECT cr.last_read_id FROM chat_read cr
+                               WHERE cr.room_id = r.id AND cr.user_id = :me), 0)) AS unread
+FROM room_member m
+JOIN room r ON r.id = m.room_id
+WHERE m.user_id = :me
+ORDER BY m.joined_at DESC, r.id DESC;
+
+SELECT COUNT(*) FROM chat_message WHERE receiver_id = :me AND read_at IS NULL;
+```
+
+채팅방을 열면 `chat_read`의 `last_read_id`를 그 방의 가장 큰 메시지 ID로 올리고(`INSERT ... ON DUPLICATE KEY UPDATE`), 쪽지 대화를 열면 상대가 보낸 쪽지의 `read_at`을 채웁니다.
 
 ## 6. 시드 데이터 (X-5)
 
