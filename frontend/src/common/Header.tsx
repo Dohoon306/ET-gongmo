@@ -4,6 +4,7 @@ import { api } from '../api/client.ts'
 import { useCurrentUser } from './useCurrentUser.ts'
 import UserSwitcher from './UserSwitcher.tsx'
 import ChatBell from '../features/team/ChatBell.tsx'
+import AdminMenuLink from '../features/admin/AdminMenuLink.tsx'
 import sproutIcon from './icons/sprout.svg'
 
 type MenuItem = {
@@ -46,6 +47,7 @@ export default function Header() {
             {menuFor(userId).map((item) => (
               <MenuLink key={item.label} item={item} current={item.currentOn.some((path) => path.test(pathname))} />
             ))}
+            <AdminMenuLink />
           </nav>
         )}
 

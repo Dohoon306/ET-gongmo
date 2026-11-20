@@ -1,4 +1,5 @@
 import type { FeatureRoute } from '../types.ts'
+import AdminPage from '../admin/AdminPage.tsx'
 import { DirectChatPage, InboxPage, TeamChatPage } from './ChatPages.tsx'
 import CreateRoomPage from './CreateRoomPage.tsx'
 import MembersPage from './MembersPage.tsx'
@@ -18,4 +19,5 @@ export const teamRoutes: FeatureRoute[] = [
   { path: '/rooms/:roomId/chat', label: '팀 채팅', element: <TeamChatPage /> },
   { path: '/messages', label: '채팅·쪽지 목록', element: <InboxPage /> },
   { path: '/messages/:userId', label: '쪽지 대화', element: <DirectChatPage /> },
+  { path: '/admin', label: '관리자', element: <AdminPage /> },
 ]

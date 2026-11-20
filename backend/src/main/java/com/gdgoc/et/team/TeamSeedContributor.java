@@ -25,23 +25,23 @@ public class TeamSeedContributor implements SeedContributor {
     static final LocalDateTime LAST_YEAR = LocalDateTime.of(2025, 11, 20, 12, 0);
 
     static final List<SeedRoom> SEED_ROOMS = List.of(
-            room(1, 1, "초보 환영! 백엔드 같이 배워요",
+            room(1, 2, "초보 환영! 백엔드 같이 배워요",
                     "공공데이터로 체육시설 예약 서비스를 만들어요. Java로 서버를 같이 공부하면서 완성할 분을 찾아요.",
                     3, List.of("it", "backend", "java", "beginner", "learn"), 0,
-                    new SeedMember(5, "MEMBER", RECRUITING_BASE.plusMinutes(30))),
-            room(2, 2, "Spring 서버 개발자 구합니다",
+                    new SeedMember(6, "MEMBER", RECRUITING_BASE.plusMinutes(30))),
+            room(2, 3, "Spring 서버 개발자 구합니다",
                     "수상이 목표예요. Spring Boot로 API 서버를 맡아 주실 분을 찾고 있어요.",
                     4, List.of("it", "backend", "java", "spring", "award"), 1),
-            room(3, 3, "앱 서비스 같이 만들 분",
+            room(3, 4, "앱 서비스 같이 만들 분",
                     "Kotlin으로 안드로이드 앱을 만들어요. 처음이어도 괜찮아요.",
                     3, List.of("it", "app", "kotlin", "beginner"), 2),
-            room(4, 4, "디자인 강한 팀, 개발자 1명",
+            room(4, 5, "디자인 강한 팀, 개발자 1명",
                     "디자인은 자신 있어요. 화면을 구현해 줄 개발자 1명을 찾아요.",
                     4, List.of("it", "uiux", "figma", "expert"), 3),
-            new SeedRoom(5, false, 1, "작년 캠퍼스 해커톤 팀", null, 3, "CLOSED", LAST_YEAR, List.of(),
-                    List.of(new SeedMember(1, "HOST", LAST_YEAR),
-                            new SeedMember(6, "MEMBER", LAST_YEAR.plusDays(1)),
-                            new SeedMember(7, "MEMBER", LAST_YEAR.plusDays(2)))));
+            new SeedRoom(5, false, 2, "작년 캠퍼스 해커톤 팀", null, 3, "CLOSED", LAST_YEAR, List.of(),
+                    List.of(new SeedMember(2, "HOST", LAST_YEAR),
+                            new SeedMember(7, "MEMBER", LAST_YEAR.plusDays(1)),
+                            new SeedMember(8, "MEMBER", LAST_YEAR.plusDays(2)))));
 
     private final JdbcTemplate jdbc;
     private final long heroGongmoaId;

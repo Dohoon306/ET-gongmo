@@ -29,7 +29,7 @@ class UserSeedContributorTest {
     void seedUsersHaveFixedIdsOneToSeven() {
         assertThat(UserSeedContributor.SEED_USERS)
                 .extracting(UserSeedContributor.SeedUser::id)
-                .containsExactly(1L, 2L, 3L, 4L, 5L, 6L, 7L);
+                .containsExactly(2L, 3L, 4L, 5L, 6L, 7L, 8L);
     }
 
     @Test
@@ -48,11 +48,11 @@ class UserSeedContributorTest {
         Timestamp seededAt = Timestamp.valueOf(UserSeedContributor.SEEDED_AT);
         InOrder order = inOrder(categoryInitializer, jdbcTemplate);
         order.verify(categoryInitializer).insertMissingCategories();
-        order.verify(jdbcTemplate).update(INSERT_USER, 1L, "방장 김", seededAt);
-        order.verify(jdbcTemplate).update(INSERT_TAG, 1L, 1L);
-        verify(jdbcTemplate).update(INSERT_USER, 7L, "새싹(작년)", seededAt);
+        order.verify(jdbcTemplate).update(INSERT_USER, 2L, "방장 김", seededAt);
+        order.verify(jdbcTemplate).update(INSERT_TAG, 2L, 1L);
+        verify(jdbcTemplate).update(INSERT_USER, 8L, "새싹(작년)", seededAt);
         for (long categoryId : new long[] {1L, 13L, 19L, 26L, 29L}) {
-            verify(jdbcTemplate).update(INSERT_TAG, 7L, categoryId);
+            verify(jdbcTemplate).update(INSERT_TAG, 8L, categoryId);
         }
         verify(jdbcTemplate, times(7)).update(eq(INSERT_USER), anyLong(), anyString(), eq(seededAt));
         verify(jdbcTemplate, times(32)).update(eq(INSERT_TAG), anyLong(), anyLong());
