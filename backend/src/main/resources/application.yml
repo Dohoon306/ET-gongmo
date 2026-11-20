@@ -31,3 +31,5 @@ server:
 app:
   ai:
     api-key: ${ET_GPT_API_KEY:}
+    model: ${ET_GPT_MODEL:gpt-6.2-astra}
+    timeout: ${ET_GPT_TIMEOUT:5s}
