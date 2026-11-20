@@ -185,7 +185,7 @@ AI는 이 목록 **밖의 태그를 만들지 않습니다.** 겹침 계산이 �
 
 ### 저장 방식 (결정)
 
-> 2026-11-20 결정: 공모아뷰 데이터는 MySQL에 넣어 두고 진행합니다. 테이블 정의는 DB 명세서로 옮길 예정입니다.
+> 2026-11-20 결정: 공모아뷰 데이터는 MySQL에 넣어 두고 진행합니다.
 
 ```
 수집 스크립트 (수동 실행 또는 하루 1회)
@@ -198,44 +198,10 @@ AI는 이 목록 **밖의 태그를 만들지 않습니다.** 겹침 계산이 �
 
 이유: 마크다운 파싱을 수집할 때 한 번만 하고, 추천 정렬을 카테고리 JOIN으로 계산하며, 마감돼 공모아뷰에서 사라진 공모전(주인공 공모전 포함)도 남기고, 시연 중 외부 호출과 호출 제한을 피하기 위해서입니다.
 
-```sql
-CREATE TABLE contest (
-  id           BIGINT PRIMARY KEY AUTO_INCREMENT,
-  gongmoa_id   BIGINT NOT NULL UNIQUE,   -- 공모아뷰 공고 번호, upsert 기준
-  title        VARCHAR(255) NOT NULL,
-  type         VARCHAR(20),              -- 공모전 / 대외활동 / 교육·강연
-  host         VARCHAR(255),
-  start_date   DATE,
-  end_date     DATE,
-  target       VARCHAR(100),
-  prize        VARCHAR(100),
-  gongmoa_url  VARCHAR(500) NOT NULL,    -- 출처 표기용 (필수)
-  source_url   VARCHAR(500),             -- 주최 측 원문, 지원 버튼 링크
-  raw_text     TEXT,                     -- get_contest 원본 마크다운. 파싱 규칙이 바뀌면 다시 파싱
-  fetched_at   DATETIME NOT NULL
-);
+테이블 정의(`contest`, `contest_category` 포함), upsert 규칙, 추천 쿼리(B-3)는 [DB 명세서](db-spec.md)에 있습니다.
 
-CREATE TABLE contest_category (
-  contest_id   BIGINT NOT NULL,
-  category_id  BIGINT NOT NULL,
-  PRIMARY KEY (contest_id, category_id)
-);
-```
-
-- upsert는 `INSERT ... ON DUPLICATE KEY UPDATE`로 합니다.
-- 마감된 공고는 지우지 않습니다. 추천에서는 `end_date >= CURDATE()`로 거릅니다.
-
-추천 쿼리 (B-3). 겹침 0개인 공모전도 나오도록 **LEFT JOIN**으로 세고, 동점이면 마감 임박순입니다:
-
-```sql
-SELECT c.*, COUNT(uc.category_id) AS overlap
-FROM contest c
-LEFT JOIN contest_category cc ON cc.contest_id = c.id
-LEFT JOIN user_category uc   ON uc.category_id = cc.category_id AND uc.user_id = ?
-WHERE c.end_date >= CURDATE()
-GROUP BY c.id
-ORDER BY overlap DESC, c.end_date ASC;
-```
+- upsert는 `INSERT ... ON DUPLICATE KEY UPDATE`로 하고, 마감된 공고는 지우지 않습니다.
+- 추천은 겹침 0개인 공모전도 나오도록 `LEFT JOIN`으로 세고, 동점이면 마감 임박순입니다 ([DB 명세서 5.1](db-spec.md#51-공모전-추천-b-3)).
 
 ### 이용 규칙
 
