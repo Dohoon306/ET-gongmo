@@ -35,6 +35,8 @@ app:
     target: univ
     limit: 20
     snapshot-directory: ${CONTEST_SNAPSHOT_DIRECTORY:data/contest-snapshots}
+  contest-classification:
+    hero-gongmoa-id: ${HERO_GONGMOA_ID:0}
   ai:
     api-key: ${ET_GPT_API_KEY:}
     model: ${ET_GPT_MODEL:gpt-6.2-astra}

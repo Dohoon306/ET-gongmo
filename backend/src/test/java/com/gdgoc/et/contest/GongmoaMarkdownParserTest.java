@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class GongmoaMarkdownParserTest {
@@ -36,7 +37,7 @@ class GongmoaMarkdownParserTest {
                 - 주최 측 원문: https://example.com/notice
                 """;
 
-        ContestRecord contest = parser.parseDetail(1234L, "목록 제목", "https://www.gongmoaview.com/contests/1234-ai", markdown, LocalDateTime.of(2026, 11, 20, 12, 0));
+        ContestRecord contest = parser.parseDetail(1234L, "목록 제목", "https://www.gongmoaview.com/contests/1234-ai", markdown, LocalDateTime.of(2026, 11, 20, 12, 0), Set.of("it"));
 
         assertThat(contest.title()).isEqualTo("대학생 AI 아이디어 공모전");
         assertThat(contest.startDate()).isEqualTo(LocalDate.of(2026, 11, 1));
@@ -44,5 +45,6 @@ class GongmoaMarkdownParserTest {
         assertThat(contest.periodMismatch()).isTrue();
         assertThat(contest.sourceUrl()).isEqualTo("https://example.com/notice");
         assertThat(contest.rawText()).isEqualTo(markdown);
+        assertThat(contest.fieldCodes()).containsExactly("it");
     }
 }

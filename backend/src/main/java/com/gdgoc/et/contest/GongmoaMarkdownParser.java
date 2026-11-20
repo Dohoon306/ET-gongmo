@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.springframework.stereotype.Component;
@@ -34,7 +35,7 @@ class GongmoaMarkdownParser {
         return title.isBlank() ? Optional.empty() : Optional.of(new SearchContest(Long.parseLong(idMatcher.group(1)), title.strip(), gongmoaUrl));
     }
 
-    ContestRecord parseDetail(long gongmoaId, String fallbackTitle, String fallbackUrl, String markdown, LocalDateTime fetchedAt) {
+    ContestRecord parseDetail(long gongmoaId, String fallbackTitle, String fallbackUrl, String markdown, LocalDateTime fetchedAt, Set<String> fieldCodes) {
         LinkedHashMap<String, String> fields = new LinkedHashMap<>();
         String title = fallbackTitle;
         for (String line : markdown.split("\\R")) {
@@ -73,7 +74,8 @@ class GongmoaMarkdownParser {
                 gongmoaUrl,
                 sourceUrl,
                 markdown,
-                fetchedAt);
+                fetchedAt,
+                Set.copyOf(fieldCodes));
     }
 
     private Optional<String> urlFrom(String value) {
