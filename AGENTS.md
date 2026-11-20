@@ -19,6 +19,11 @@
 - 추천·방 목록 정렬은 docs/db-spec.md 5장의 SQL을 `@Query(nativeQuery = true)`로 그대로 쓴다.
 - AI 호출은 `AiClient` 인터페이스를 거치고, 실패하면 대체 응답을 돌려준다.
 
+## 브랜치
+
+- 기능 하나당 최신 `main`에서 `feature/<명세서 ID>-<이름>` 브랜치(예: `feature/x1-user-switch`)를 만들어 개발한다.
+- 개발이 끝나면 PR로 `main`에 머지하고, 머지한 브랜치는 삭제한다. `main`에 직접 커밋하지 않는다.
+
 ## 코드 주석 금지
 
 코드 파일(.java, .ts, .tsx, .css, .sql 등)에 주석을 쓰지 않는다.
