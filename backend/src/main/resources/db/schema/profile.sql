@@ -21,3 +21,10 @@ SET @et_d_schema_sql = IF((
 PREPARE et_d_schema FROM @et_d_schema_sql;
 EXECUTE et_d_schema;
 DEALLOCATE PREPARE et_d_schema;
+
+CREATE TABLE IF NOT EXISTS user_profile_image (
+  user_id    BIGINT     NOT NULL,
+  image_png  MEDIUMBLOB NOT NULL,
+  PRIMARY KEY (user_id),
+  CONSTRAINT fk_profile_image_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+);

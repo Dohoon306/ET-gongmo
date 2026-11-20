@@ -30,12 +30,3 @@ CREATE TABLE IF NOT EXISTS user_name_change (
   PRIMARY KEY (user_id),
   CONSTRAINT fk_unc_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
-
-CREATE TABLE IF NOT EXISTS user_photo (
-  user_id       BIGINT       NOT NULL,
-  content_type  VARCHAR(20)  NOT NULL,
-  data          MEDIUMBLOB   NOT NULL,
-  updated_at    DATETIME     NOT NULL,
-  PRIMARY KEY (user_id),
-  CONSTRAINT fk_photo_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-);

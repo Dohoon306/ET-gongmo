@@ -38,7 +38,6 @@ class ProfileEditServiceTest {
         when(jdbc.queryForList(contains("FOR UPDATE"), eq(String.class), eq(USER))).thenReturn(List.of("방장 박"));
         when(jdbc.queryForList(contains("SELECT name, intro"), eq(USER)))
                 .thenReturn(List.of(Map.of("name", "박", "intro", "소개")));
-        when(jdbc.queryForObject(contains("COUNT(*) FROM users"), eq(Integer.class), eq(USER))).thenReturn(1);
     }
 
     private void lastNameChange(LocalDateTime changedAt) {
@@ -99,25 +98,6 @@ class ProfileEditServiceTest {
         assertThatThrownBy(() -> service.changeIntro(USER, "가".repeat(1001))).hasMessageContaining("1000자");
         when(jdbc.update("UPDATE users SET intro = ? WHERE id = ?", "Java 백엔드 공부 중", USER)).thenReturn(1);
         assertThat(service.changeIntro(USER, " Java 백엔드 공부 중 ").name()).isEqualTo("박");
-    }
-
-    @Test
-    void photoMustBeRealImageUnderLimit() {
-        byte[] png = {(byte) 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A, 0};
-        byte[] jpeg = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 0};
-        byte[] webp = {'R', 'I', 'F', 'F', 0, 0, 0, 0, 'W', 'E', 'B', 'P'};
-        assertThat(ProfileEditService.imageTypeOf(png)).contains("image/png");
-        assertThat(ProfileEditService.imageTypeOf(jpeg)).contains("image/jpeg");
-        assertThat(ProfileEditService.imageTypeOf(webp)).contains("image/webp");
-        assertThat(ProfileEditService.imageTypeOf("<svg onload=alert(1)>".getBytes())).isEmpty();
-
-        assertThatThrownBy(() -> service.changePhoto(USER, "<html>".getBytes())).hasMessageContaining("PNG");
-        assertThatThrownBy(() -> service.changePhoto(USER, new byte[ProfileEditService.MAX_PHOTO_BYTES + 1]))
-                .hasMessageContaining("1MB");
-        verify(jdbc, never()).update(contains("INSERT INTO user_photo"), any(Object[].class));
-
-        service.changePhoto(USER, jpeg);
-        verify(jdbc).update(contains("INSERT INTO user_photo"), eq(USER), eq("image/jpeg"), eq(jpeg), eq(NOW));
     }
 
     @Test

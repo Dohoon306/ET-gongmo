@@ -1,7 +1,5 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { api, ApiError } from '../../api/client.ts'
-import { getCurrentUserId } from '../../common/currentUserStorage.ts'
-import { photoUrl } from './userPhotos.ts'
 
 export type MyAccount = {
   id: number
@@ -9,7 +7,6 @@ export type MyAccount = {
   intro: string | null
   categoryIds: number[]
   nameChangeAvailableAt: string | null
-  photoVersion: number | null
 }
 
 type Axis = 'FIELD' | 'ROLE' | 'SKILL' | 'LEVEL' | 'GOAL'
@@ -62,107 +59,6 @@ export function PencilButton({ label, onClick, disabled = false, title }: {
 
 function ErrorLine({ message }: { message: string | null }) {
   return message ? <p role="alert" className="text-sm text-danger">{message}</p> : null
-}
-
-export function ProfilePhoto({ userId, name, version, own, onChanged }: {
-  userId: string
-  name: string
-  version: number | null
-  own: boolean
-  onChanged: () => void
-}) {
-  const input = useRef<HTMLInputElement>(null)
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const initial = name.trim().split(/\s+/).at(-1)?.slice(0, 1)
-
-  async function upload(file: File) {
-    setBusy(true)
-    setError(null)
-    try {
-      const form = new FormData()
-      form.append('file', await toSquareJpeg(file), 'photo.jpg')
-      const currentUserId = getCurrentUserId()
-      const res = await fetch('/api/users/me/photo', {
-        method: 'PUT',
-        headers: currentUserId !== null ? { 'X-User-Id': String(currentUserId) } : {},
-        body: form,
-      })
-      if (!res.ok) {
-        const data = await res.json().catch(() => null)
-        throw new ApiError(res.status, data?.message ?? '사진을 올리지 못했어요.')
-      }
-      onChanged()
-    } catch (failure) {
-      setError(failure instanceof ApiError ? failure.message : '사진을 읽지 못했어요. 다른 사진으로 해 주세요.')
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  async function remove() {
-    setBusy(true)
-    setError(null)
-    try {
-      await api('/api/users/me/photo', { method: 'DELETE' })
-      onChanged()
-    } catch (failure) {
-      setError(messageOf(failure))
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  return (
-    <div className="space-y-2">
-      <div className="flex items-end gap-3">
-        {version !== null ? (
-          <img src={photoUrl(userId, version)} alt={`${name} 프로필 사진`} className="size-[72px] rounded-md border border-line object-cover" />
-        ) : (
-          <span aria-hidden="true" className="grid size-[72px] place-items-center rounded-md bg-brand-soft text-2xl font-bold text-brand">{initial}</span>
-        )}
-        {own && (
-          <div className="flex flex-wrap gap-1.5">
-            <button type="button" className={cancelButton} disabled={busy} onClick={() => input.current?.click()}>
-              {busy ? '올리는 중…' : '사진 변경'}
-            </button>
-            {version !== null && (
-              <button type="button" className={`${smallButton} text-muted hover:bg-subtle`} disabled={busy} onClick={remove}>삭제</button>
-            )}
-            <input
-              ref={input}
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              className="hidden"
-              onChange={(event) => {
-                const file = event.target.files?.[0]
-                event.target.value = ''
-                if (file) void upload(file)
-              }}
-            />
-          </div>
-        )}
-      </div>
-      <ErrorLine message={error} />
-    </div>
-  )
-}
-
-async function toSquareJpeg(file: File, size = 256): Promise<Blob> {
-  const bitmap = await createImageBitmap(file)
-  const side = Math.min(bitmap.width, bitmap.height)
-  const canvas = document.createElement('canvas')
-  canvas.width = size
-  canvas.height = size
-  const context = canvas.getContext('2d')
-  if (!context) throw new Error('canvas')
-  context.fillStyle = '#ffffff'
-  context.fillRect(0, 0, size, size)
-  context.drawImage(bitmap, (bitmap.width - side) / 2, (bitmap.height - side) / 2, side, side, 0, 0, size, size)
-  bitmap.close()
-  return new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('blob'))), 'image/jpeg', 0.88)
-  })
 }
 
 export function NameField({ name, own, account, onSaved }: {
