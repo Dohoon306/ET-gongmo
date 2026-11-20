@@ -1,7 +1,7 @@
 # DB 명세서 (초안)
 
 > 상태: 초안 · 팀 검토 전
-> 기준: [기능 명세서 v0.4](feature-spec.md), [시연용 데이터](demo-data.md), [README 기술 스택](../README.md#기술-스택)
+> 기준: [기능 명세서 v0.5](feature-spec.md), [시연용 데이터](demo-data.md), [README 기술 스택](../README.md#기술-스택)
 > DB: MySQL 8 · InnoDB · `utf8mb4` / `utf8mb4_0900_ai_ci` · JPA `ddl-auto=none`, 테이블은 아래 DDL을 담당별 `db/schema/*.sql` 파일로 만듭니다.
 
 ## 1. 한눈에 보기
@@ -447,13 +447,13 @@ FROM evaluation
 WHERE target_id = :userId;
 ```
 
-코멘트 목록은 평가한 사람과 팀을 빼고 별점·내용만 가져옵니다 (익명).
+코멘트 목록은 평가한 사람과 팀을 빼고 별점·내용만 가져옵니다 (익명). 작성한 순서로 정렬하면 마지막에 평가한 사람을 짐작할 수 있어서, 별점 높은 순, 같으면 내용 가나다순으로 정렬합니다.
 
 ```sql
 SELECT score, comment
 FROM evaluation
 WHERE target_id = :userId AND comment IS NOT NULL
-ORDER BY created_at DESC;
+ORDER BY score DESC, comment ASC;
 ```
 
 ### 5.6 관심 공고 목록 (D-2)
@@ -473,6 +473,22 @@ B-3·B-4 화면의 저장 버튼 상태는 이 ID 목록으로 표시합니다. 
 ```sql
 SELECT contest_id FROM bookmark WHERE user_id = :userId;
 ```
+
+### 5.7 내 방 찾기 (C)
+
+헤더의 "내 팀"(`/my/team`)과 "받은 요청"(`/my/requests`)이 현재 사용자의 방으로 이동할 때 씁니다 ([기능 명세서 헤더 메뉴](feature-spec.md#헤더-메뉴)). 종료된 팀은 빼고, 가장 최근에 들어간 방 하나를 고릅니다.
+
+```sql
+SELECT r.id
+FROM room r
+JOIN room_member m ON m.room_id = r.id
+WHERE m.user_id = :userId
+  AND r.status IN ('RECRUITING', 'FULL')
+ORDER BY m.joined_at DESC, r.id DESC
+LIMIT 1;
+```
+
+"받은 요청"은 여기에 `AND m.role = 'HOST'`를 더합니다. 결과가 없으면 화면에서 "아직 속한 팀이 없어요" 안내를 보여 줍니다. 시드 기준으로 방장 김은 방 1이 나오고(방 5는 종료라 빠짐), 새싹(작년)은 결과가 없습니다.
 
 ## 6. 시드 데이터 (X-5)
 
@@ -537,7 +553,7 @@ SELECT contest_id FROM bookmark WHERE user_id = :userId;
 
 ## 7. 맞춰야 할 것
 
-- [ ] **방4 인원이 디자인과 달라요.** 디자인 화면은 방4를 "3 / 4명"(디자이너 3명)으로 그렸는데, 시연 데이터에는 방장 최만 있어서 시드로는 "1 / 4명"이 됩니다. 시드에 디자이너 2명을 더하거나, 디자인을 1 / 4명으로 고칩니다.
+- [x] 방4 인원: Figma 시안을 시드에 맞춰 "1 / 4명"으로 그렸습니다 (예전 캔버스는 "3 / 4명").
 - [ ] 시드 사용자에 담당 D 시연용 관심 공고를 미리 넣을지 정합니다 (초안은 비워 두고 시연 중 저장).
 - [ ] 평가 항목이 회의에서 바뀌면 `evaluation`의 `score`, `comment` 컬럼을 고칩니다.
 - [ ] 방과 공모전을 1:1로 확정하지 않으면 `room.contest_id` 대신 연결 테이블이 필요합니다.
