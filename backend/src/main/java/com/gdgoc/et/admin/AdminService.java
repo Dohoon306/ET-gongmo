@@ -51,6 +51,49 @@ public class AdminService {
                                String target, String prize, String benefit, String gongmoaUrl, String sourceUrl,
                                List<Long> categoryIds) {}
 
+    public record RoomRow(long id, String title, String status, int capacity, long memberCount, long hostId,
+                          String hostName, Long contestId, String contestTitle, String contestEndDate,
+                          long pendingRequests, String createdAt) {}
+
+    public List<RoomRow> rooms() {
+        return jdbc.query("""
+                SELECT r.id, r.title, r.status, r.capacity, r.host_id, u.name AS host_name,
+                       r.contest_id, c.title AS contest_title, c.end_date AS contest_end_date,
+                       (SELECT COUNT(*) FROM room_member m WHERE m.room_id = r.id) AS member_count,
+                       (SELECT COUNT(*) FROM join_request j WHERE j.room_id = r.id AND j.status = 'PENDING') AS pending,
+                       DATE_FORMAT(r.created_at, %s) AS created_at
+                FROM room r
+                JOIN users u ON u.id = r.host_id
+                LEFT JOIN contest c ON c.id = r.contest_id
+                ORDER BY FIELD(r.status, 'RECRUITING', 'FULL', 'CLOSED'), r.id DESC
+                """.formatted(DATETIME), (rs, i) -> new RoomRow(rs.getLong("id"), rs.getString("title"),
+                rs.getString("status"), rs.getInt("capacity"), rs.getLong("member_count"), rs.getLong("host_id"),
+                rs.getString("host_name"), rs.getObject("contest_id", Long.class), rs.getString("contest_title"),
+                rs.getString("contest_end_date"), rs.getLong("pending"), rs.getString("created_at")));
+    }
+
+    @Transactional
+    public void closeRoom(long roomId) {
+        String status = jdbc.queryForList("SELECT status FROM room WHERE id = ? FOR UPDATE", String.class, roomId)
+                .stream().findFirst()
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "방을 찾을 수 없어요"));
+        if ("CLOSED".equals(status)) {
+            throw new ApiException(HttpStatus.CONFLICT, "이미 마감된 방이에요");
+        }
+        jdbc.update("UPDATE room SET status = 'CLOSED' WHERE id = ?", roomId);
+        jdbc.update("""
+                UPDATE join_request SET status = 'REJECTED', decided_at = NOW()
+                WHERE room_id = ? AND status = 'PENDING'
+                """, roomId);
+    }
+
+    @Transactional
+    public void deleteRoom(long roomId) {
+        if (jdbc.update("DELETE FROM room WHERE id = ?", roomId) == 0) {
+            throw new ApiException(HttpStatus.NOT_FOUND, "방을 찾을 수 없어요");
+        }
+    }
+
     public boolean isAdmin(Long userId) {
         if (userId == null) {
             return false;

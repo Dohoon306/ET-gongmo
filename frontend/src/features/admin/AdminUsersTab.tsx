@@ -51,6 +51,11 @@ export default function AdminUsersTab() {
                 {u.suspended && u.suspendReason && <p className="mt-1 text-xs text-red-700">정지 이유: {u.suspendReason}</p>}
                 <p className="mt-1 text-xs text-(--color-muted)">가입 {u.createdAt.slice(0, 10)}</p>
               </div>
+              {!u.admin && (
+                <Link to={`/messages/${u.id}`} className={secondaryButton}>
+                  쪽지
+                </Link>
+              )}
               {!u.admin &&
                 (u.suspended ? (
                   <button onClick={() => act(`/api/admin/users/${u.id}/suspension`, 'DELETE')} className={primaryButton}>

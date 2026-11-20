@@ -6,11 +6,18 @@ import type { AdminEvaluation, AdminUser } from './adminApi.ts'
 
 export default function AdminEvaluationsTab() {
   const [userFilter, setUserFilter] = useState('')
+  const [query, setQuery] = useState('')
   const users = useGet<AdminUser[]>('/api/admin/users')
+  const q = query.trim().toLowerCase()
+  const matchedUsers = users.data?.filter((u) => u.name.toLowerCase().includes(q) || String(u.id) === q) ?? []
   const { data, error, reload } = useGet<AdminEvaluation[]>(
     `/api/admin/evaluations${userFilter ? `?userFilter=${userFilter}` : ''}`,
   )
   const [actionError, setActionError] = useState<string | null>(null)
+  const shown =
+    userFilter || !q
+      ? (data ?? [])
+      : (data ?? []).filter((e) => [e.evaluatorName, e.targetName].some((n) => n.toLowerCase().includes(q)))
 
   async function remove(id: number) {
     if (!window.confirm('이 평가를 지울까요? 되돌릴 수 없어요.')) return
@@ -26,24 +33,37 @@ export default function AdminEvaluationsTab() {
   return (
     <>
       <ErrorText message={error ?? actionError} />
-      <label className="mb-4 flex items-center gap-2 text-sm">
+      <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
         <span className="font-semibold">사람별로 보기</span>
+        <input
+          value={query}
+          onChange={(e) => {
+            setQuery(e.target.value)
+            const text = e.target.value.trim().toLowerCase()
+            const found = users.data?.filter((u) => u.name.toLowerCase().includes(text) || String(u.id) === text) ?? []
+            setUserFilter(text && found.length === 1 ? String(found[0].id) : '')
+          }}
+          placeholder="이름이나 번호로 검색"
+          aria-label="평가를 볼 사람 검색"
+          className="h-10 min-w-0 flex-1 rounded-xl border border-(--color-line-strong) bg-white px-3"
+        />
         <select
           value={userFilter}
           onChange={(e) => setUserFilter(e.target.value)}
+          aria-label="평가를 볼 사람"
           className="h-10 rounded-xl border border-(--color-line-strong) bg-white px-3"
         >
-          <option value="">전체</option>
-          {users.data?.map((u) => (
+          <option value="">{q ? `검색 결과 ${matchedUsers.length}명` : '전체'}</option>
+          {matchedUsers.map((u) => (
             <option key={u.id} value={u.id}>
               #{u.id} {u.name}
             </option>
           ))}
         </select>
-      </label>
-      {data && data.length === 0 && <Card className="px-6 py-10 text-center text-sm text-(--color-muted)">평가가 없어요.</Card>}
+      </div>
+      {data && shown.length === 0 && <Card className="px-6 py-10 text-center text-sm text-(--color-muted)">평가가 없어요.</Card>}
       <ul className="space-y-3">
-        {data?.map((e) => (
+        {shown.map((e) => (
           <li key={e.id}>
             <Card className="flex flex-wrap items-center gap-4 px-5 py-4">
               <div className="min-w-0 flex-1 text-sm">

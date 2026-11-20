@@ -5,6 +5,7 @@ import AdminAppealsTab from './AdminAppealsTab.tsx'
 import AdminContestsTab from './AdminContestsTab.tsx'
 import AdminEvaluationsTab from './AdminEvaluationsTab.tsx'
 import AdminReportsTab from './AdminReportsTab.tsx'
+import AdminRoomsTab from './AdminRoomsTab.tsx'
 import AdminUsersTab from './AdminUsersTab.tsx'
 
 const TABS = [
@@ -12,6 +13,7 @@ const TABS = [
   { key: 'appeals', label: '평가 항의', element: <AdminAppealsTab /> },
   { key: 'evaluations', label: '전체 평가', element: <AdminEvaluationsTab /> },
   { key: 'contests', label: '공모전', element: <AdminContestsTab /> },
+  { key: 'rooms', label: '모집 방', element: <AdminRoomsTab /> },
   { key: 'reports', label: '신고 내역', element: <AdminReportsTab /> },
 ]
 
@@ -33,7 +35,7 @@ export default function AdminPage() {
     <TeamPage>
       <h1 className="text-[28px] font-bold">관리자</h1>
       <p className="mt-2 mb-5 text-[15px] text-(--color-muted)">
-        계정 정지, 평가 항의, 공모전, 신고 내역을 관리해요. 관리자 화면에서는 평가한 사람도 보여요.
+        계정 정지, 평가 항의, 공모전, 모집 방, 신고 내역을 관리해요. 관리자 화면에서는 평가한 사람도 보여요.
       </p>
       <div role="tablist" className="mb-5 flex flex-wrap gap-1.5">
         {TABS.map((t) => (

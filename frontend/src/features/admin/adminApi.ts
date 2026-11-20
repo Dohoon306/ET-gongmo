@@ -76,6 +76,21 @@ export type AdminContest = {
   categoryIds: number[]
 }
 
+export type AdminRoom = {
+  id: number
+  title: string
+  status: 'RECRUITING' | 'FULL' | 'CLOSED'
+  capacity: number
+  memberCount: number
+  hostId: number
+  hostName: string
+  contestId: number | null
+  contestTitle: string | null
+  contestEndDate: string | null
+  pendingRequests: number
+  createdAt: string
+}
+
 export type MyEvaluation = {
   id: number
   score: number
