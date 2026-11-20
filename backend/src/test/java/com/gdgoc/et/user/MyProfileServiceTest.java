@@ -22,6 +22,36 @@ class MyProfileServiceTest {
     private final User user = new User("새싹", "자기소개");
 
     @Test
+    void confirmingAgainReplacesEarlierTags() {
+        when(userRepository.findById(8L)).thenReturn(Optional.of(user));
+
+        service.confirmCategories(8L, List.of(1L, 13L, 19L, 26L, 29L));
+        List<Long> confirmed = service.confirmCategories(8L, List.of(22L, 14L, 14L));
+
+        assertThat(confirmed).containsExactly(14L, 22L);
+        assertThat(user.getCategoryIds()).containsExactlyInAnyOrder(14L, 22L);
+    }
+
+    @Test
+    void tagOutsideCatalogIsRejectedAndNothingIsSaved() {
+        when(userRepository.findById(8L)).thenReturn(Optional.of(user));
+
+        assertThatThrownBy(() -> service.confirmCategories(8L, List.of(1L, 99L)))
+                .isInstanceOfSatisfying(ApiException.class,
+                        e -> assertThat(e.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST));
+        assertThat(user.getCategoryIds()).isEmpty();
+    }
+
+    @Test
+    void twoLevelTagsAreRejected() {
+        when(userRepository.findById(8L)).thenReturn(Optional.of(user));
+
+        assertThatThrownBy(() -> service.confirmCategories(8L, List.of(26L, 27L)))
+                .isInstanceOfSatisfying(ApiException.class,
+                        e -> assertThat(e.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST));
+    }
+
+    @Test
     void unknownUserIsNotFound() {
         when(userRepository.findById(99L)).thenReturn(Optional.empty());
 
