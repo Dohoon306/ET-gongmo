@@ -47,6 +47,32 @@ public class CategorySuggester {
             Map.entry("after_effects", List.of("after effects", "애프터 이펙트", "에펙")),
             Map.entry("powerpoint", List.of("powerpoint", "ppt", "파워포인트")),
             Map.entry("excel", List.of("excel", "엑셀")),
+            Map.entry("branding", List.of("브랜딩", "브랜드")),
+            Map.entry("drawing", List.of("드로잉", "회화", "소묘")),
+            Map.entry("composing", List.of("작곡", "편곡")),
+            Map.entry("performance", List.of("연주", "보컬", "노래")),
+            Map.entry("directing", List.of("연출", "시나리오", "스토리보드")),
+            Map.entry("motion_graphics", List.of("모션그래픽", "모션 그래픽")),
+            Map.entry("proofreading", List.of("교정", "퇴고")),
+            Map.entry("ideation", List.of("브레인스토밍", "발상")),
+            Map.entry("content_creation", List.of("콘텐츠", "카드뉴스")),
+            Map.entry("market_analysis", List.of("시장 분석", "시장분석", "시장 조사", "시장조사")),
+            Map.entry("business_planning", List.of("사업 계획", "사업계획", "비즈니스 모델")),
+            Map.entry("reporting", List.of("취재", "인터뷰", "기사")),
+            Map.entry("field_activity", List.of("현장")),
+            Map.entry("event_operation", List.of("행사", "부스")),
+            Map.entry("mentoring", List.of("멘토링", "교육", "가르치")),
+            Map.entry("indesign", List.of("indesign", "인디자인")),
+            Map.entry("procreate", List.of("procreate", "프로크리에이트")),
+            Map.entry("daw", List.of("daw", "logic pro", "큐베이스", "에이블톤", "garageband")),
+            Map.entry("final_cut", List.of("final cut", "파이널컷", "파이널 컷")),
+            Map.entry("lightroom", List.of("lightroom", "라이트룸")),
+            Map.entry("capcut", List.of("capcut", "캡컷")),
+            Map.entry("canva", List.of("canva", "캔바")),
+            Map.entry("google_analytics", List.of("google analytics", "구글 애널리틱스", "ga4")),
+            Map.entry("hwp", List.of("hwp", "한컴")),
+            Map.entry("word", List.of("ms word", "ms워드")),
+            Map.entry("notion", List.of("notion", "노션")),
             Map.entry("backend", List.of("백엔드", "서버")),
             Map.entry("frontend", List.of("프론트")),
             Map.entry("app", List.of("앱", "안드로이드", "ios")),
@@ -89,17 +115,23 @@ public class CategorySuggester {
 
     private String promptFor(String intro) {
         String catalog = CategoryCatalog.ALL.stream()
-                .map(seed -> seed.code() + "(" + seed.axis() + ", " + seed.name() + ")")
+                .map(seed -> seed.code() + "(" + seed.axis() + ", " + seed.name() + fieldNote(seed) + ")")
                 .collect(Collectors.joining(", "));
         return """
                 공모전 참가자의 자기소개를 읽고 아래 태그 목록 안에서만 어울리는 태그를 골라 주세요.
                 목록에 없는 태그는 만들지 마세요. LEVEL 태그는 하나만 고르세요.
+                ROLE·SKILL 태그는 고른 FIELD 태그의 코드가 "분야"에 적힌 것 위주로 고르세요.
                 답은 설명 없이 태그 코드만 쉼표로 이어서 쓰세요. 예: it,backend,java
 
                 태그 목록: %s
 
                 자기소개: %s
                 """.formatted(catalog, intro);
+    }
+
+    private String fieldNote(CategorySeed seed) {
+        List<String> fieldCodes = CategoryCatalog.fieldCodesOf(seed.code());
+        return fieldCodes.isEmpty() ? "" : ", 분야 " + String.join("/", fieldCodes);
     }
 
     private String keywordAnswer(String intro) {

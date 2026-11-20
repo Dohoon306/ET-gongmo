@@ -1,6 +1,9 @@
 package com.gdgoc.et.user;
 
-public record CategoryResponse(Long id, CategoryAxis axis, String code, String name, int sortOrder) {
+import java.util.List;
+
+public record CategoryResponse(
+        Long id, CategoryAxis axis, String code, String name, int sortOrder, List<String> fieldCodes) {
 
     public static CategoryResponse from(Category category) {
         return new CategoryResponse(
@@ -8,6 +11,7 @@ public record CategoryResponse(Long id, CategoryAxis axis, String code, String n
                 category.getAxis(),
                 category.getCode(),
                 category.getName(),
-                category.getSortOrder());
+                category.getSortOrder(),
+                CategoryCatalog.fieldCodesOf(category.getCode()));
     }
 }

@@ -3,6 +3,7 @@ package com.gdgoc.et.team;
 import com.gdgoc.et.common.error.ApiException;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -26,16 +27,26 @@ public class RoomCreateService {
 
     public record NewRoom(Long contestId, String title, String intro, int capacity, List<Long> categoryIds) {}
 
-    public record ContestOption(Long id, String title, String type, String endDate) {}
+    public record ContestOption(Long id, String title, String type, String endDate, List<Long> fieldIds) {}
 
     public List<ContestOption> openContests() {
         return jdbc.query("""
-                SELECT id, title, type, end_date
-                FROM contest
-                WHERE end_date IS NULL OR end_date >= CURRENT_DATE
-                ORDER BY end_date IS NULL, end_date, id
+                SELECT c.id, c.title, c.type, c.end_date,
+                       (SELECT GROUP_CONCAT(cc.category_id ORDER BY cc.category_id)
+                        FROM contest_category cc JOIN category f ON f.id = cc.category_id
+                        WHERE cc.contest_id = c.id AND f.axis = 'FIELD') AS field_ids
+                FROM contest c
+                WHERE c.end_date IS NULL OR c.end_date >= CURRENT_DATE
+                ORDER BY c.end_date IS NULL, c.end_date, c.id
                 """, (rs, i) -> new ContestOption(rs.getLong("id"), rs.getString("title"), rs.getString("type"),
-                rs.getString("end_date")));
+                rs.getString("end_date"), idsIn(rs.getString("field_ids"))));
+    }
+
+    static List<Long> idsIn(String commaSeparatedIds) {
+        if (commaSeparatedIds == null || commaSeparatedIds.isBlank()) {
+            return List.of();
+        }
+        return Arrays.stream(commaSeparatedIds.split(",")).map(Long::valueOf).toList();
     }
 
     @Transactional

@@ -1,18 +1,19 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { api, ApiError } from '../../api/client.ts'
+import { choicesForAxis, withoutCategory } from '../../common/categoryFields.ts'
 import { useCurrentUser } from '../../common/useCurrentUser.ts'
 import checkIcon from './icons/check-on-brand.svg'
 import chevronLeftIcon from './icons/chevron-left.svg'
 import sparkleIcon from './icons/sparkle-brand.svg'
 
 type Axis = 'FIELD' | 'ROLE' | 'SKILL' | 'LEVEL' | 'GOAL'
-type Category = { id: number; axis: Axis; code: string; name: string; sortOrder: number }
+type Category = { id: number; axis: Axis; code: string; name: string; sortOrder: number; fieldCodes: string[] }
 type Suggestion = { name: string; intro: string | null; categoryIds: number[] }
 type Loaded = { categories: Category[]; suggestion: Suggestion }
 
 const axes: { axis: Axis; label: string; hint: string }[] = [
-  { axis: 'FIELD', label: '분야', hint: '공모전 분야' },
+  { axis: 'FIELD', label: '분야', hint: '먼저 골라 주세요' },
   { axis: 'ROLE', label: '직무', hint: '맡고 싶은 역할' },
   { axis: 'SKILL', label: '기술', hint: '써 봤거나 쓸 기술' },
   { axis: 'LEVEL', label: '수준', hint: '하나만 골라요' },
@@ -78,7 +79,7 @@ export default function SignupTagsPage() {
   function toggle(category: Category) {
     setSaveError(null)
     setSelectedIds((current) => {
-      if (current.includes(category.id)) return current.filter((id) => id !== category.id)
+      if (current.includes(category.id)) return withoutCategory(categories, current, category)
       if (category.axis !== SINGLE_CHOICE_AXIS) return [...current, category.id]
       const sameAxisIds = categories.filter((other) => other.axis === category.axis).map((other) => other.id)
       return [...current.filter((id) => !sameAxisIds.includes(id)), category.id]
@@ -148,37 +149,44 @@ export default function SignupTagsPage() {
 
       <section className="flex flex-col rounded-2xl border border-line bg-white px-6 pt-6 pb-2">
         <h2 className="pb-3 text-lg font-bold">태그 고르기</h2>
-        {axes.map(({ axis, label, hint }) => (
-          <div key={axis} role="group" aria-label={label} className="flex flex-col gap-3 border-t border-gray-100 py-4 sm:flex-row sm:gap-6">
-            <div className="flex w-[120px] shrink-0 flex-col gap-0.5">
-              <p className="text-[15px] font-semibold">{label}</p>
-              <p className="text-xs text-gray-600">{hint}</p>
+        {axes.map(({ axis, label, hint }) => {
+          const choices = choicesForAxis(categories, axis, selectedIds)
+          return (
+            <div key={axis} role="group" aria-label={label} className="flex flex-col gap-3 border-t border-gray-100 py-4 sm:flex-row sm:gap-6">
+              <div className="flex w-[120px] shrink-0 flex-col gap-0.5">
+                <p className="text-[15px] font-semibold">{label}</p>
+                <p className="text-xs text-gray-600">{hint}</p>
+              </div>
+              {choices.length === 0 ? (
+                <p className="flex min-h-10 min-w-0 flex-1 items-center text-sm text-gray-600">
+                  분야를 먼저 골라 주세요. 고른 분야에 맞는 태그가 나와요.
+                </p>
+              ) : (
+                <div className="flex min-w-0 flex-1 flex-wrap gap-2">
+                  {choices.map((category) => {
+                    const selected = selectedIds.includes(category.id)
+                    return (
+                      <button
+                        key={category.id}
+                        type="button"
+                        aria-pressed={selected}
+                        onClick={() => toggle(category)}
+                        className={`flex h-10 items-center rounded-full border px-3.5 text-sm ${
+                          selected
+                            ? 'gap-1.5 border-brand bg-brand font-semibold text-white'
+                            : 'border-gray-300 bg-white font-medium text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        {selected && <img src={checkIcon} alt="" />}
+                        {category.name}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
             </div>
-            <div className="flex min-w-0 flex-1 flex-wrap gap-2">
-              {categories
-                .filter((category) => category.axis === axis)
-                .map((category) => {
-                  const selected = selectedIds.includes(category.id)
-                  return (
-                    <button
-                      key={category.id}
-                      type="button"
-                      aria-pressed={selected}
-                      onClick={() => toggle(category)}
-                      className={`flex h-10 items-center rounded-full border px-3.5 text-sm ${
-                        selected
-                          ? 'gap-1.5 border-brand bg-brand font-semibold text-white'
-                          : 'border-gray-300 bg-white font-medium text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      {selected && <img src={checkIcon} alt="" />}
-                      {category.name}
-                    </button>
-                  )
-                })}
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </section>
 
       <p className="text-[13px] leading-[1.6] text-gray-600">

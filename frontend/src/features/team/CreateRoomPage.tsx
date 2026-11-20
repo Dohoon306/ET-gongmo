@@ -1,13 +1,14 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { api } from '../../api/client.ts'
+import { choicesForAxis, withFieldsReplaced, withoutCategory } from '../../common/categoryFields.ts'
 import { useCurrentUser } from '../../common/useCurrentUser.ts'
 import { idParam, useGet } from './api.ts'
 import { Card, ErrorText, MissingId, TeamPage, primaryButton, secondaryButton } from './ui.tsx'
 
-type Category = { id: number; axis: string; name: string }
+type Category = { id: number; axis: string; code: string; name: string; fieldCodes: string[] }
 
-type ContestOption = { id: number; title: string; type: string | null; endDate: string | null }
+type ContestOption = { id: number; title: string; type: string | null; endDate: string | null; fieldIds: number[] }
 
 const AXIS_LABELS: [string, string][] = [
   ['FIELD', '분야'],
@@ -45,15 +46,19 @@ function CreateRoomForm({ initialContestId }: { initialContestId: number | null 
   const [intro, setIntro] = useState('')
   const [capacity, setCapacity] = useState(3)
   const [picked, setPicked] = useState<Set<number>>(new Set())
+  const [fieldsTakenFromContestId, setFieldsTakenFromContestId] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
 
-  const toggle = (id: number) =>
+  if (contest && categories && fieldsTakenFromContestId !== contest.id) {
+    setFieldsTakenFromContestId(contest.id)
+    setPicked(new Set(withFieldsReplaced(categories, [...picked], contest.fieldIds)))
+  }
+
+  const toggle = (category: Category) =>
     setPicked((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
+      if (prev.has(category.id)) return new Set(withoutCategory(categories ?? [], [...prev], category))
+      return new Set(prev).add(category.id)
     })
 
   const canSubmit = userId !== null && contestId !== null && title.trim() !== '' && picked.size > 0 && !sending
@@ -152,27 +157,32 @@ function CreateRoomForm({ initialContestId }: { initialContestId: number | null 
           <fieldset>
             <legend className="text-sm font-semibold">원하는 팀원 태그</legend>
             <div className="mt-2 space-y-3">
-              {AXIS_LABELS.map(([axis, label]) => (
-                <div key={axis} className="flex items-start gap-3">
-                  <span className="w-10 shrink-0 pt-1 text-[13px] text-(--color-muted)">{label}</span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {categories
-                      ?.filter((c) => c.axis === axis)
-                      .map((c) => (
-                        <button
-                          key={c.id}
-                          type="button"
-                          aria-pressed={picked.has(c.id)}
-                          onClick={() => toggle(c.id)}
-                          className={`h-7 rounded-full px-3 text-[13px] font-medium ${picked.has(c.id) ? 'bg-brand text-white' : 'bg-(--color-subtle) text-(--color-ink-2)'}`}
-                        >
-                          {picked.has(c.id) && '✓ '}
-                          {c.name}
-                        </button>
-                      ))}
+              {AXIS_LABELS.map(([axis, label]) => {
+                const choices = choicesForAxis(categories ?? [], axis, [...picked])
+                return (
+                  <div key={axis} role="group" aria-label={label} className="flex items-start gap-3">
+                    <span className="w-10 shrink-0 pt-1 text-[13px] text-(--color-muted)">{label}</span>
+                    {categories && choices.length === 0 ? (
+                      <p className="pt-1 text-[13px] text-(--color-muted)">분야를 먼저 골라 주세요. 고른 분야에 맞는 태그가 나와요.</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-1.5">
+                        {choices.map((c) => (
+                          <button
+                            key={c.id}
+                            type="button"
+                            aria-pressed={picked.has(c.id)}
+                            onClick={() => toggle(c)}
+                            className={`h-7 rounded-full px-3 text-[13px] font-medium ${picked.has(c.id) ? 'bg-brand text-white' : 'bg-(--color-subtle) text-(--color-ink-2)'}`}
+                          >
+                            {picked.has(c.id) && '✓ '}
+                            {c.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </fieldset>
 

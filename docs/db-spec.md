@@ -315,7 +315,7 @@ DDL은 담당별 파일 5개로 나눠 `backend/src/main/resources/db/schema/`�
 
 | 순서 | 파일 | 담당 | 테이블 |
 |---|---|---|---|
-| 1 | `user.sql` | A | `category`, `users`, `user_category` |
+| 1 | `user.sql` | A | `category`, `category_field`, `users`, `user_category` |
 | 2 | `contest.sql` | B | `contest`, `contest_category` |
 | 3 | `team.sql` | C | `room`, `room_category`, `room_member`, `join_request` |
 | 4 | `bookmark.sql` | D | `bookmark` |
@@ -748,7 +748,43 @@ IT 밖 공모전을 위해 직무·기술 태그를 더했습니다. 이미 쓰�
 | `ROLE` | 32~39 | 7~14 | `graphic_design` 그래픽 디자인 · `illustration` 일러스트 · `video_editing` 영상 편집 · `shooting` 촬영 · `copywriting` 글쓰기·카피 · `promotion` 홍보·SNS · `research` 자료 조사 · `presentation` 발표 |
 | `SKILL` | 40~45 | 8~13 | `photoshop` Photoshop · `illustrator` Illustrator · `premiere` Premiere Pro · `after_effects` After Effects · `powerpoint` PowerPoint · `excel` Excel |
 
+분야마다 맞는 직무·기술이 있도록 태그를 한 번 더 더했습니다 (id 46~71).
+
+| axis | id | sort_order | code → name |
+|---|---|---|---|
+| `ROLE` | 46~60 | 15~29 | `branding` 브랜딩 · `drawing` 회화·드로잉 · `composing` 작곡·편곡 · `performance` 연주·보컬 · `directing` 연출·스토리 · `motion_graphics` 모션그래픽 · `proofreading` 교정·퇴고 · `ideation` 아이디어 발상 · `content_creation` 콘텐츠 제작 · `market_analysis` 시장 분석 · `business_planning` 사업 계획 · `reporting` 취재·인터뷰 · `field_activity` 현장 활동 · `event_operation` 행사 운영 · `mentoring` 교육·멘토링 |
+| `SKILL` | 61~71 | 14~24 | `indesign` InDesign · `procreate` Procreate · `daw` 작곡 프로그램(DAW) · `final_cut` Final Cut Pro · `lightroom` Lightroom · `capcut` CapCut · `canva` Canva · `google_analytics` Google Analytics · `hwp` 한글(HWP) · `word` MS Word · `notion` Notion |
+
 `code`는 영문 소문자와 밑줄만 씁니다 (AI 응답을 이 규칙으로 잘라 읽습니다).
+
+**분야별 직무·기술.** 직무·기술 태그는 어느 분야에서 고를 수 있는지가 정해져 있습니다. 목록은 `CategoryCatalog`가 갖고 있고, 앱이 뜰 때 `category_field` 테이블(A 담당, `user.sql`)에 `(category_id, field_id)`로 채웁니다. 화면은 `GET /api/categories`의 `fieldCodes`로 받고 (분야·수준·목표 태그는 빈 배열), 다른 담당의 백엔드는 `category_field`를 native SQL로 읽습니다. 한 태그가 여러 분야에 속할 수 있습니다.
+
+```sql
+CREATE TABLE IF NOT EXISTS category_field (
+  category_id  BIGINT NOT NULL,
+  field_id     BIGINT NOT NULL,
+  PRIMARY KEY (category_id, field_id),
+  CONSTRAINT fk_cf_category FOREIGN KEY (category_id) REFERENCES category (id),
+  CONSTRAINT fk_cf_field    FOREIGN KEY (field_id)    REFERENCES category (id)
+);
+```
+
+쓰는 곳: 태그 확인(1-2), 방 만들기, 관리자 공모전 수정 화면이 고른 분야의 직무·기술만 보여 줍니다. 방 만들기는 `GET /api/rooms/contest-options`의 `fieldIds`(공모전의 분야 태그 ID)로 분야를 미리 골라 둡니다. 공모전 분류(B-2)는 AI에게 그 공모전 분야에 속한 직무·기술 코드만 보여 주고, 그 밖의 코드는 답에서 버립니다.
+
+| 분야 | 직무 | 기술 |
+|---|---|---|
+| `it` | backend, frontend, app, ai_data, uiux, planning | java, spring, python, javascript, react, kotlin, figma |
+| `idea` | planning, ideation, research, presentation | powerpoint, excel, hwp, word, notion |
+| `design` | graphic_design, uiux, illustration, branding, motion_graphics | figma, photoshop, illustrator, indesign, procreate |
+| `art` | illustration, drawing, composing, performance | photoshop, illustrator, procreate, daw |
+| `video` | video_editing, shooting, directing, motion_graphics | premiere, after_effects, final_cut, lightroom, capcut, photoshop |
+| `writing` | copywriting, research, proofreading | hwp, word |
+| `naming` | copywriting, ideation, research | powerpoint, hwp, word |
+| `marketing` | promotion, content_creation, market_analysis, planning, presentation | powerpoint, excel, photoshop, canva, google_analytics |
+| `startup` | business_planning, market_analysis, planning, presentation, research | powerpoint, excel, hwp, word, notion |
+| `supporters` | promotion, content_creation, reporting, shooting, copywriting | photoshop, premiere, capcut, canva |
+| `volunteer` | field_activity, event_operation, mentoring, promotion | powerpoint, excel, canva |
+| `etc` | planning, research, presentation, copywriting | powerpoint, excel, hwp, word, notion |
 
 ### 6.2 사용자
 

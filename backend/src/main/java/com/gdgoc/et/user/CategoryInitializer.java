@@ -16,6 +16,11 @@ public class CategoryInitializer implements ApplicationRunner {
 
     private final JdbcTemplate jdbcTemplate;
 
+    static final String LINK_CATEGORY_TO_FIELD = """
+            INSERT IGNORE INTO category_field (category_id, field_id)
+            SELECT c.id, f.id FROM category c JOIN category f ON f.code = ? WHERE c.code = ?
+            """;
+
     @Override
     public void run(ApplicationArguments args) {
         int inserted = insertMissingCategories();
@@ -40,6 +45,15 @@ public class CategoryInitializer implements ApplicationRunner {
                     "INSERT INTO category (id, axis, code, name, sort_order) VALUES (?, ?, ?, ?, ?)",
                     seed.id(), seed.axis().name(), seed.code(), seed.name(), seed.sortOrder());
         }
+        linkCategoriesToFields();
         return inserted;
+    }
+
+    private void linkCategoriesToFields() {
+        for (CategorySeed seed : CategoryCatalog.ALL) {
+            for (String fieldCode : CategoryCatalog.fieldCodesOf(seed.code())) {
+                jdbcTemplate.update(LINK_CATEGORY_TO_FIELD, fieldCode, seed.code());
+            }
+        }
     }
 }

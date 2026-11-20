@@ -2,7 +2,9 @@ package com.gdgoc.et.user;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -51,6 +53,23 @@ class CategorySuggesterTest {
 
         assertThat(suggester.suggest("포토샵으로 포스터 디자인을 해봤고 공모전은 처음이에요"))
                 .containsExactly(3L, 26L, 32L, 40L);
+    }
+
+    @Test
+    void keywordFallbackCoversRolesAndSkillsAddedPerField() {
+        when(aiClient.ask(anyString(), anyString())).thenAnswer(invocation -> invocation.getArgument(1));
+
+        assertThat(suggester.suggest("마케팅 공모전에서 캔바로 카드뉴스를 만들어 봤어요"))
+                .containsExactly(8L, 54L, 67L);
+    }
+
+    @Test
+    void promptTellsWhichFieldsEachRoleAndSkillBelongsTo() {
+        when(aiClient.ask(anyString(), anyString())).thenReturn("");
+
+        suggester.suggest("영상 편집을 해보고 싶어요");
+
+        verify(aiClient).ask(contains("premiere(SKILL, Premiere Pro, 분야 video/supporters)"), anyString());
     }
 
     @Test

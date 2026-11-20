@@ -8,6 +8,14 @@ CREATE TABLE IF NOT EXISTS category (
   UNIQUE KEY uk_category_code (code)
 );
 
+CREATE TABLE IF NOT EXISTS category_field (
+  category_id  BIGINT NOT NULL,
+  field_id     BIGINT NOT NULL,
+  PRIMARY KEY (category_id, field_id),
+  CONSTRAINT fk_cf_category FOREIGN KEY (category_id) REFERENCES category (id),
+  CONSTRAINT fk_cf_field    FOREIGN KEY (field_id)    REFERENCES category (id)
+);
+
 CREATE TABLE IF NOT EXISTS users (
   id          BIGINT       NOT NULL AUTO_INCREMENT,
   name        VARCHAR(30)  NOT NULL,

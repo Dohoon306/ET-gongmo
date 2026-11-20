@@ -31,7 +31,9 @@ class CategoryControllerTest {
                 .andExpect(jsonPath("$[0].axis").value("ROLE"))
                 .andExpect(jsonPath("$[0].code").value("backend"))
                 .andExpect(jsonPath("$[0].name").value("백엔드"))
-                .andExpect(jsonPath("$[0].sortOrder").value(1));
+                .andExpect(jsonPath("$[0].sortOrder").value(1))
+                .andExpect(jsonPath("$[0].fieldCodes.length()").value(1))
+                .andExpect(jsonPath("$[0].fieldCodes[0]").value("it"));
     }
 
     @Test
@@ -42,17 +44,22 @@ class CategoryControllerTest {
 
         mvc.perform(get("/api/categories"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(45))
+                .andExpect(jsonPath("$.length()").value(71))
                 .andExpect(jsonPath("$[0].code").value("it"))
+                .andExpect(jsonPath("$[0].fieldCodes.length()").value(0))
                 .andExpect(jsonPath("$[11].code").value("etc"))
                 .andExpect(jsonPath("$[12].code").value("backend"))
                 .andExpect(jsonPath("$[18].code").value("graphic_design"))
                 .andExpect(jsonPath("$[25].code").value("presentation"))
-                .andExpect(jsonPath("$[26].code").value("java"))
-                .andExpect(jsonPath("$[33].code").value("photoshop"))
-                .andExpect(jsonPath("$[38].code").value("excel"))
-                .andExpect(jsonPath("$[39].code").value("beginner"))
-                .andExpect(jsonPath("$[42].code").value("learn"))
-                .andExpect(jsonPath("$[44].code").value("award"));
+                .andExpect(jsonPath("$[26].code").value("branding"))
+                .andExpect(jsonPath("$[40].code").value("mentoring"))
+                .andExpect(jsonPath("$[41].code").value("java"))
+                .andExpect(jsonPath("$[48].code").value("photoshop"))
+                .andExpect(jsonPath("$[53].code").value("excel"))
+                .andExpect(jsonPath("$[54].code").value("indesign"))
+                .andExpect(jsonPath("$[64].code").value("notion"))
+                .andExpect(jsonPath("$[65].code").value("beginner"))
+                .andExpect(jsonPath("$[68].code").value("learn"))
+                .andExpect(jsonPath("$[70].code").value("award"));
     }
 }

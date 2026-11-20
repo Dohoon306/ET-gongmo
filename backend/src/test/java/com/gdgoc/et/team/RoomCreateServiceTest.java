@@ -1,5 +1,6 @@
 package com.gdgoc.et.team;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -33,6 +34,13 @@ class RoomCreateServiceTest {
         assertThatThrownBy(() -> service.create(1L, room(1, List.of(1L)))).isInstanceOf(ApiException.class);
         assertThatThrownBy(() -> service.create(1L, room(11, List.of(1L)))).isInstanceOf(ApiException.class);
         verify(jdbc, never()).update(any(PreparedStatementCreator.class), any(KeyHolder.class));
+    }
+
+    @Test
+    void readsContestFieldIdsFromCommaSeparatedColumn() {
+        assertThat(RoomCreateService.idsIn("1,3")).containsExactly(1L, 3L);
+        assertThat(RoomCreateService.idsIn(null)).isEmpty();
+        assertThat(RoomCreateService.idsIn("")).isEmpty();
     }
 
     @Test

@@ -1,11 +1,20 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import { api } from '../../api/client.ts'
+import { choicesForAxis, withoutCategory } from '../../common/categoryFields.ts'
 import { useGet } from '../team/api.ts'
 import { Card, ErrorText, primaryButton, secondaryButton } from '../team/ui.tsx'
 import type { AdminContest } from './adminApi.ts'
 
-type Category = { id: number; name: string; axis: string }
+type Category = { id: number; name: string; axis: string; code: string; fieldCodes: string[] }
+
+const AXIS_LABELS: [string, string][] = [
+  ['FIELD', '분야'],
+  ['ROLE', '직무'],
+  ['SKILL', '기술'],
+  ['LEVEL', '수준'],
+  ['GOAL', '목표'],
+]
 
 type Form = {
   title: string
@@ -101,10 +110,12 @@ export default function AdminContestsTab() {
     }
   }
 
-  const toggleCategory = (id: number) =>
+  const toggleCategory = (category: Category) =>
     setForm((f) => ({
       ...f,
-      categoryIds: f.categoryIds.includes(id) ? f.categoryIds.filter((c) => c !== id) : [...f.categoryIds, id],
+      categoryIds: f.categoryIds.includes(category.id)
+        ? withoutCategory(categories.data ?? [], f.categoryIds, category)
+        : [...f.categoryIds, category.id],
     }))
 
   const shown = data?.filter((c) => c.title.toLowerCase().includes(query.trim().toLowerCase())) ?? []
@@ -144,18 +155,32 @@ export default function AdminContestsTab() {
             </div>
             <fieldset className="mt-4">
               <legend className="text-sm font-semibold">태그 (추천에 쓰여요)</legend>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {categories.data?.map((c) => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    aria-pressed={form.categoryIds.includes(c.id)}
-                    onClick={() => toggleCategory(c.id)}
-                    className={`h-7 rounded-full px-3 text-[13px] font-medium ${form.categoryIds.includes(c.id) ? 'bg-brand text-white' : 'bg-(--color-subtle) text-(--color-ink-2)'}`}
-                  >
-                    {c.name}
-                  </button>
-                ))}
+              <div className="mt-2 space-y-3">
+                {AXIS_LABELS.map(([axis, label]) => {
+                  const choices = choicesForAxis(categories.data ?? [], axis, form.categoryIds)
+                  return (
+                    <div key={axis} role="group" aria-label={label} className="flex items-start gap-3">
+                      <span className="w-10 shrink-0 pt-1 text-[13px] text-(--color-muted)">{label}</span>
+                      {categories.data && choices.length === 0 ? (
+                        <p className="pt-1 text-[13px] text-(--color-muted)">분야를 먼저 골라 주세요. 고른 분야에 맞는 태그가 나와요.</p>
+                      ) : (
+                        <div className="flex flex-wrap gap-1.5">
+                          {choices.map((c) => (
+                            <button
+                              key={c.id}
+                              type="button"
+                              aria-pressed={form.categoryIds.includes(c.id)}
+                              onClick={() => toggleCategory(c)}
+                              className={`h-7 rounded-full px-3 text-[13px] font-medium ${form.categoryIds.includes(c.id) ? 'bg-brand text-white' : 'bg-(--color-subtle) text-(--color-ink-2)'}`}
+                            >
+                              {c.name}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             </fieldset>
             <div className="mt-4 flex justify-end gap-2">

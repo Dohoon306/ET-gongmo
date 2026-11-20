@@ -5,16 +5,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import org.junit.jupiter.api.Test;
 
 class CategoryCatalogTest {
 
     @Test
-    void hasFortyFiveCategoriesWithIdsOneToFortyFiveInOrder() {
-        assertThat(CategoryCatalog.ALL).hasSize(45);
+    void hasSeventyOneCategoriesWithIdsOneToSeventyOneInOrder() {
+        assertThat(CategoryCatalog.ALL).hasSize(71);
         assertThat(CategoryCatalog.ALL.stream().map(CategorySeed::id))
-                .containsExactlyElementsOf(LongStream.rangeClosed(1, 45).boxed().toList());
+                .containsExactlyElementsOf(LongStream.rangeClosed(1, 71).boxed().toList());
     }
 
     @Test
@@ -46,7 +47,64 @@ class CategoryCatalogTest {
                 .containsEntry("graphic_design", 32L)
                 .containsEntry("presentation", 39L)
                 .containsEntry("photoshop", 40L)
-                .containsEntry("excel", 45L);
+                .containsEntry("excel", 45L)
+                .containsEntry("branding", 46L)
+                .containsEntry("mentoring", 60L)
+                .containsEntry("indesign", 61L)
+                .containsEntry("notion", 71L);
+    }
+
+    @Test
+    void everyRoleAndSkillBelongsToAtLeastOneField() {
+        List<String> fieldCodes = codesOf(CategoryAxis.FIELD);
+
+        assertThat(CategoryCatalog.ALL.stream()
+                        .filter(seed -> seed.axis() == CategoryAxis.ROLE || seed.axis() == CategoryAxis.SKILL))
+                .allSatisfy(seed -> assertThat(CategoryCatalog.fieldCodesOf(seed.code()))
+                        .as(seed.code())
+                        .isNotEmpty()
+                        .isSubsetOf(fieldCodes)
+                        .doesNotHaveDuplicates());
+    }
+
+    @Test
+    void everyFieldOffersRolesAndSkills() {
+        for (String fieldCode : codesOf(CategoryAxis.FIELD)) {
+            assertThat(codesOf(CategoryAxis.ROLE).stream()
+                            .filter(code -> CategoryCatalog.fieldCodesOf(code).contains(fieldCode)))
+                    .as(fieldCode + " 직무")
+                    .hasSizeGreaterThanOrEqualTo(3);
+            assertThat(codesOf(CategoryAxis.SKILL).stream()
+                            .filter(code -> CategoryCatalog.fieldCodesOf(code).contains(fieldCode)))
+                    .as(fieldCode + " 기술")
+                    .hasSizeGreaterThanOrEqualTo(2);
+        }
+    }
+
+    @Test
+    void fieldLevelAndGoalTagsBelongToNoField() {
+        assertThat(CategoryCatalog.ALL.stream()
+                        .filter(seed -> seed.axis() != CategoryAxis.ROLE && seed.axis() != CategoryAxis.SKILL))
+                .allSatisfy(seed -> assertThat(CategoryCatalog.fieldCodesOf(seed.code())).isEmpty());
+    }
+
+    @Test
+    void itFieldKeepsItsDeveloperRolesAndSkills() {
+        assertThat(codesOf(CategoryAxis.ROLE).stream()
+                        .filter(code -> CategoryCatalog.fieldCodesOf(code).contains("it")))
+                .containsExactly("backend", "frontend", "app", "ai_data", "uiux", "planning");
+        assertThat(codesOf(CategoryAxis.SKILL).stream()
+                        .filter(code -> CategoryCatalog.fieldCodesOf(code).contains("it")))
+                .containsExactly("java", "spring", "python", "javascript", "react", "kotlin", "figma");
+        assertThat(CategoryCatalog.fieldCodesOf("java")).containsExactly("it");
+        assertThat(CategoryCatalog.fieldCodesOf("photoshop")).doesNotContain("it");
+    }
+
+    private List<String> codesOf(CategoryAxis axis) {
+        return CategoryCatalog.ALL.stream()
+                .filter(seed -> seed.axis() == axis)
+                .map(CategorySeed::code)
+                .toList();
     }
 
     @Test
@@ -65,9 +123,9 @@ class CategoryCatalogTest {
 
         assertThat(sortOrdersByAxis.get(CategoryAxis.FIELD)).containsExactly(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12);
         assertThat(sortOrdersByAxis.get(CategoryAxis.ROLE))
-                .containsExactly(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14);
+                .containsExactlyElementsOf(IntStream.rangeClosed(1, 29).boxed().toList());
         assertThat(sortOrdersByAxis.get(CategoryAxis.SKILL))
-                .containsExactly(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13);
+                .containsExactlyElementsOf(IntStream.rangeClosed(1, 24).boxed().toList());
         assertThat(sortOrdersByAxis.get(CategoryAxis.LEVEL)).containsExactly(1, 2, 3);
         assertThat(sortOrdersByAxis.get(CategoryAxis.GOAL)).containsExactly(1, 2, 3);
     }
