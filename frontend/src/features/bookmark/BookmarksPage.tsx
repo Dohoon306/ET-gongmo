@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import { api } from '../../api/client.ts'
+import { DDayBadge } from '../../common/DDayBadge.tsx'
 import { getDeadline } from '../../common/deadline.ts'
 import { useCurrentUser } from '../../common/useCurrentUser.ts'
 import BookmarkButton from './BookmarkButton.tsx'
@@ -55,7 +56,7 @@ function ContestGrid({ contests, now, muted = false, onRemove }: { contests: Sav
 function SavedContestCard({ contest, now, muted, onRemove }: { contest: SavedContest; now: Date; muted: boolean; onRemove: (contestId: number) => void }) {
   const deadline = getDeadline(contest.endDate, now)
   const status = deadline.expired ? '마감' : deadline.urgent ? '마감 임박' : '진행 중'
-  return <li className={`flex min-h-[220px] flex-col rounded-3xl border border-[#dce2da] p-5 shadow-[0_4px_12px_rgba(16,42,94,0.05)] ${muted ? 'bg-[#f6f7f3]' : 'bg-white'}`}><div className="flex items-start justify-between gap-3"><div className="flex flex-wrap gap-1.5"><span className="rounded-full bg-[#e8f1ff] px-2.5 py-1 text-[11px] font-semibold text-[#102a5e]">저장 공고</span><span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${deadline.expired ? 'bg-[#eef1ec] text-[#56635b]' : deadline.urgent ? 'bg-[#fdebec] text-[#d94a4a]' : 'bg-[#e5f0e8] text-[#1d6a43]'}`}>{status}</span></div><BookmarkButton contestId={contest.id} initiallySaved onChange={(saved) => { if (!saved) onRemove(contest.id) }} /></div><Link to={`/contests/${contest.id}`} className={`mt-4 line-clamp-2 text-lg font-extrabold leading-7 transition hover:text-[#1d6a43] ${muted ? 'text-[#334155]' : 'text-[#0f234c]'}`}>{contest.title}</Link><p className="mt-2 text-[13px] font-medium text-[#64748b]">{contest.host ?? '주최 정보 없음'}</p><div className="mt-auto flex items-center justify-between gap-3 pt-5 text-[13px] text-[#64748b]"><span>{deadline.date ?? '상시 모집'}{contest.prize ? ` · 1등 ${contest.prize}` : ''}</span><span className={`shrink-0 font-bold ${deadline.expired ? 'text-[#56635b]' : 'text-[#102a5e]'}`}>{deadline.label}</span></div></li>
+  return <li className={`flex min-h-[220px] flex-col rounded-3xl border border-[#dce2da] p-5 shadow-[0_4px_12px_rgba(16,42,94,0.05)] ${muted ? 'bg-[#f6f7f3]' : 'bg-white'}`}><div className="flex items-start justify-between gap-3"><div className="flex flex-wrap gap-1.5"><span className="rounded-full bg-[#e8f1ff] px-2.5 py-1 text-[11px] font-semibold text-[#102a5e]">저장 공고</span><span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${deadline.expired ? 'bg-[#eef1ec] text-[#56635b]' : deadline.urgent ? 'bg-[#fdebec] text-[#d94a4a]' : 'bg-[#e5f0e8] text-[#1d6a43]'}`}>{status}</span></div><BookmarkButton contestId={contest.id} initiallySaved onChange={(saved) => { if (!saved) onRemove(contest.id) }} /></div><Link to={`/contests/${contest.id}`} className={`mt-4 line-clamp-2 text-lg font-extrabold leading-7 transition hover:text-[#1d6a43] ${muted ? 'text-[#334155]' : 'text-[#0f234c]'}`}>{contest.title}</Link><p className="mt-2 text-[13px] font-medium text-[#64748b]">{contest.host ?? '주최 정보 없음'}</p><div className="mt-auto flex items-center justify-between gap-3 pt-5 text-[13px] text-[#64748b]"><DDayBadge endDate={contest.endDate} today={now} />{contest.prize && <span className="shrink-0">1등 {contest.prize}</span>}</div></li>
 }
 
 function EmptyBookmarks() {

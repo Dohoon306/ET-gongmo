@@ -23,11 +23,11 @@ export default function ProfilePage() {
 
   const profileUserId = userId === 'me' ? String(currentUserId) : userId
   return profileUserId && /^[1-9][0-9]*$/.test(profileUserId)
-    ? <ProfileDetails key={profileUserId} userId={profileUserId} />
+    ? <ProfileDetails key={profileUserId} userId={profileUserId} own={String(currentUserId) === profileUserId} />
     : <p role="alert" className="text-red-700">유효한 사용자를 선택해 주세요.</p>
 }
 
-function ProfileDetails({ userId }: { userId: string }) {
+function ProfileDetails({ userId, own }: { userId: string; own: boolean }) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [error, setError] = useState<string | null>(null)
   const { state } = useLocation()
@@ -76,7 +76,7 @@ function ProfileDetails({ userId }: { userId: string }) {
                       <p className="break-words text-sm font-semibold">{team.title}</p>
                       <p className="text-xs text-[#56635B]">{team.status === 'CLOSED' ? '종료 · ' : ''}팀원 {team.memberCount}명</p>
                     </div>
-                    {team.status === 'CLOSED' &&
+                    {own && team.status === 'CLOSED' &&
                       <Link to={'/rooms/' + team.id + '/review'} className="text-xs font-semibold text-[#1D6A43] hover:underline">팀원 평가 ›</Link>}
                   </li>
                 ))}
