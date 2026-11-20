@@ -53,9 +53,23 @@ function ContestDetailLoader({ contestId }: { contestId?: string }) {
   )
 }
 
+function getOrganizerUrl(value: string | null): string | null {
+  if (!value) return null
+
+  try {
+    const url = new URL(value)
+    const hostname = url.hostname.replace(/\.$/, '')
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') return null
+    if (hostname === 'gongmoaview.com' || hostname.endsWith('.gongmoaview.com')) return null
+    return url.href
+  } catch {
+    return null
+  }
+}
+
 function ContestContent({ contest }: { contest: ContestDetail }) {
   const primaryReward = contest.prize || contest.benefit
-  const supportUrl = contest.sourceUrl || contest.gongmoaUrl
+  const supportUrl = getOrganizerUrl(contest.sourceUrl)
   const period = formatPeriod(contest.startDate, contest.endDate)
   const optionalDetails = [
     ['활동 기간', contest.activityPeriod],
@@ -84,7 +98,11 @@ function ContestContent({ contest }: { contest: ContestDetail }) {
         <p className="text-[13px] font-medium text-[#d5eadc]">마감까지</p>
         <div className="mt-1"><DDayBadge endDate={contest.endDate} /></div>
         <div className="mt-4 grid gap-2">
-          <a href={supportUrl} target="_blank" rel="noreferrer" className="flex h-12 items-center justify-center rounded-xl bg-white px-4 text-sm font-bold text-[#183322] transition hover:bg-[#f0f6f1]">주최 측 원문에서 지원하기</a>
+          {supportUrl ? (
+            <a href={supportUrl} target="_blank" rel="noreferrer" className="flex h-12 items-center justify-center rounded-xl bg-white px-4 text-sm font-bold text-[#183322] transition hover:bg-[#f0f6f1]">주최 측 원문에서 지원하기</a>
+          ) : (
+            <p className="rounded-xl bg-white/10 px-4 py-3 text-center text-sm">주최 측 지원 링크를 확인할 수 없어요.</p>
+          )}
           <Link to={`/contests/${contest.id}/rooms`} className="flex h-12 items-center justify-center rounded-xl border border-white/60 bg-white/10 px-4 text-sm font-bold transition hover:bg-white/20">이 공모전의 모집 방 보기</Link>
           <Link to={`/contests/${contest.id}/rooms/new`} className="flex h-12 items-center justify-center rounded-xl border border-white/60 bg-white/10 px-4 text-sm font-bold transition hover:bg-white/20">이 공모전에 방 만들기</Link>
           <div className="flex justify-center rounded-xl border border-white/60 bg-white/10 py-1 [&_button]:border-0 [&_button]:bg-transparent [&_button]:text-white [&_button]:hover:bg-white/10"><BookmarkButton contestId={contest.id} /></div>
