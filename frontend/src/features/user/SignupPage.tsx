@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { useNavigate } from 'react-router'
+import { useLocation, useNavigate } from 'react-router'
 import { api, ApiError } from '../../api/client.ts'
 import { useCurrentUser } from '../../common/useCurrentUser.ts'
 import sparkleIcon from './icons/sparkle.svg'
 
-type CreatedUser = { id: number; name: string }
+type SavedUser = { id: number; name: string }
+type ProfileDraft = { name: string; intro: string }
 
 const NAME_MAX_LENGTH = 30
 const INTRO_MAX_LENGTH = 500
@@ -13,10 +14,12 @@ const INTRO_MAX_LENGTH = 500
 const steps = ['자기소개 쓰기', 'AI가 붙인 태그 확인하기', '나에게 맞는 공모전과 팀 찾기']
 
 export default function SignupPage() {
-  const { setUserId } = useCurrentUser()
+  const { userId, setUserId, reloadUsers } = useCurrentUser()
   const navigate = useNavigate()
-  const [name, setName] = useState('')
-  const [intro, setIntro] = useState('')
+  const draft = useLocation().state as ProfileDraft | null
+  const rewriting = draft !== null && userId !== null
+  const [name, setName] = useState(rewriting ? draft.name : '')
+  const [intro, setIntro] = useState(rewriting ? draft.intro : '')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -30,11 +33,14 @@ export default function SignupPage() {
     setSubmitting(true)
     setError(null)
     try {
-      const created = await api<CreatedUser>('/api/users', {
-        method: 'POST',
-        body: { name: trimmedName, intro: trimmedIntro },
-      })
-      setUserId(created.id)
+      const body = { name: trimmedName, intro: trimmedIntro }
+      if (rewriting) {
+        await api<SavedUser>('/api/users/me', { method: 'PUT', body })
+        await reloadUsers()
+      } else {
+        const created = await api<SavedUser>('/api/users', { method: 'POST', body })
+        setUserId(created.id)
+      }
       navigate('/signup/tags')
     } catch (failure) {
       setError(failure instanceof ApiError ? failure.message : '가입하지 못했어요. 잠시 뒤에 다시 시도해 주세요.')
