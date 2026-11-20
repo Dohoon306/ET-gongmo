@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router'
 import { api } from '../../api/client.ts'
 import DDayBadge from '../../common/DDayBadge.tsx'
@@ -21,6 +21,7 @@ type Contest = {
 type SortOrder = 'recommended' | 'deadline'
 
 const ALL = '전체'
+const PAGE_SIZE = 12
 
 export default function ContestRecommendationPage() {
   const { userId } = useCurrentUser()
@@ -51,6 +52,8 @@ function Recommendations({ userId }: { userId: number }) {
   const [level, setLevel] = useState(ALL)
   const [interestOnly, setInterestOnly] = useState(false)
   const [bookmarksOnly, setBookmarksOnly] = useState(false)
+  const [requestedPage, setRequestedPage] = useState(1)
+  const resultsTop = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const request = new AbortController()
@@ -81,6 +84,20 @@ function Recommendations({ userId }: { userId: number }) {
     return sortOrder === 'deadline' ? [...filtered].sort((left, right) => left.endDate.localeCompare(right.endDate)) : filtered
   }, [bookmarkIds, bookmarksOnly, contests, field, interestOnly, level, query, sortOrder])
 
+  const pageCount = Math.max(1, Math.ceil(visibleContests.length / PAGE_SIZE))
+  const page = Math.min(requestedPage, pageCount)
+  const pageContests = visibleContests.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
+  const fromFirstPage = <Value,>(apply: (value: Value) => void) => (value: Value) => {
+    apply(value)
+    setRequestedPage(1)
+  }
+
+  const goToPage = (next: number) => {
+    setRequestedPage(next)
+    resultsTop.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
   const markBookmark = (contestId: number, saved: boolean) => {
     setBookmarkIds((current) => {
       const next = new Set(current)
@@ -106,24 +123,24 @@ function Recommendations({ userId }: { userId: number }) {
         <div className="flex flex-col gap-3 md:flex-row">
           <label className="flex h-12 flex-1 items-center gap-3 rounded-xl border border-[#d9e2f0] px-4 text-slate-500">
             <SearchIcon />
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="공모전명, 주최, 키워드 검색" className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400" />
+            <input value={query} onChange={(event) => fromFirstPage(setQuery)(event.target.value)} placeholder="공모전명, 주최, 키워드 검색" className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400" />
           </label>
-          <select aria-label="정렬 기준" value={sortOrder} onChange={(event) => setSortOrder(event.target.value as SortOrder)} className="h-12 rounded-xl border border-[#d9e2f0] bg-white px-4 text-sm font-medium text-[#0f234c] outline-none md:w-52">
+          <select aria-label="정렬 기준" value={sortOrder} onChange={(event) => fromFirstPage(setSortOrder)(event.target.value as SortOrder)} className="h-12 rounded-xl border border-[#d9e2f0] bg-white px-4 text-sm font-medium text-[#0f234c] outline-none md:w-52">
             <option value="recommended">맞춤 추천순</option>
             <option value="deadline">마감 임박순</option>
           </select>
         </div>
-        {fields.length > 0 && <FilterRow label="분야" values={[ALL, ...fields]} selected={field} onSelect={setField} />}
+        {fields.length > 0 && <FilterRow label="분야" values={[ALL, ...fields]} selected={field} onSelect={fromFirstPage(setField)} />}
         <div className="mt-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-          {levels.length > 0 ? <FilterRow label="난이도" values={[ALL, ...levels]} selected={level} onSelect={setLevel} compact /> : <span />}
+          {levels.length > 0 ? <FilterRow label="난이도" values={[ALL, ...levels]} selected={level} onSelect={fromFirstPage(setLevel)} compact /> : <span />}
           <div className="flex flex-wrap gap-2 xl:justify-end">
-            <ToggleButton active={interestOnly} onClick={() => setInterestOnly((value) => !value)}>내 관심 분야만</ToggleButton>
-            <ToggleButton active={bookmarksOnly} onClick={() => setBookmarksOnly((value) => !value)}>북마크만</ToggleButton>
+            <ToggleButton active={interestOnly} onClick={() => fromFirstPage(setInterestOnly)(!interestOnly)}>내 관심 분야만</ToggleButton>
+            <ToggleButton active={bookmarksOnly} onClick={() => fromFirstPage(setBookmarksOnly)(!bookmarksOnly)}>북마크만</ToggleButton>
           </div>
         </div>
       </div>
 
-      <div className="mt-7 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div ref={resultsTop} className="mt-7 flex scroll-mt-24 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm font-semibold text-slate-700">총 <span className="text-brand">{visibleContests.length}</span>개의 공모전</p>
         <div className="flex flex-wrap gap-2 text-xs">
           <span className="rounded-full bg-[#1d6a43] px-3 py-1.5 font-semibold text-white">✓ 나와 겹치는 태그</span>
@@ -133,11 +150,13 @@ function Recommendations({ userId }: { userId: number }) {
 
       {visibleContests.length ? (
         <div className="mt-4 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {visibleContests.map((contest) => <ContestCard key={contest.id} contest={contest} onBookmark={(saved) => markBookmark(contest.id, saved)} />)}
+          {pageContests.map((contest) => <ContestCard key={contest.id} contest={contest} onBookmark={(saved) => markBookmark(contest.id, saved)} />)}
         </div>
       ) : (
         <div className="mt-4 rounded-3xl border border-dashed border-[#d9e2f0] bg-white px-6 py-16 text-center text-slate-500">조건에 맞는 공모전이 없어요. 필터를 바꿔 보세요.</div>
       )}
+
+      {pageCount > 1 && <PageNumbers page={page} pageCount={pageCount} onSelect={goToPage} />}
 
       <p className="mt-7 text-xs text-slate-500">공고 정보 출처: 공모아뷰 · 지원과 접수는 각 공고의 주최 측 원문에서 해요.</p>
     </>
@@ -162,6 +181,19 @@ function FilterRow({ label, values, selected, onSelect, compact = false }: { lab
       <span className="mr-2 text-xs font-medium text-slate-500">{label}</span>
       {values.map((value) => <button key={value} type="button" onClick={() => onSelect(value)} className={`h-10 rounded-full border px-4 text-sm font-medium transition ${selected === value ? 'border-[#1d6a43] bg-[#1d6a43] text-white' : 'border-[#c9d1c6] bg-white text-slate-700 hover:border-[#1d6a43]'}`}>{selected === value ? '✓ ' : ''}{value}</button>)}
     </div>
+  )
+}
+
+function PageNumbers({ page, pageCount, onSelect }: { page: number; pageCount: number; onSelect: (page: number) => void }) {
+  const stepClass = 'h-10 rounded-xl border border-[#c9d1c6] bg-white px-3 text-sm font-medium text-slate-700 transition hover:border-[#1d6a43] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-[#c9d1c6]'
+  return (
+    <nav aria-label="공모전 목록 페이지" className="mt-8 flex flex-wrap items-center justify-center gap-2">
+      <button type="button" disabled={page === 1} onClick={() => onSelect(page - 1)} className={stepClass}>이전</button>
+      {Array.from({ length: pageCount }, (_, index) => index + 1).map((number) => (
+        <button key={number} type="button" aria-label={`${number}페이지`} aria-current={number === page ? 'page' : undefined} onClick={() => onSelect(number)} className={`h-10 min-w-10 rounded-xl border px-3 text-sm font-semibold transition ${number === page ? 'border-[#1d6a43] bg-[#1d6a43] text-white' : 'border-[#c9d1c6] bg-white text-slate-700 hover:border-[#1d6a43]'}`}>{number}</button>
+      ))}
+      <button type="button" disabled={page === pageCount} onClick={() => onSelect(page + 1)} className={stepClass}>다음</button>
+    </nav>
   )
 }
 
