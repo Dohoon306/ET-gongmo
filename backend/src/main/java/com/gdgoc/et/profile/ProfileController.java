@@ -27,10 +27,11 @@ public class ProfileController {
     @Transactional(readOnly = true)
     public Profile profile(@PathVariable long userId) {
         ProfileIdentity identity = jdbc.query("""
-                SELECT u.name, image.image_png
+                SELECT u.name, u.intro, image.image_png
                 FROM users u LEFT JOIN user_profile_image image ON image.user_id = u.id
                 WHERE u.id = ?
-                """, (row, index) -> new ProfileIdentity(row.getString("name"), row.getBytes("image_png")), userId)
+                """, (row, index) -> new ProfileIdentity(row.getString("name"), row.getString("intro"),
+                        row.getBytes("image_png")), userId)
                 .stream().findFirst()
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
         List<String> categories = jdbc.queryForList("""
@@ -59,7 +60,7 @@ public class ProfileController {
                 ORDER BY score DESC, comment ASC
                 """, (row, index) -> new ReviewComment(row.getInt("score"), row.getString("comment")), userId);
         String image = identity.image() == null ? null : Base64.getEncoder().encodeToString(identity.image());
-        return new Profile(userId, identity.name(), categories, teams, rating, comments, image);
+        return new Profile(userId, identity.name(), identity.intro(), categories, teams, rating, comments, image);
     }
 
     @ExceptionHandler(BadSqlGrammarException.class)
@@ -71,11 +72,11 @@ public class ProfileController {
                 .body(new ErrorResponse("사용자·팀 테이블을 먼저 초기화해 주세요."));
     }
 
-    public record Profile(long id, String name, List<String> categories, List<Team> teams, Rating rating,
+    public record Profile(long id, String name, String intro, List<String> categories, List<Team> teams, Rating rating,
                           List<ReviewComment> comments, String image) {
     }
 
-    private record ProfileIdentity(String name, byte[] image) {
+    private record ProfileIdentity(String name, String intro, byte[] image) {
     }
 
     public record Team(long id, String title, String status, int memberCount) {
