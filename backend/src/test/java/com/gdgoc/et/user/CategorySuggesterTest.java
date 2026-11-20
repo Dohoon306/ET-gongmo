@@ -46,6 +46,14 @@ class CategorySuggesterTest {
     }
 
     @Test
+    void keywordFallbackCoversFieldsOutsideIt() {
+        when(aiClient.ask(anyString(), anyString())).thenAnswer(invocation -> invocation.getArgument(1));
+
+        assertThat(suggester.suggest("포토샵으로 포스터 디자인을 해봤고 공모전은 처음이에요"))
+                .containsExactly(3L, 26L, 32L, 40L);
+    }
+
+    @Test
     void blankIntroHasNoSuggestion() {
         assertThat(suggester.suggest(" ")).isEmpty();
         assertThat(suggester.suggest(null)).isEmpty();

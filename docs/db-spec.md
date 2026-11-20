@@ -777,7 +777,16 @@ SELECT COUNT(*) FROM chat_message WHERE receiver_id = :me AND read_at IS NULL;
 | `LEVEL` | `beginner` 초보 · `experienced` 경험 있음 · `expert` 숙련 |
 | `GOAL` | `learn` 배우고 싶음 · `portfolio` 포트폴리오 · `award` 수상 목표 |
 
-`sort_order`는 위 순서대로 1부터 매깁니다.
+`id`와 `sort_order`는 위 순서대로 1부터 매깁니다 (id 1~31).
+
+IT 밖 공모전을 위해 직무·기술 태그를 더했습니다. 이미 쓰는 ID가 밀리지 않도록 id는 32부터 이어 붙이고, `sort_order`는 같은 축의 마지막 값 다음부터 매깁니다.
+
+| axis | id | sort_order | code → name |
+|---|---|---|---|
+| `ROLE` | 32~39 | 7~14 | `graphic_design` 그래픽 디자인 · `illustration` 일러스트 · `video_editing` 영상 편집 · `shooting` 촬영 · `copywriting` 글쓰기·카피 · `promotion` 홍보·SNS · `research` 자료 조사 · `presentation` 발표 |
+| `SKILL` | 40~45 | 8~13 | `photoshop` Photoshop · `illustrator` Illustrator · `premiere` Premiere Pro · `after_effects` After Effects · `powerpoint` PowerPoint · `excel` Excel |
+
+`code`는 영문 소문자와 밑줄만 씁니다 (AI 응답을 이 규칙으로 잘라 읽습니다).
 
 ### 6.2 사용자
 

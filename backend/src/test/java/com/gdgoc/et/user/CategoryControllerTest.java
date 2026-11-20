@@ -42,13 +42,17 @@ class CategoryControllerTest {
 
         mvc.perform(get("/api/categories"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(31))
+                .andExpect(jsonPath("$.length()").value(45))
                 .andExpect(jsonPath("$[0].code").value("it"))
                 .andExpect(jsonPath("$[11].code").value("etc"))
                 .andExpect(jsonPath("$[12].code").value("backend"))
-                .andExpect(jsonPath("$[18].code").value("java"))
-                .andExpect(jsonPath("$[25].code").value("beginner"))
-                .andExpect(jsonPath("$[28].code").value("learn"))
-                .andExpect(jsonPath("$[30].code").value("award"));
+                .andExpect(jsonPath("$[18].code").value("graphic_design"))
+                .andExpect(jsonPath("$[25].code").value("presentation"))
+                .andExpect(jsonPath("$[26].code").value("java"))
+                .andExpect(jsonPath("$[33].code").value("photoshop"))
+                .andExpect(jsonPath("$[38].code").value("excel"))
+                .andExpect(jsonPath("$[39].code").value("beginner"))
+                .andExpect(jsonPath("$[42].code").value("learn"))
+                .andExpect(jsonPath("$[44].code").value("award"));
     }
 }
