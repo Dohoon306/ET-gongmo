@@ -1,8 +1,8 @@
 # DB 명세서 (초안)
 
 > 상태: 초안 · 팀 검토 전
-> 기준: [기능 명세서 v0.3](feature-spec.md), [시연용 데이터](demo-data.md), [README 기술 스택](../README.md#기술-스택)
-> DB: MySQL 8 · InnoDB · `utf8mb4` / `utf8mb4_0900_ai_ci` · JPA `ddl-auto=none`, 테이블은 아래 DDL을 `schema.sql`로 만듭니다.
+> 기준: [기능 명세서 v0.4](feature-spec.md), [시연용 데이터](demo-data.md), [README 기술 스택](../README.md#기술-스택)
+> DB: MySQL 8 · InnoDB · `utf8mb4` / `utf8mb4_0900_ai_ci` · JPA `ddl-auto=none`, 테이블은 아래 DDL을 담당별 `db/schema/*.sql` 파일로 만듭니다.
 
 ## 1. 한눈에 보기
 
@@ -28,19 +28,21 @@ erDiagram
 
 | 테이블 | 내용 | 만드는 사람 | 읽는 기능 |
 |---|---|---|---|
-| `category` | 고정 태그 목록 (X-2) | B | 전체 |
-| `users` | 사용자 (A-1) | A | 전체 (X-1 헤더) |
-| `user_category` | 사용자가 확정한 태그 (A-3) | A | B-3, C-2 |
-| `contest` | 공모아뷰에서 받은 공모전 (B-1) | B | C (방 목록 위 공모전 정보) |
+| `category` | 고정 태그 목록 (X-2) | A | 전체 |
+| `users` | 사용자 (A-1) | A | 전체 (X-1 헤더), C-5, C-6, D-3, D-4 |
+| `user_category` | 사용자가 확정한 태그 (A-3) | A | B-3, C-2, C-5, C-6, D-4 |
+| `contest` | 공모아뷰에서 받은 공모전 (B-1) | B | C-2 (방 목록 위 공모전 정보), D-2 |
 | `contest_category` | 공모전 태그 (B-2) | B | B-3 |
-| `room` | 모집 방 = 팀 (C-1) | C | A-5, A-6 |
+| `room` | 모집 방 = 팀 (C-1) | C | D-3, D-4 |
 | `room_category` | 방이 원하는 팀원 태그 | C | C-2 |
-| `room_member` | 팀원, 방장 포함 (C-5) | C | A-5, A-6 |
+| `room_member` | 팀원, 방장 포함 (C-5) | C | D-3, D-4 |
 | `join_request` | 참가 요청 (C-4, C-5) | C | - |
-| `evaluation` | 팀원 평가 (A-5), 익명 | A | A-6 |
+| `evaluation` | 팀원 평가 (D-3), 익명 | D | D-4 |
 | `bookmark` | 관심 공고 (D-1) | D | D-2 |
 
-"만드는 사람"이 테이블과 JPA 엔티티를 만들고 고칩니다. 다른 사람 테이블은 읽기만 하고, 바꿔야 하면 그 사람에게 요청합니다.
+"만드는 사람"이 테이블과 JPA 엔티티, DDL 파일, 시드 조각을 만들고 고칩니다. 다른 사람 테이블은 **native SQL로 읽기만** 하고, 그 담당의 엔티티·리포지토리 클래스는 import하지 않습니다. 컬럼을 바꿔야 하면 그 사람에게 요청합니다.
+
+태그 연결 테이블(`user_category`, `contest_category`, `room_category`)은 `Category` 엔티티를 거치지 않고 `@ElementCollection`과 `@CollectionTable`로 `Set<Long>` 카테고리 ID만 들고 있게 매핑합니다. 그러면 세 담당이 `Category` 클래스에 기대지 않습니다.
 
 ## 2. 공통 규칙
 
@@ -51,15 +53,16 @@ erDiagram
 | 상태 값 | MySQL `ENUM` 대신 `VARCHAR(20)` + 영문 대문자. JPA는 `@Enumerated(EnumType.STRING)` |
 | 시간 | `DATETIME`, 한국 시간으로 저장 (JDBC URL에 `serverTimezone=Asia/Seoul`) |
 | 삭제 | 시연 범위에 삭제 기능은 없습니다. 연결 테이블만 부모가 지워지면 같이 지워지게 `ON DELETE CASCADE` |
-| 초기화 (X-5) | 시드 스크립트가 `SET FOREIGN_KEY_CHECKS = 0` → 전 테이블 `TRUNCATE` → 다시 1 → 시드 입력 |
+| 초기화 (X-5) | `seed` 러너가 `SET FOREIGN_KEY_CHECKS = 0` → 현재 스키마의 전 테이블 `TRUNCATE` → 다시 1 → 담당별 시드 조각을 순서대로 입력 ([6장](#6-시드-데이터-x-5)) |
+| 다른 담당 ID | 방의 `host_id`처럼 다른 담당 테이블을 가리키는 컬럼은 `@ManyToOne` 대신 `Long` ID로 들고, 필요하면 native SQL로 조인 |
 
 JPA 매핑:
-- 태그 연결 테이블(`user_category`, `contest_category`, `room_category`)은 엔티티 없이 `@ManyToMany` + `@JoinTable`로 매핑합니다.
+- 태그 연결 테이블(`user_category`, `contest_category`, `room_category`)은 엔티티 없이 `@ElementCollection` + `@CollectionTable`로 `Set<Long>` 카테고리 ID에 매핑합니다.
 - 컬럼이 더 있는 `room_member`, `join_request`, `evaluation`, `bookmark`은 엔티티로 만듭니다.
 
 ## 3. 테이블
 
-### 3.1 `category` — 고정 태그 목록 (B, X-2)
+### 3.1 `category` — 고정 태그 목록 (A, X-2)
 
 | 컬럼 | 타입 | 제약 | 설명 |
 |---|---|---|---|
@@ -180,7 +183,7 @@ JPA 매핑:
 
 MySQL에는 조건부 UNIQUE가 없어서 생성 컬럼을 씁니다. 대기 중 요청만 1이고 나머지는 NULL이라, 처리된 요청은 몇 개가 있어도 됩니다. JPA 엔티티에서는 이 컬럼을 매핑하지 않습니다.
 
-### 3.10 `evaluation` — 팀원 평가 (A, A-5)
+### 3.10 `evaluation` — 팀원 평가 (D, D-3)
 
 | 컬럼 | 타입 | 제약 | 설명 |
 |---|---|---|---|
@@ -194,9 +197,9 @@ MySQL에는 조건부 UNIQUE가 없어서 생성 컬럼을 씁니다. 대기 중
 | | | UNIQUE (`room_id`, `evaluator_id`, `target_id`) | 같은 팀에서 한 사람에게 한 번만 |
 | | | CHECK (`evaluator_id <> target_id`) | 자기 자신은 평가할 수 없음 |
 
-"종료된 팀이어야 한다", "두 사람 다 그 팀원이어야 한다"는 앱에서 확인합니다 ([5.4](#54-팀원-평가-a-5)).
+"종료된 팀이어야 한다", "두 사람 다 그 팀원이어야 한다"는 앱에서 확인합니다 ([5.4](#54-팀원-평가-d-3)). `room`·`room_member`는 C의 테이블이라 native SQL로 읽기만 합니다.
 
-평가는 익명입니다 ([기능 명세서 익명 평가 규칙](feature-spec.md#익명-평가-규칙)). `evaluator_id`는 중복 평가와 팀원 여부를 확인하는 데만 쓰고, 프로필(A-6) 응답 DTO에 넣지 않습니다. 엔티티를 그대로 JSON으로 내보내지 말고 `score`, `comment`만 담은 DTO로 돌려줍니다.
+평가는 익명입니다 ([기능 명세서 익명 평가 규칙](feature-spec.md#익명-평가-규칙)). `evaluator_id`는 중복 평가와 팀원 여부를 확인하는 데만 쓰고, 프로필(D-4) 응답 DTO에 넣지 않습니다. 엔티티를 그대로 JSON으로 내보내지 말고 `score`, `comment`만 담은 DTO로 돌려줍니다.
 
 ### 3.11 `bookmark` — 관심 공고 (D, D-1)
 
@@ -210,9 +213,21 @@ MySQL에는 조건부 UNIQUE가 없어서 생성 컬럼을 씁니다. 대기 중
 - 공모전은 마감돼도 지우지 않으므로(3.4) 마감된 관심 공고도 목록에 남습니다.
 - 시드에는 넣지 않습니다. 시연 중 장면 2에서 처음 저장합니다.
 
-## 4. DDL (`schema.sql`)
+## 4. DDL (`db/schema/*.sql`)
 
-앱을 켤 때마다 `schema.sql`이 실행되므로(`spring.sql.init.mode=always`) 모든 테이블을 `CREATE TABLE IF NOT EXISTS`로 만듭니다. 이미 있는 테이블은 건너뛰므로, 컬럼을 바꾸면 `docker compose down -v`로 DB를 지우고 다시 띄워야 반영됩니다.
+DDL은 담당별 파일 5개로 나눠 `backend/src/main/resources/db/schema/`에 둡니다. 4명이 한 파일을 고치다 충돌하지 않게 하기 위해서입니다. 앱을 켤 때마다 `application.yml`의 `spring.sql.init.schema-locations`에 적은 순서대로 실행되므로(`spring.sql.init.mode=always`) 모든 테이블을 `CREATE TABLE IF NOT EXISTS`로 만듭니다. 이미 있는 테이블은 건너뛰므로, 컬럼을 바꾸면 `docker compose down -v`로 DB를 지우고 다시 띄워야 반영됩니다.
+
+| 순서 | 파일 | 담당 | 테이블 |
+|---|---|---|---|
+| 1 | `user.sql` | A | `category`, `users`, `user_category` |
+| 2 | `contest.sql` | B | `contest`, `contest_category` |
+| 3 | `team.sql` | C | `room`, `room_category`, `room_member`, `join_request` |
+| 4 | `bookmark.sql` | D | `bookmark` |
+| 5 | `profile.sql` | D | `evaluation` |
+
+다른 파일의 테이블을 가리키는 FK는 위 순서 덕분에 만들 수 있습니다. 순서를 바꾸지 않습니다.
+
+### `user.sql` (A)
 
 ```sql
 CREATE TABLE IF NOT EXISTS category (
@@ -240,7 +255,11 @@ CREATE TABLE IF NOT EXISTS user_category (
   CONSTRAINT fk_uc_user     FOREIGN KEY (user_id)     REFERENCES users (id)    ON DELETE CASCADE,
   CONSTRAINT fk_uc_category FOREIGN KEY (category_id) REFERENCES category (id)
 );
+```
 
+### `contest.sql` (B)
+
+```sql
 CREATE TABLE IF NOT EXISTS contest (
   id               BIGINT        NOT NULL AUTO_INCREMENT,
   gongmoa_id       BIGINT        NOT NULL,
@@ -269,7 +288,11 @@ CREATE TABLE IF NOT EXISTS contest_category (
   CONSTRAINT fk_cc_contest  FOREIGN KEY (contest_id)  REFERENCES contest (id)  ON DELETE CASCADE,
   CONSTRAINT fk_cc_category FOREIGN KEY (category_id) REFERENCES category (id)
 );
+```
 
+### `team.sql` (C)
+
+```sql
 CREATE TABLE IF NOT EXISTS room (
   id          BIGINT        NOT NULL AUTO_INCREMENT,
   contest_id  BIGINT        NULL,
@@ -325,7 +348,25 @@ CREATE TABLE IF NOT EXISTS join_request (
   CONSTRAINT fk_request_user FOREIGN KEY (user_id) REFERENCES users (id),
   CONSTRAINT ck_request_status CHECK (status IN ('PENDING', 'ACCEPTED', 'REJECTED'))
 );
+```
 
+### `bookmark.sql` (D)
+
+```sql
+CREATE TABLE IF NOT EXISTS bookmark (
+  user_id     BIGINT    NOT NULL,
+  contest_id  BIGINT    NOT NULL,
+  created_at  DATETIME  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, contest_id),
+  KEY idx_bookmark_contest (contest_id),
+  CONSTRAINT fk_bookmark_user    FOREIGN KEY (user_id)    REFERENCES users (id)   ON DELETE CASCADE,
+  CONSTRAINT fk_bookmark_contest FOREIGN KEY (contest_id) REFERENCES contest (id) ON DELETE CASCADE
+);
+```
+
+### `profile.sql` (D)
+
+```sql
 CREATE TABLE IF NOT EXISTS evaluation (
   id            BIGINT        NOT NULL AUTO_INCREMENT,
   room_id       BIGINT        NOT NULL,
@@ -342,16 +383,6 @@ CREATE TABLE IF NOT EXISTS evaluation (
   CONSTRAINT fk_eval_target    FOREIGN KEY (target_id)    REFERENCES users (id),
   CONSTRAINT ck_eval_score CHECK (score BETWEEN 1 AND 5),
   CONSTRAINT ck_eval_not_self CHECK (evaluator_id <> target_id)
-);
-
-CREATE TABLE IF NOT EXISTS bookmark (
-  user_id     BIGINT    NOT NULL,
-  contest_id  BIGINT    NOT NULL,
-  created_at  DATETIME  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (user_id, contest_id),
-  KEY idx_bookmark_contest (contest_id),
-  CONSTRAINT fk_bookmark_user    FOREIGN KEY (user_id)    REFERENCES users (id)   ON DELETE CASCADE,
-  CONSTRAINT fk_bookmark_contest FOREIGN KEY (contest_id) REFERENCES contest (id) ON DELETE CASCADE
 );
 ```
 
@@ -400,7 +431,7 @@ ORDER BY (r.status = 'FULL') ASC, overlap DESC, r.created_at DESC;
    - 방을 `FULL`로 바꿉니다.
    - 같은 방의 남은 `PENDING` 요청을 모두 `REJECTED`로 바꿉니다.
 
-### 5.4 팀원 평가 (A-5)
+### 5.4 팀원 평가 (D-3)
 
 저장하기 전에 앱에서 확인합니다.
 
@@ -408,7 +439,7 @@ ORDER BY (r.status = 'FULL') ASC, overlap DESC, r.created_at DESC;
 2. 평가하는 사람과 받는 사람이 둘 다 그 방의 `room_member`인지
 3. 이미 평가했는지 (UNIQUE에 걸리면 "이미 평가했어요")
 
-### 5.5 프로필 평가 요약 (A-6)
+### 5.5 프로필 평가 요약 (D-4)
 
 ```sql
 SELECT ROUND(AVG(score), 1) AS avg_score, COUNT(*) AS eval_count
@@ -447,14 +478,14 @@ SELECT contest_id FROM bookmark WHERE user_id = :userId;
 
 [시연용 데이터](demo-data.md)를 테이블로 옮긴 것입니다.
 
-넣는 순서: 방이 공모전 ID를, 평가가 방과 사용자 ID를 참조하므로 아래 순서로 넣습니다. 공모전은 JSON 스냅샷을 수집과 같은 Java upsert 코드로 넣으므로, 시드 전체를 `seed` 프로필의 Java 코드 한 곳에서 실행합니다.
+시드는 담당별 조각으로 나뉩니다. 각 담당이 `SeedContributor`를 구현해 **자기 테이블만** 넣고, `seed` 프로필 러너(D)가 먼저 `SET FOREIGN_KEY_CHECKS = 0` → 현재 스키마의 전 테이블 `TRUNCATE` → `SET FOREIGN_KEY_CHECKS = 1`을 한 뒤 `@Order` 순서대로 부릅니다. 방이 공모전 ID를, 평가가 방과 사용자 ID를 참조하므로 순서는 바꾸지 않습니다. 서로의 ID는 아래에서 고정한 값을 그대로 씁니다.
 
-1. `SET FOREIGN_KEY_CHECKS = 0` → 전 테이블 `TRUNCATE` → `SET FOREIGN_KEY_CHECKS = 1`
-2. `category` (6.1)
-3. `contest`, `contest_category` (JSON 스냅샷 upsert, 주인공 공모전 수동 태그)
-4. `users`, `user_category` (6.2). id를 1~7로 직접 넣어, 시연 중 가입한 새싹이 8번이 되게 합니다
-5. `room`, `room_category`, `room_member` (6.3). 방 1~4는 주인공 공모전의 `gongmoa_id`로 `contest.id`를 찾아 넣습니다
-6. `evaluation` (6.4)
+| 순서 | 담당 | 넣는 것 |
+|---|---|---|
+| 1 | A | `category` (6.1), `users`·`user_category` (6.2). id를 1~7로 직접 넣어, 시연 중 가입한 새싹이 8번이 되게 합니다 |
+| 2 | B | `contest`, `contest_category`. JSON 스냅샷을 수집과 같은 Java upsert 코드로 넣고, 주인공 공모전은 태그를 수동으로 지정합니다 |
+| 3 | C | `room`, `room_category`, `room_member` (6.3). 방 id 1~5를 직접 넣고, 방 1~4는 주인공 공모전의 `gongmoa_id`로 `contest.id`를 찾아 넣습니다 |
+| 4 | D | `evaluation` (6.4). `bookmark`은 비워 둡니다 |
 
 ### 6.1 카테고리 시드
 

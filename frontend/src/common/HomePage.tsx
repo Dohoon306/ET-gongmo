@@ -3,12 +3,13 @@ import { userRoutes } from '../features/user/routes.tsx'
 import { contestRoutes } from '../features/contest/routes.tsx'
 import { teamRoutes } from '../features/team/routes.tsx'
 import { bookmarkRoutes } from '../features/bookmark/routes.tsx'
+import { profileRoutes } from '../features/profile/routes.tsx'
 
 const sections = [
-  { title: 'A. 사용자 판단 · 팀원 평가', routes: userRoutes },
+  { title: 'A. 사용자 판단', routes: userRoutes },
   { title: 'B. 공모전', routes: contestRoutes },
   { title: 'C. 팀 모집', routes: teamRoutes },
-  { title: 'D. 관심 공고', routes: bookmarkRoutes },
+  { title: 'D. 관심 공고 · 팀원 평가', routes: [...bookmarkRoutes, ...profileRoutes] },
 ]
 
 export default function HomePage() {

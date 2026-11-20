@@ -81,18 +81,21 @@ E.T 공모전은 이런 진입 장벽을 낮춰, 누구나 자신의 관심 분�
 
 ```
 backend/src/main/java/com/gdgoc/et/
-├── common/     # X: 현재 사용자, 카테고리, AiClient, 예외 처리, 시드
-├── user/       # A: 가입, 카테고리 확정, 평가, 프로필
+├── common/     # X: 현재 사용자, AiClient, 예외 처리, 시드 러너
+├── user/       # A: 가입, 카테고리 목록·확정
 ├── contest/    # B: 수집, 분류, 추천, 상세
 ├── team/       # C: 방, 참가 요청, 수락·거절, 팀원 목록
-└── bookmark/   # D: 관심 공고 저장·목록
+├── bookmark/   # D: 관심 공고 저장·목록
+└── profile/    # D: 팀원 평가, 프로필
 ```
+
+담당끼리는 다른 패키지의 클래스를 import하지 않습니다. 다른 담당의 테이블은 native SQL로 읽기만 하고, 화면 이동은 경로로만 연결합니다 ([담당 사이 접점](docs/feature-spec.md#담당-사이-접점)).
 
 ### DB
 
 - **MySQL 8**을 `docker compose`로 띄웁니다. 각자 PC에 MySQL을 설치하지 않아도 같은 환경이 됩니다.
 - 문자셋은 `utf8mb4`입니다.
-- `backend/src/main/resources/db/schema.sql`로 테이블을 만들고(JPA `ddl-auto=none`, 앱을 켤 때마다 실행), `seed` 프로필로 실행하면 DB가 시연 시작 상태로 돌아갑니다 (X-5). 공모전 시드는 JSON 스냅샷을 읽어 수집과 **같은 upsert 코드**로 넣습니다.
+- `backend/src/main/resources/db/schema/`의 담당별 파일(`user.sql`, `contest.sql`, `team.sql`, `bookmark.sql`, `profile.sql`)로 테이블을 만들고(JPA `ddl-auto=none`, 앱을 켤 때마다 `application.yml`에 적은 순서로 실행), `seed` 프로필로 실행하면 DB가 시연 시작 상태로 돌아갑니다 (X-5). 시드는 담당별 `SeedContributor`가 자기 테이블만 넣고, 러너가 순서대로 부릅니다. 공모전 시드는 JSON 스냅샷을 읽어 수집과 **같은 upsert 코드**로 넣습니다.
 
 ### 프론트엔드
 
@@ -110,7 +113,8 @@ frontend/src/
     ├── user/routes.tsx     # A
     ├── contest/routes.tsx  # B
     ├── team/routes.tsx     # C
-    └── bookmark/routes.tsx # D
+    ├── bookmark/routes.tsx # D
+    └── profile/routes.tsx  # D
 ```
 
 ### 공통 코드 쓰는 법
@@ -121,7 +125,7 @@ frontend/src/
 |---|---|
 | 백엔드에서 현재 사용자 ID 받기 | 컨트롤러 파라미터에 `@CurrentUser Long userId`. 헤더가 없으면 400. 없어도 되면 `@CurrentUser(required = false)` |
 | 백엔드에서 에러 응답 | `throw new ApiException(HttpStatus.BAD_REQUEST, "메시지")` → `{"message": "메시지"}` |
-| 테이블 만들기 | `backend/src/main/resources/db/schema.sql`에 추가 ([DB 명세서](docs/db-spec.md) 기준). 파일이 없으면 건너뜀 |
+| 테이블 만들기 | `backend/src/main/resources/db/schema/`의 내 담당 파일에 추가 ([DB 명세서 4장](docs/db-spec.md#4-ddl-dbschemasql) 기준). 파일이 없으면 건너뜀 |
 | 프론트에서 API 호출 | `await api<Contest[]>('/api/contests/recommended')`, `await api('/api/...', { method: 'POST', body: {...} })`. 실패하면 `ApiError` (`status`, `message`) |
 | 프론트에서 현재 사용자 | `const { userId, setUserId } = useCurrentUser()` |
 | 화면 추가 | 내 기능 폴더의 `routes.tsx`에 `{ path, label, element }` 한 줄. 첫 화면(개발용 화면 목록)에 자동으로 링크가 생김 |
@@ -191,7 +195,7 @@ IntelliJ에서 `backend` 폴더를 열고 `EtApplication`을 실행해도 됩니
 | 헤더에 **서버 연결 안 됨** | 백엔드(8080)가 안 떠 있습니다 |
 | 헤더에 **DB 연결 안 됨** | MySQL 컨테이너가 꺼져 있거나 `.env` 값이 다릅니다. `docker compose ps`로 확인 |
 | DB를 처음 상태로 지우고 싶음 | `docker compose down -v` 후 다시 `docker compose up -d` |
-| `schema.sql`의 컬럼을 바꿨는데 반영이 안 됨 | 이미 있는 테이블은 건너뛰기 때문입니다. `docker compose down -v`로 지우고 다시 띄우기 |
+| DDL 파일의 컬럼을 바꿨는데 반영이 안 됨 | 이미 있는 테이블은 건너뛰기 때문입니다. `docker compose down -v`로 지우고 다시 띄우기 |
 
 ### 그 밖에
 

@@ -5,8 +5,9 @@ import { userRoutes } from './features/user/routes.tsx'
 import { contestRoutes } from './features/contest/routes.tsx'
 import { teamRoutes } from './features/team/routes.tsx'
 import { bookmarkRoutes } from './features/bookmark/routes.tsx'
+import { profileRoutes } from './features/profile/routes.tsx'
 
-const featureRoutes = [...userRoutes, ...contestRoutes, ...teamRoutes, ...bookmarkRoutes]
+const featureRoutes = [...userRoutes, ...contestRoutes, ...teamRoutes, ...bookmarkRoutes, ...profileRoutes]
 
 export default function App() {
   return (

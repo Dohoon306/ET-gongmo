@@ -17,7 +17,12 @@ spring:
   sql:
     init:
       mode: always
-      schema-locations: optional:classpath:db/schema.sql
+      schema-locations:
+        - optional:classpath:db/schema/user.sql
+        - optional:classpath:db/schema/contest.sql
+        - optional:classpath:db/schema/team.sql
+        - optional:classpath:db/schema/bookmark.sql
+        - optional:classpath:db/schema/profile.sql
       encoding: UTF-8
 
 server:
