@@ -5,6 +5,15 @@ import checkIcon from './icons/check.svg'
 import chevronDownIcon from './icons/chevron-down.svg'
 import plusIcon from './icons/plus.svg'
 
+const SEED_USER_NAMES_HIDDEN_FROM_SWITCHER = new Set([
+  '방장 이',
+  '방장 박',
+  '방장 최',
+  '팀원 정',
+  '팀원 한',
+  '새싹(작년)',
+])
+
 function avatarInitial(name: string) {
   const lastWord = name.trim().split(/\s+/).at(-1) ?? ''
   return lastWord.charAt(0)
@@ -51,7 +60,11 @@ export default function UserSwitcher() {
     setOpen(false)
   }
 
-  const buttonLabel = currentUser?.name ?? (userId !== null ? `사용자 ${userId}` : '사용자 선택')
+  const switchableUsers = users.filter(
+    (user) => user.id === userId || !SEED_USER_NAMES_HIDDEN_FROM_SWITCHER.has(user.name),
+  )
+
+  const buttonLabel =currentUser?.name ?? (userId !== null ? `사용자 ${userId}` : '사용자 선택')
 
   return (
     <div ref={containerRef} className="relative flex shrink-0 items-center gap-2.5">
@@ -82,10 +95,10 @@ export default function UserSwitcher() {
             {usersLoadFailed && (
               <p role="alert" className="px-2.5 py-2 text-sm text-danger">사용자 목록을 불러오지 못했어요</p>
             )}
-            {!usersLoadFailed && users.length === 0 && (
+            {!usersLoadFailed && switchableUsers.length === 0 && (
               <p className="px-2.5 py-2 text-sm text-muted">아직 사용자가 없어요</p>
             )}
-            {users.map((user) => {
+            {switchableUsers.map((user) => {
               const selected = user.id === userId
               return (
                 <button
