@@ -9,6 +9,7 @@ export type CurrentUserValue = {
   userId: number | null
   currentUser: DemoUser | null
   users: DemoUser[]
+  usersLoadFailed: boolean
   setUserId: (userId: number | null) => void
   reloadUsers: () => Promise<void>
 }

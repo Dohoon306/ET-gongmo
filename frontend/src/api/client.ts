@@ -1,4 +1,4 @@
-import { getStoredUserId } from '../common/currentUserStorage.ts'
+import { getCurrentUserId } from '../common/currentUserStorage.ts'
 
 export class ApiError extends Error {
   readonly status: number
@@ -13,7 +13,7 @@ type ApiOptions = Omit<RequestInit, 'body'> & { body?: unknown }
 
 export async function api<T = void>(path: string, options: ApiOptions = {}): Promise<T> {
   const { body, headers, ...rest } = options
-  const userId = getStoredUserId()
+  const userId = getCurrentUserId()
 
   const res = await fetch(path, {
     ...rest,

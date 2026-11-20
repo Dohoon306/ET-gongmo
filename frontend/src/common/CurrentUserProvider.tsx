@@ -1,20 +1,22 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { api } from '../api/client.ts'
 import { CurrentUserContext, type DemoUser } from './currentUserContext.ts'
-import { getStoredUserId, storeUserId } from './currentUserStorage.ts'
+import { getCurrentUserId, setCurrentUserId } from './currentUserStorage.ts'
 
 export function CurrentUserProvider({ children }: { children: ReactNode }) {
-  const [userId, setUserIdState] = useState<number | null>(getStoredUserId)
+  const [userId, setUserIdState] = useState<number | null>(getCurrentUserId)
   const [users, setUsers] = useState<DemoUser[]>([])
+  const [usersLoadFailed, setUsersLoadFailed] = useState(false)
   const latestLoad = useRef(0)
 
   const applyLoadedUsers = useCallback((load: number, loaded: DemoUser[]) => {
     if (load !== latestLoad.current) return
 
     setUsers(loaded)
-    const storedUserId = getStoredUserId()
-    if (storedUserId !== null && !loaded.some((user) => user.id === storedUserId)) {
-      storeUserId(null)
+    setUsersLoadFailed(false)
+    const selectedUserId = getCurrentUserId()
+    if (selectedUserId !== null && !loaded.some((user) => user.id === selectedUserId)) {
+      setCurrentUserId(null)
       setUserIdState(null)
     }
   }, [])
@@ -23,7 +25,9 @@ export function CurrentUserProvider({ children }: { children: ReactNode }) {
     const load = ++latestLoad.current
     return api<DemoUser[]>('/api/users').then(
       (loaded) => applyLoadedUsers(load, loaded),
-      () => undefined,
+      () => {
+        if (load === latestLoad.current) setUsersLoadFailed(true)
+      },
     )
   }, [applyLoadedUsers])
 
@@ -33,7 +37,7 @@ export function CurrentUserProvider({ children }: { children: ReactNode }) {
 
   const setUserId = useCallback(
     (next: number | null) => {
-      storeUserId(next)
+      setCurrentUserId(next)
       setUserIdState(next)
       if (next !== null && !users.some((user) => user.id === next)) void reloadUsers()
     },
@@ -43,7 +47,7 @@ export function CurrentUserProvider({ children }: { children: ReactNode }) {
   const currentUser = users.find((user) => user.id === userId) ?? null
 
   return (
-    <CurrentUserContext.Provider value={{ userId, currentUser, users, setUserId, reloadUsers }}>
+    <CurrentUserContext.Provider value={{ userId, currentUser, users, usersLoadFailed, setUserId, reloadUsers }}>
       {children}
     </CurrentUserContext.Provider>
   )

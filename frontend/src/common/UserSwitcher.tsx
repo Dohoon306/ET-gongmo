@@ -19,7 +19,7 @@ function Avatar({ name }: { name: string }) {
 }
 
 export default function UserSwitcher() {
-  const { userId, currentUser, users, setUserId, reloadUsers } = useCurrentUser()
+  const { userId, currentUser, users, usersLoadFailed, setUserId, reloadUsers } = useCurrentUser()
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -79,7 +79,12 @@ export default function UserSwitcher() {
           <p className="px-2.5 py-2 text-[13px] font-semibold text-gray-500">데모 사용자 전환</p>
 
           <div className="flex max-h-[calc(100vh-200px)] flex-col gap-0.5 overflow-y-auto">
-            {users.length === 0 && <p className="px-2.5 py-2 text-sm text-gray-500">아직 사용자가 없어요</p>}
+            {usersLoadFailed && (
+              <p role="alert" className="px-2.5 py-2 text-sm text-red-600">사용자 목록을 불러오지 못했어요</p>
+            )}
+            {!usersLoadFailed && users.length === 0 && (
+              <p className="px-2.5 py-2 text-sm text-gray-500">아직 사용자가 없어요</p>
+            )}
             {users.map((user) => {
               const selected = user.id === userId
               return (
