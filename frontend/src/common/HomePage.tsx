@@ -18,7 +18,7 @@ export default function HomePage() {
       <h1 className="text-2xl font-bold">개발용 화면 목록</h1>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {sections.map((s) => (
-          <section key={s.title} className="rounded-lg border border-line bg-white p-4">
+          <section key={s.title} className="rounded-md border border-line bg-white p-4">
             <h2 className="mb-3 font-semibold">{s.title}</h2>
             <ul className="space-y-1 text-sm">
               {s.routes.map((r) => (

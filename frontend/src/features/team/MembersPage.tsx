@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { getDeadline } from '../../common/deadline.ts'
+import { ChevronLeftIcon, ChevronRightIcon } from '../../common/icons.tsx'
 import { idParam, teamComposition, useGet, type Person, type Room } from './api.ts'
 import { MemberActions, RoomActions } from './RoomManage.tsx'
 import { Avatar, Card, ErrorText, MissingId, StatusChip, Tags, TeamPage, secondaryButton } from './ui.tsx'
@@ -25,17 +26,17 @@ export default function MembersPage() {
 
   return (
     <TeamPage>
-      <Link to="/my/team" className="mb-4 inline-flex items-center gap-1 text-sm text-(--color-muted) hover:text-(--color-ink)">
-        ‹ 내 팀 목록
+      <Link to="/my/team" className="mb-3.5 inline-flex min-h-8 items-center gap-1.5 text-sm font-medium text-muted hover:text-ink">
+        <ChevronLeftIcon />내 팀 목록
       </Link>
 
       {full && r && (
-        <div className="mb-8 flex items-center gap-3 rounded-xl bg-brand px-5 py-3.5 text-white">
+        <div role="status" className="mb-7 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md bg-brand-soft px-4 py-3 text-brand">
           <svg aria-hidden viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="m3 8.5 3.2 3L13 4.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           <span className="text-[15px] font-semibold">팀이 확정됐어요</span>
-          <span className="text-sm opacity-90">
+          <span className="text-sm">
             {newest ? `${newest.name} 님이 합류해서 ` : ''}정원 {r.capacity}명이 모두 찼어요.
           </span>
         </div>
@@ -44,12 +45,12 @@ export default function MembersPage() {
       {r && (
         <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-[28px] font-bold">{r.title}</h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-[26px] font-bold leading-[1.3] tracking-[-0.02em]">{r.title}</h1>
               <StatusChip full={r.status !== 'RECRUITING'} />
             </div>
             {r.contest && (
-              <Link to={`/contests/${r.contest.id}`} className="mt-1.5 inline-block text-[15px] text-brand hover:underline">
+              <Link to={`/contests/${r.contest.id}`} className="mt-1 inline-block break-keep text-[15px] text-brand hover:text-brand-strong hover:underline">
                 {r.contest.title} · {getDeadline(r.contest.endDate).date}
               </Link>
             )}
@@ -68,23 +69,23 @@ export default function MembersPage() {
 
       {members.data && (
         <div className="grid items-start gap-5 md:grid-cols-[1fr_300px]">
-          <Card className="px-7 py-6">
-            <p className="mb-2 text-lg font-bold">팀원 {members.data.length}명</p>
-            <ul className="divide-y divide-line">
+          <Card className="px-6 pt-[22px] pb-1.5">
+            <p className="mb-1.5 text-lg font-bold tracking-[-0.01em]">팀원 <span className="tabular-nums">{members.data.length}</span>명</p>
+            <ul className="divide-y divide-line border-t border-line">
               {members.data.map((m) => (
-                <li key={m.id} className="flex items-center gap-4 py-5">
+                <li key={m.id} className="flex flex-wrap items-center gap-3.5 py-[18px]">
                   <Avatar name={m.name} size="lg" userId={m.userId} />
                   <div className="min-w-0 flex-1">
                     <p className="mb-2 text-[15px] font-semibold">
                       <Link to={`/users/${m.userId}`} className="hover:underline">
                         {m.name}
                       </Link>
-                      <span className="ml-1.5 text-xs font-medium text-brand">{roleLabel(m)}</span>
+                      <span className="ml-1.5 text-xs font-semibold text-brand">{roleLabel(m)}</span>
                     </p>
                     <Tags tags={m.tags} />
                   </div>
-                  <Link to={`/users/${m.userId}`} className="shrink-0 text-sm font-semibold text-brand hover:underline">
-                    프로필 ›
+                  <Link to={`/users/${m.userId}`} className="inline-flex min-h-11 shrink-0 items-center gap-0.5 text-sm font-semibold text-brand hover:text-brand-strong">
+                    프로필<ChevronRightIcon className="size-[13px]" />
                   </Link>
                   {r && <MemberActions room={r} member={m} onChanged={refresh} onError={setManageError} />}
                 </li>
@@ -93,17 +94,17 @@ export default function MembersPage() {
             {r && <RoomActions room={r} memberCount={members.data.length} />}
           </Card>
 
-          <Card className="p-5">
-            <p className="mb-4 text-[15px] font-semibold">우리 팀 구성</p>
-            <ul className="space-y-3">
+          <Card muted className="p-5">
+            <p className="mb-3 text-[15px] font-semibold">우리 팀 구성</p>
+            <ul className="divide-y divide-line border-y border-line">
               {teamComposition(members.data).map(({ tag, count }) => (
-                <li key={tag.id} className="flex justify-between text-sm">
-                  <span className="text-(--color-ink-2)">{tag.name}</span>
-                  <span className="font-semibold">{count}명</span>
+                <li key={tag.id} className="flex justify-between gap-3 py-[9px] text-sm">
+                  <span className="text-ink-2">{tag.name}</span>
+                  <span className="font-semibold tabular-nums">{count}명</span>
                 </li>
               ))}
             </ul>
-            <p className="mt-5 border-t border-line pt-4 text-[13px] leading-relaxed text-(--color-muted)">
+            <p className="mt-3.5 break-keep text-[13px] leading-relaxed text-muted">
               공모전이 끝나면 프로필의 ‘함께한 팀’에서 서로를 익명으로 평가할 수 있어요.
             </p>
           </Card>

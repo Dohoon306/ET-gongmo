@@ -12,7 +12,7 @@ function avatarInitial(name: string) {
 
 function Avatar({ name }: { name: string }) {
   return (
-    <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand-soft text-sm font-semibold text-brand">
+    <span className="flex size-7 shrink-0 items-center justify-center rounded-sm bg-brand-soft text-[13px] font-bold text-brand">
       {avatarInitial(name)}
     </span>
   )
@@ -55,16 +55,16 @@ export default function UserSwitcher() {
 
   return (
     <div ref={containerRef} className="relative flex shrink-0 items-center gap-2.5">
-      <span className="whitespace-nowrap text-xs text-gray-500">데모 사용자</span>
+      <span className="whitespace-nowrap text-xs text-muted">데모 사용자</span>
       <button
         type="button"
         onClick={toggle}
         aria-haspopup="menu"
         aria-expanded={open}
-        className={`flex items-center gap-2 rounded-full border border-gray-300 bg-white py-1.5 pr-3 hover:bg-gray-50 ${currentUser ? 'pl-1.5' : 'pl-3'}`}
+        className={`flex h-10 items-center gap-2 rounded-md border border-line-strong bg-white pr-2.5 hover:bg-page ${currentUser ? 'pl-1.5' : 'pl-3'}`}
       >
         {currentUser && <Avatar name={currentUser.name} />}
-        <span className={`whitespace-nowrap text-sm font-semibold text-gray-900 ${currentUser ? '' : 'leading-8'}`}>
+        <span className={`whitespace-nowrap text-sm font-semibold text-ink ${currentUser ? '' : 'leading-8'}`}>
           {buttonLabel}
         </span>
         <img src={chevronDownIcon} alt="" width={16} height={16} className="shrink-0" />
@@ -74,16 +74,16 @@ export default function UserSwitcher() {
         <div
           role="menu"
           aria-label="데모 사용자 전환"
-          className="absolute right-0 top-full z-20 mt-1 flex w-[300px] flex-col gap-0.5 rounded-[14px] border border-line bg-white p-2 shadow-[0_12px_32px_rgba(23,33,28,0.14)]"
+          className="absolute right-0 top-full z-20 mt-1 flex w-[300px] flex-col gap-0.5 rounded-lg border border-line bg-white p-2 shadow-[0_12px_32px_rgba(23,33,28,0.14)]"
         >
-          <p className="px-2.5 py-2 text-[13px] font-semibold text-gray-500">데모 사용자 전환</p>
+          <p className="px-2.5 py-2 text-[13px] font-semibold text-muted">데모 사용자 전환</p>
 
           <div className="flex max-h-[calc(100vh-200px)] flex-col gap-0.5 overflow-y-auto">
             {usersLoadFailed && (
-              <p role="alert" className="px-2.5 py-2 text-sm text-red-600">사용자 목록을 불러오지 못했어요</p>
+              <p role="alert" className="px-2.5 py-2 text-sm text-danger">사용자 목록을 불러오지 못했어요</p>
             )}
             {!usersLoadFailed && users.length === 0 && (
-              <p className="px-2.5 py-2 text-sm text-gray-500">아직 사용자가 없어요</p>
+              <p className="px-2.5 py-2 text-sm text-muted">아직 사용자가 없어요</p>
             )}
             {users.map((user) => {
               const selected = user.id === userId
@@ -94,10 +94,10 @@ export default function UserSwitcher() {
                   role="menuitemradio"
                   aria-checked={selected}
                   onClick={() => switchTo(user.id)}
-                  className={`flex w-full items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-left ${selected ? 'bg-brand-soft' : 'hover:bg-gray-100'}`}
+                  className={`flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left ${selected ? 'bg-brand-soft' : 'hover:bg-subtle'}`}
                 >
                   <Avatar name={user.name} />
-                  <span className="min-w-0 flex-1 truncate text-sm font-semibold text-gray-900">{user.name}</span>
+                  <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">{user.name}</span>
                   {selected && <img src={checkIcon} alt="" width={16} height={16} className="shrink-0" />}
                 </button>
               )

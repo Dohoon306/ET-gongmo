@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import { api } from '../../api/client.ts'
 import { useGet } from '../team/api.ts'
-import { Card, ErrorText, primaryButton, secondaryButton } from '../team/ui.tsx'
+import { Card, ErrorText, primaryButton, dangerButton, secondaryButton } from '../team/ui.tsx'
 import type { AdminContest } from './adminApi.ts'
 
 type Category = { id: number; name: string; axis: string }
@@ -118,7 +118,7 @@ export default function AdminContestsTab() {
           onChange={(e) => setQuery(e.target.value)}
           placeholder="공모전 제목 검색"
           aria-label="공모전 제목 검색"
-          className="h-10 min-w-0 flex-1 rounded-xl border border-(--color-line-strong) bg-white px-3 text-[15px]"
+          className="h-10 min-w-0 flex-1 rounded-md border border-line-strong bg-white px-3 text-[15px]"
         />
         <button onClick={() => open('new')} className={primaryButton}>
           공모전 추가
@@ -137,7 +137,7 @@ export default function AdminContestsTab() {
                     type={f.type ?? 'text'}
                     value={form[f.key] as string}
                     onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
-                    className="mt-1 h-10 w-full rounded-xl border border-(--color-line-strong) px-3 text-[15px]"
+                    className="mt-1 h-10 w-full rounded-md border border-line-strong px-3 text-[15px]"
                   />
                 </label>
               ))}
@@ -151,7 +151,7 @@ export default function AdminContestsTab() {
                     type="button"
                     aria-pressed={form.categoryIds.includes(c.id)}
                     onClick={() => toggleCategory(c.id)}
-                    className={`h-7 rounded-full px-3 text-[13px] font-medium ${form.categoryIds.includes(c.id) ? 'bg-brand text-white' : 'bg-(--color-subtle) text-(--color-ink-2)'}`}
+                    className={`h-9 rounded-md border px-3 text-[13px] font-medium ${form.categoryIds.includes(c.id) ? 'border-brand bg-brand text-white' : 'border-line-strong bg-white text-ink-2 hover:border-brand'}`}
                   >
                     {c.name}
                   </button>
@@ -170,7 +170,7 @@ export default function AdminContestsTab() {
         </Card>
       )}
 
-      <p className="mb-3 text-[13px] text-(--color-muted)">공모전 {shown.length}개</p>
+      <p className="mb-3 text-[13px] text-muted">공모전 {shown.length}개</p>
       <ul className="space-y-2">
         {shown.map((c) => (
           <li key={c.id}>
@@ -179,7 +179,7 @@ export default function AdminContestsTab() {
                 <Link to={`/contests/${c.id}`} className="block truncate text-[15px] font-semibold hover:underline">
                   {c.title}
                 </Link>
-                <p className="text-xs text-(--color-muted)">
+                <p className="text-xs text-muted">
                   #{c.id} · {c.type ?? '-'} · {c.host ?? '-'} · 마감 {c.endDate ?? '상시'}
                   {c.gongmoaId < 0 ? ' · 관리자가 추가' : ''}
                 </p>
@@ -187,7 +187,7 @@ export default function AdminContestsTab() {
               <button onClick={() => open(c)} className={secondaryButton}>
                 수정
               </button>
-              <button onClick={() => remove(c)} className={`${secondaryButton} text-red-700`}>
+              <button onClick={() => remove(c)} className={dangerButton}>
                 삭제
               </button>
             </Card>

@@ -25,7 +25,7 @@ export default function AdminPage() {
     return (
       <TeamPage>
         <EmptyState title="관리자만 볼 수 있는 화면이에요">
-          <p className="mt-2 text-sm text-(--color-muted)">헤더에서 "관리자" 계정으로 바꿔 주세요.</p>
+          <p className="mt-2 text-sm text-muted">헤더에서 "관리자" 계정으로 바꿔 주세요.</p>
         </EmptyState>
       </TeamPage>
     )
@@ -33,18 +33,18 @@ export default function AdminPage() {
 
   return (
     <TeamPage>
-      <h1 className="text-[28px] font-bold">관리자</h1>
-      <p className="mt-2 mb-5 text-[15px] text-(--color-muted)">
+      <h1 className="text-[26px] font-bold leading-[1.3] tracking-[-0.02em]">관리자</h1>
+      <p className="mt-1.5 mb-5 break-keep text-[15px] text-muted">
         계정 정지, 평가 항의, 공모전, 모집 방, 신고 내역을 관리해요. 관리자 화면에서는 평가한 사람도 보여요.
       </p>
-      <div role="tablist" className="mb-5 flex flex-wrap gap-1.5">
+      <div role="tablist" className="mb-5 flex flex-wrap gap-1 border-b border-line">
         {TABS.map((t) => (
           <button
             key={t.key}
             role="tab"
             aria-selected={tab === t.key}
             onClick={() => setTab(t.key)}
-            className={`h-10 rounded-xl px-4 text-[15px] font-semibold ${tab === t.key ? 'bg-brand text-white' : 'border border-(--color-line-strong) bg-white text-(--color-ink)'}`}
+            className={`-mb-px h-11 border-b-2 px-3.5 text-[15px] ${tab === t.key ? 'border-brand font-semibold text-ink' : 'border-transparent font-medium text-muted hover:text-ink'}`}
           >
             {t.label}
           </button>

@@ -58,27 +58,27 @@ export default function JoinDialog({ room, onClose, onSent }: { room: Room; onCl
       ref={dialogRef}
       onClose={onClose}
       aria-labelledby="join-title"
-      className="m-auto w-[min(640px,calc(100%-2rem))] rounded-2xl p-0 text-(--color-ink) shadow-xl backdrop:bg-[#18211B]/85"
+      className="m-auto w-[min(640px,calc(100%-2rem))] rounded-lg p-0 text-ink shadow-[0_12px_32px_rgba(24,33,27,0.28)] backdrop:bg-ink/70"
     >
       <div className="p-7">
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-[13px] font-semibold text-brand">참가 요청</p>
-            <h2 id="join-title" className="mt-1.5 text-xl font-bold">
+            <h2 id="join-title" className="mt-1 text-xl font-bold tracking-[-0.01em]">
               {room.title}
             </h2>
-            <p className="mt-1 text-sm text-(--color-muted)">
+            <p className="mt-1 text-sm tabular-nums text-muted">
               {room.hostName} · {room.memberCount} / {room.capacity}명
             </p>
           </div>
-          <button onClick={close} aria-label="닫기" className="-mt-1 -mr-1 rounded-lg p-1.5 text-(--color-muted) hover:bg-(--color-subtle)">
+          <button onClick={close} aria-label="닫기" className="-mt-2 -mr-2 flex size-11 shrink-0 items-center justify-center rounded-md text-muted hover:bg-subtle">
             <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.6">
               <path d="m4 4 8 8M12 4l-8 8" strokeLinecap="round" />
             </svg>
           </button>
         </div>
 
-        <div className="mt-6 rounded-xl bg-(--color-page) p-4">
+        <div className="mt-6 rounded-md bg-page p-4">
           <p className="mb-3 text-sm font-semibold">
             내 태그가 이 방과{' '}
             <span className="text-brand">
@@ -90,7 +90,7 @@ export default function JoinDialog({ room, onClose, onSent }: { room: Room; onCl
         </div>
 
         {sent ? (
-          <p className="mt-6 rounded-xl bg-brand-soft p-4 text-sm font-semibold text-brand">
+          <p role="status" className="mt-6 rounded-md bg-brand-soft px-4 py-3.5 text-sm font-semibold text-brand">
             요청을 보냈어요. 방장이 수락하면 팀이 확정돼요.
           </p>
         ) : (
@@ -99,10 +99,7 @@ export default function JoinDialog({ room, onClose, onSent }: { room: Room; onCl
               <label htmlFor="join-message" className="text-sm font-semibold">
                 방장에게 보낼 메시지
               </label>
-              <span className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-2 py-0.5 text-xs font-medium text-brand">
-                <svg aria-hidden viewBox="0 0 12 12" className="h-3 w-3" fill="currentColor">
-                  <path d="M6 0.5 7.2 4.8 11.5 6 7.2 7.2 6 11.5 4.8 7.2 0.5 6 4.8 4.8z" />
-                </svg>
+              <span className="inline-flex h-[22px] items-center rounded-sm bg-brand-soft px-[7px] text-xs font-semibold text-brand">
                 AI가 쓴 초안
               </span>
             </div>
@@ -111,10 +108,10 @@ export default function JoinDialog({ room, onClose, onSent }: { room: Room; onCl
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               rows={4}
-              className="w-full resize-none rounded-xl border-2 border-brand p-4 text-[15px] leading-relaxed focus:outline-none"
+              className="w-full resize-none rounded-md border border-brand p-3.5 text-[15px] leading-relaxed focus:outline-2 focus:outline-offset-1 focus:outline-brand"
               placeholder={busy ? 'AI가 초안을 쓰는 중이에요' : '방장에게 보낼 메시지를 써 주세요'}
             />
-            <p className="mt-2 text-[13px] text-(--color-muted)">내 태그와 방 소개를 보고 썼어요. 내 말투로 고쳐서 보내도 돼요.</p>
+            <p className="mt-2 text-[13px] text-muted">내 태그와 방 소개를 보고 썼어요. 내 말투로 고쳐서 보내도 돼요.</p>
             <ErrorText message={error} />
           </div>
         )}
@@ -139,7 +136,7 @@ export default function JoinDialog({ room, onClose, onSent }: { room: Room; onCl
           )}
         </div>
 
-        <p className="mt-6 border-t border-line pt-4 text-[13px] text-(--color-muted)">
+        <p className="mt-6 border-t border-line pt-4 break-keep text-[13px] text-muted">
           방장이 수락하면 팀이 확정돼요. 답을 기다리는 동안에는 같은 방에 다시 요청할 수 없어요.
         </p>
       </div>

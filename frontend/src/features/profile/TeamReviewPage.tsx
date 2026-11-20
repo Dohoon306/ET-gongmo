@@ -1,8 +1,8 @@
+import { CheckIcon, StarIcon } from '../../common/icons.tsx'
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, Navigate, useParams } from 'react-router'
 import { api, ApiError } from '../../api/client.ts'
 import { useCurrentUser } from '../../common/useCurrentUser.ts'
-import './team-review.css'
 
 type ReviewTarget = { id: number; name: string; reviewed: boolean; categories: string[] }
 type ReviewRoom = { title: string; targets: ReviewTarget[] }
@@ -15,15 +15,15 @@ export default function TeamReviewPage() {
     return <Navigate replace to="/rooms/5/review" />
   }
   return (
-    <div className="team-review-page mx-auto max-w-[1056px] space-y-5 text-[#18211B]">
+    <div className="space-y-4 text-ink">
       <header>
-        <h1 className="text-2xl font-bold">팀원 평가</h1>
-        <p className="mt-2 text-sm text-gray-600">평가는 익명으로 남아요.</p>
+        <h1 className="text-[26px] font-bold leading-[1.3] tracking-[-0.02em]">팀원 평가</h1>
+        <p className="mt-1.5 mb-1.5 text-[15px] text-muted">평가는 익명으로 남아요.</p>
       </header>
       {roomId && /^[1-9][0-9]*$/.test(roomId) ? (
         userId === null ? <p>평가하려면 현재 사용자를 선택해 주세요.</p>
           : <ReviewForm key={roomId + ':' + userId} roomId={roomId} userId={userId} />
-      ) : <p role="alert" className="text-red-700">유효한 팀을 선택해 주세요.</p>}
+      ) : <p role="alert" className="text-danger">유효한 팀을 선택해 주세요.</p>}
     </div>
   )
 }
@@ -110,88 +110,88 @@ function ReviewForm({ roomId, userId }: { roomId: string; userId: number }) {
     setError(null)
   }
 
-  if (!team) return error ? <p role="alert" className="text-red-700">{error}</p>
+  if (!team) return error ? <p role="alert" className="text-danger">{error}</p>
     : <p role="status">팀원 정보를 불러오는 중이에요.</p>
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-[#DCE2DA] bg-white px-4 py-3 text-sm">
-        <span className="rounded-md bg-[#EEF1EC] px-2 py-1 font-semibold">종료된 팀</span>
+      <div className="flex flex-wrap items-center gap-2.5 rounded-md border border-line bg-page px-4 py-3 text-sm">
+        <span className="inline-flex h-6 items-center rounded-sm bg-subtle px-2 text-xs font-semibold text-muted">종료된 팀</span>
         <strong>{team.title}</strong>
-        <span className="text-[#56635B]">팀원 {team.targets.length + 1}명</span>
+        <span className="text-muted">팀원 {team.targets.length + 1}명</span>
       </div>
-      <p className="rounded-xl bg-[#E5F0E8] px-4 py-3 text-sm text-[#1D6A43]">
+      <p className="break-keep rounded-md bg-brand-soft px-4 py-3 text-sm text-brand">
         <strong>평가는 익명으로 남아요.</strong> 상대방의 프로필에 평가한 사람이 표시되지 않아요.
       </p>
       {submitted !== null && (
-        <div role="status" className="flex flex-wrap justify-between gap-2 rounded-xl bg-[#E5F0E8] px-4 py-3 text-sm text-[#1D6A43]">
-          <strong>{submitted.edited ? '✓ 팀원 평가를 수정했어요.' : '✓ 팀원 평가를 남겼어요.'}</strong>
-          <Link to={'/users/' + submitted.targetId} state={{ reviewRoomId: Number(roomId) }} className="hover:underline">프로필 보기 ›</Link>
+        <div role="status" className="flex flex-wrap justify-between gap-2 rounded-md bg-brand-soft px-4 py-3 text-sm text-brand">
+          <strong className="inline-flex items-center gap-2 font-semibold"><CheckIcon className="size-4" />{submitted.edited ? '팀원 평가를 수정했어요.' : '팀원 평가를 남겼어요.'}</strong>
+          <Link to={'/users/' + submitted.targetId} state={{ reviewRoomId: Number(roomId) }} className="font-medium underline underline-offset-[3px] hover:text-brand-strong">프로필 보기</Link>
         </div>
       )}
-      {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
-      {team.targets.length === 0 && <p className="text-[#56635B]">평가할 팀원이 없어요.</p>}
-      <ul className="space-y-4">
+      {error && <p role="alert" className="text-sm text-danger">{error}</p>}
+      {team.targets.length === 0 && <p className="text-muted">평가할 팀원이 없어요.</p>}
+      <ul className="space-y-3.5">
         {team.targets.map((item) => {
           const expanded = target?.id === item.id
           return (
-            <li key={item.id} className={'space-y-4 rounded-2xl border bg-white px-5 py-4 ' + (expanded ? 'border-[#1D6A43]' : 'border-[#DCE2DA]')}>
-              <div className="flex items-center justify-between gap-3">
+            <li key={item.id} className={'space-y-4 rounded-lg border bg-white px-5 py-[18px] ' + (expanded ? 'border-brand' : 'border-line')}>
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-3">
-                  <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-full bg-[#E5F0E8] font-bold text-[#1D6A43]">{item.name.trim().split(/\s+/).at(-1)?.slice(0, 1)}</span>
+                  <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-md bg-brand-soft font-bold text-brand">{item.name.trim().split(/\s+/).at(-1)?.slice(0, 1)}</span>
                   <div className="min-w-0 space-y-1">
-                    <Link to={'/users/' + item.id} className="break-words font-semibold hover:text-[#1D6A43] hover:underline">{item.name}</Link>
+                    <Link to={'/users/' + item.id} className="break-words font-semibold hover:text-brand hover:underline">{item.name}</Link>
                     {expanded && item.categories.length > 0 ? (
                       <ul aria-label="카테고리" className="flex flex-wrap gap-1.5">
-                        {item.categories.map((category) => <li key={category} className="rounded-full bg-[#EEF1EC] px-2 py-0.5 text-xs text-[#3B4840]">{category}</li>)}
+                        {item.categories.map((category) => <li key={category} className="inline-flex h-[22px] items-center rounded-sm border border-line px-[7px] text-xs font-medium text-ink-2">{category}</li>)}
                       </ul>
-                    ) : !expanded && <p className="text-xs text-[#56635B]">{item.reviewed ? '평가를 남겼어요.' : '아직 평가하지 않았어요.'}</p>}
+                    ) : !expanded && <p className="text-xs text-muted">{item.reviewed ? '평가를 남겼어요.' : '아직 평가하지 않았어요.'}</p>}
                   </div>
                 </div>
                 {item.reviewed ? (
                   <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
-                    <span className="rounded-full bg-[#E5F0E8] px-3 py-1 text-xs font-semibold text-[#1D6A43]">✓ 평가 완료</span>
+                    <span className="inline-flex h-6 items-center gap-1 rounded-sm bg-brand-soft px-2 text-xs font-semibold text-brand"><CheckIcon className="size-[11px]" />평가 완료</span>
                     <button type="button" disabled={saving || loadingTarget !== null || expanded} aria-expanded={expanded}
                       onClick={() => { void choose(item) }}
-                      className="rounded-lg border border-[#C9D1C6] px-3 py-1.5 text-sm font-semibold hover:bg-[#E5F0E8] disabled:opacity-50">
+                      className="inline-flex h-10 items-center rounded-md border border-line-strong bg-white px-3.5 text-sm font-semibold hover:bg-subtle disabled:opacity-50">
                       {loadingTarget === item.id ? '불러오는 중' : '수정'}
                     </button>
                   </div>
                 ) : !expanded && <button type="button" disabled={saving || loadingTarget !== null} onClick={() => { void choose(item) }}
-                    className="shrink-0 rounded-lg border border-[#C9D1C6] px-3.5 py-2 text-sm font-semibold hover:bg-[#E5F0E8]">평가하기</button>}
+                    className="inline-flex h-11 shrink-0 items-center rounded-md border border-line-strong bg-white px-4 text-sm font-semibold hover:bg-subtle">평가하기</button>}
               </div>
               {expanded && (
-                <form className="space-y-4" onSubmit={(event) => { void submit(event) }}>
+                <form className="space-y-4 border-t border-line pt-4" onSubmit={(event) => { void submit(event) }}>
                   <fieldset disabled={saving}>
                     <legend className="mb-2 text-sm font-semibold">별점</legend>
-                    <div className="flex flex-wrap items-center gap-1">
+                    <div className="flex flex-wrap items-center gap-0.5">
                       {[1, 2, 3, 4, 5].map((value) => {
                         const filled = value <= (score ?? 0)
                         return (
-                          <label key={value} className="cursor-pointer rounded-md px-1">
+                          <label key={value} className="flex size-11 cursor-pointer items-center justify-center rounded-md">
                             <input className="peer sr-only" type="radio" name="score" value={value} checked={score === value}
                               onChange={() => setScore(value)} aria-label={value + '점'} required />
-                            <span aria-hidden="true" className={'block rounded-sm text-2xl peer-focus-visible:outline-2 peer-focus-visible:outline-[#1D6A43] ' + (filled ? 'text-[#9A4508]' : 'text-[#56635B]')}>
-                              {filled ? '★' : '☆'}
+                            <span aria-hidden="true" className={'block rounded-sm peer-focus-visible:outline-2 peer-focus-visible:outline-brand ' + (filled ? 'text-accent' : 'text-muted')}>
+                              <StarIcon className="size-7" filled={filled} />
                             </span>
                           </label>
                         )
                       })}
-                      {score !== null && <span className="ml-2 text-sm text-[#56635B]">{score} / 5</span>}
+                      {score !== null && <span className="ml-2 text-sm tabular-nums text-muted">{score} / 5</span>}
                     </div>
                   </fieldset>
                   <label className="block space-y-2 text-sm font-semibold">
-                    <span>한 줄 코멘트 <span className="font-normal text-[#56635B]">(선택)</span></span>
+                    <span>한 줄 코멘트 <span className="font-normal text-muted">(선택)</span></span>
                     <textarea value={comment} maxLength={200} rows={2} disabled={saving} onChange={(event) => setComment(event.target.value)}
-                      className="w-full resize-y rounded-lg border border-[#C9D1C6] px-3 py-2 font-normal" />
+                      className="w-full resize-y rounded-md border border-line-strong px-3.5 py-2.5 text-[15px] leading-relaxed font-normal" />
                   </label>
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <p className="text-xs text-[#56635B]">남긴 평가는 팀원의 프로필에 익명으로 표시돼요.</p>
+                    <p className="text-xs text-muted">남긴 평가는 팀원의 프로필에 익명으로 표시돼요.</p>
                     <div className="ml-auto flex gap-2">
                       {item.reviewed && <button type="button" disabled={saving} onClick={cancelEdit}
-                        className="rounded-lg border border-[#C9D1C6] px-4 py-2.5 text-sm font-semibold hover:bg-[#E5F0E8] disabled:opacity-50">취소</button>}
+                        className="inline-flex h-11 items-center rounded-md border border-line-strong bg-white px-4 text-[15px] font-semibold hover:bg-subtle disabled:opacity-50">취소</button>}
                       <button type="submit" disabled={saving || score === null}
-                        className="rounded-lg bg-[#1D6A43] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#175536] disabled:opacity-50">
+                        className="inline-flex h-11 items-center rounded-md bg-brand px-4 text-[15px] font-semibold text-white hover:bg-brand-strong disabled:opacity-50">
                         {saving ? '저장 중' : item.reviewed ? '저장' : '평가 남기기'}
                       </button>
                     </div>

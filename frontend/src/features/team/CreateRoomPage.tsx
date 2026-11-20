@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { api } from '../../api/client.ts'
+import { CheckIcon, ChevronLeftIcon } from '../../common/icons.tsx'
 import { useCurrentUser } from '../../common/useCurrentUser.ts'
 import { idParam, useGet } from './api.ts'
 import { Card, ErrorText, MissingId, TeamPage, primaryButton, secondaryButton } from './ui.tsx'
@@ -76,11 +77,11 @@ function CreateRoomForm({ initialContestId }: { initialContestId: number | null 
 
   return (
     <TeamPage>
-      <Link to={backTo} className="text-sm text-(--color-muted) hover:text-(--color-ink)">
-        ‹ {contestId ? '모집 방 목록' : '추천 공모전'}
+      <Link to={backTo} className="inline-flex min-h-8 items-center gap-1.5 text-sm font-medium text-muted hover:text-ink">
+        <ChevronLeftIcon />{contestId ? '모집 방 목록' : '추천 공모전'}
       </Link>
-      <h1 className="mt-4 text-[28px] font-bold">모집 방 만들기</h1>
-      <p className="mt-2 mb-6 text-[15px] text-(--color-muted)">{contest?.title ?? '공모전'}에 함께할 팀원을 모집해요.</p>
+      <h1 className="mt-3 text-[26px] font-bold leading-[1.3] tracking-[-0.02em]">모집 방 만들기</h1>
+      <p className="mt-1.5 mb-[22px] break-keep text-[15px] text-muted">{contest?.title ?? '공모전'}에 함께할 팀원을 모집해요.</p>
       <ErrorText message={loadError ?? error} />
       {userId === null && <ErrorText message="헤더에서 사용자를 먼저 골라 주세요" />}
 
@@ -89,7 +90,7 @@ function CreateRoomForm({ initialContestId }: { initialContestId: number | null 
           {initialContestId !== null ? (
             <div>
               <span className="text-sm font-semibold">공모전</span>
-              <p className="mt-2 rounded-xl bg-(--color-subtle) px-3 py-3 text-[15px] font-medium">
+              <p className="mt-2 break-keep rounded-md bg-subtle px-3.5 py-3 text-[15px] font-medium">
                 {contest ? contestLabel(contest) : contestOptions ? `공모전 ${initialContestId}번 (접수 중인 목록에 없음)` : ' '}
               </p>
             </div>
@@ -99,7 +100,7 @@ function CreateRoomForm({ initialContestId }: { initialContestId: number | null 
               <select
                 value={contestId ?? ''}
                 onChange={(e) => setContestId(e.target.value ? Number(e.target.value) : null)}
-                className="mt-2 h-11 w-full rounded-xl border border-(--color-line-strong) px-3 text-[15px]"
+                className="mt-2 h-11 w-full rounded-md border border-line-strong px-3 text-[15px]"
               >
                 <option value="">공모전을 골라 주세요</option>
                 {contestOptions?.map((c) => (
@@ -118,7 +119,7 @@ function CreateRoomForm({ initialContestId }: { initialContestId: number | null 
               onChange={(e) => setTitle(e.target.value)}
               maxLength={100}
               placeholder="예: 초보 환영! 백엔드 같이 배워요"
-              className="mt-2 h-11 w-full rounded-xl border border-(--color-line-strong) px-3 text-[15px]"
+              className="mt-2 h-11 w-full rounded-md border border-line-strong px-3 text-[15px]"
             />
           </label>
 
@@ -130,7 +131,7 @@ function CreateRoomForm({ initialContestId }: { initialContestId: number | null 
               maxLength={1000}
               rows={4}
               placeholder="어떤 팀인지, 어떤 팀원을 찾는지 적어 주세요"
-              className="mt-2 w-full rounded-xl border border-(--color-line-strong) px-3 py-2 text-[15px]"
+              className="mt-2 w-full rounded-md border border-line-strong px-3.5 py-2.5 text-[15px] leading-relaxed"
             />
           </label>
 
@@ -139,7 +140,7 @@ function CreateRoomForm({ initialContestId }: { initialContestId: number | null 
             <select
               value={capacity}
               onChange={(e) => setCapacity(Number(e.target.value))}
-              className="mt-2 h-11 w-32 rounded-xl border border-(--color-line-strong) px-3 text-[15px]"
+              className="mt-2 h-11 w-32 rounded-md border border-line-strong px-3 text-[15px]"
             >
               {Array.from({ length: MAX_CAPACITY - MIN_CAPACITY + 1 }, (_, i) => MIN_CAPACITY + i).map((n) => (
                 <option key={n} value={n}>
@@ -151,11 +152,11 @@ function CreateRoomForm({ initialContestId }: { initialContestId: number | null 
 
           <fieldset>
             <legend className="text-sm font-semibold">원하는 팀원 태그</legend>
-            <div className="mt-2 space-y-3">
+            <div className="mt-2.5 divide-y divide-line border-y border-line">
               {AXIS_LABELS.map(([axis, label]) => (
-                <div key={axis} className="flex items-start gap-3">
-                  <span className="w-10 shrink-0 pt-1 text-[13px] text-(--color-muted)">{label}</span>
-                  <div className="flex flex-wrap gap-1.5">
+                <div key={axis} className="flex items-start gap-4 py-2.5">
+                  <span className="w-11 shrink-0 pt-2 text-[13px] font-medium text-muted">{label}</span>
+                  <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
                     {categories
                       ?.filter((c) => c.axis === axis)
                       .map((c) => (
@@ -164,9 +165,9 @@ function CreateRoomForm({ initialContestId }: { initialContestId: number | null 
                           type="button"
                           aria-pressed={picked.has(c.id)}
                           onClick={() => toggle(c.id)}
-                          className={`h-7 rounded-full px-3 text-[13px] font-medium ${picked.has(c.id) ? 'bg-brand text-white' : 'bg-(--color-subtle) text-(--color-ink-2)'}`}
+                          className={`inline-flex h-9 items-center gap-1.5 rounded-md border px-3 text-[13px] font-medium ${picked.has(c.id) ? 'border-brand bg-brand text-white' : 'border-line-strong bg-white text-ink-2 hover:border-brand'}`}
                         >
-                          {picked.has(c.id) && '✓ '}
+                          {picked.has(c.id) && <CheckIcon />}
                           {c.name}
                         </button>
                       ))}

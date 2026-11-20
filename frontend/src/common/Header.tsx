@@ -36,14 +36,14 @@ export default function Header() {
 
   return (
     <header className="border-b border-line bg-white">
-      <div className="mx-auto flex h-16 max-w-5xl items-center gap-7 px-4">
+      <div className="mx-auto flex min-h-[60px] max-w-[1120px] flex-wrap items-center gap-x-7 px-6">
         <Link to="/" className="flex shrink-0 items-center gap-2">
-          <img src={sproutIcon} alt="" width={26} height={26} />
-          <span className="whitespace-nowrap text-lg font-bold text-gray-900">E.T 공모전</span>
+          <img src={sproutIcon} alt="" width={24} height={24} />
+          <span className="whitespace-nowrap text-[17px] font-bold tracking-[-0.01em] text-ink">E.T 공모전</span>
         </Link>
 
         {!menuHidden && (
-          <nav className="flex items-center gap-1">
+          <nav className="flex flex-wrap items-center gap-1">
             {menuFor(userId).map((item) => (
               <MenuLink key={item.label} item={item} current={item.currentOn.some((path) => path.test(pathname))} />
             ))}
@@ -61,11 +61,11 @@ export default function Header() {
 }
 
 function MenuLink({ item, current }: { item: MenuItem; current: boolean }) {
-  const shape = 'flex h-10 items-center whitespace-nowrap rounded-lg px-3 text-[15px]'
+  const shape = 'flex h-11 items-center whitespace-nowrap border-b-2 px-3 text-[15px] md:h-[60px]'
 
   if (item.to === null) {
     return (
-      <span aria-disabled="true" title="사용자를 먼저 선택하세요" className={`${shape} font-medium text-gray-400`}>
+      <span aria-disabled="true" title="사용자를 먼저 선택하세요" className={`${shape} border-transparent font-medium text-muted opacity-60`}>
         {item.label}
       </span>
     )
@@ -75,7 +75,7 @@ function MenuLink({ item, current }: { item: MenuItem; current: boolean }) {
     <Link
       to={item.to}
       aria-current={current ? 'page' : undefined}
-      className={`${shape} ${current ? 'bg-brand-soft font-semibold text-brand' : 'font-medium text-gray-700 hover:bg-gray-100'}`}
+      className={`${shape} ${current ? 'border-brand font-semibold text-ink' : 'border-transparent font-medium text-muted hover:text-ink'}`}
     >
       {item.label}
     </Link>
@@ -98,8 +98,8 @@ function ServerStatus() {
   const ok = health?.db === 'UP'
 
   return (
-    <span className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap text-xs ${ok ? 'text-green-700' : 'text-red-600'}`}>
-      <span className={`h-2 w-2 rounded-full ${ok ? 'bg-green-500' : 'bg-red-500'}`} />
+    <span className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap text-xs ${ok ? 'text-muted' : 'text-danger'}`}>
+      <span className={`size-[7px] rounded-full ${ok ? 'bg-brand' : 'bg-danger'}`} />
       {label}
     </span>
   )

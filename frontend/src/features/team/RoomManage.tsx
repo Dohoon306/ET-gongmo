@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router'
 import { api } from '../../api/client.ts'
 import { useCurrentUser } from '../../common/useCurrentUser.ts'
 import type { Person, Room } from './api.ts'
-import { ErrorText, secondaryButton } from './ui.tsx'
+import { ErrorText, dangerButton } from './ui.tsx'
 
 const smallButton =
-  'inline-flex h-8 items-center rounded-lg border border-(--color-line-strong) bg-white px-2.5 text-[13px] font-semibold hover:bg-(--color-subtle)'
+  'inline-flex h-9 items-center rounded-md border border-line-strong bg-white px-3 text-[13px] font-semibold hover:bg-subtle'
 
 async function call(path: string, method: 'POST' | 'DELETE', body?: unknown) {
   await api(path, { method, body })
@@ -50,7 +50,7 @@ export function MemberActions({ room, member, onChanged, onError }: {
       <button onClick={makeHost} className={smallButton}>
         방장 넘기기
       </button>
-      <button onClick={kick} className={`${smallButton} text-red-700`}>
+      <button onClick={kick} className={`${smallButton} text-danger`}>
         강퇴
       </button>
     </div>
@@ -82,11 +82,11 @@ export function RoomActions({ room, memberCount }: { room: Room; memberCount: nu
       <div className="flex flex-wrap items-center justify-end gap-2">
         {isHost ? (
           <>
-            {!alone && <span className="text-[13px] text-(--color-muted)">팀원이 모두 나가거나 강퇴된 뒤에 방을 지울 수 있어요</span>}
+            {!alone && <span className="text-[13px] text-muted">팀원이 모두 나가거나 강퇴된 뒤에 방을 지울 수 있어요</span>}
             <button
               disabled={!alone}
               onClick={() => run(`/api/rooms/${room.id}`, 'DELETE', `"${room.title}" 방을 지울까요? 되돌릴 수 없어요.`)}
-              className={`${secondaryButton} text-red-700`}
+              className={dangerButton}
             >
               방 삭제
             </button>
@@ -94,7 +94,7 @@ export function RoomActions({ room, memberCount }: { room: Room; memberCount: nu
         ) : (
           <button
             onClick={() => run(`/api/rooms/${room.id}/leave`, 'POST', `"${room.title}" 방에서 나갈까요? 팀 채팅에 나갔다고 표시돼요.`)}
-            className={`${secondaryButton} text-red-700`}
+            className={dangerButton}
           >
             방 나가기
           </button>

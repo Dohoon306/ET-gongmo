@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import { api } from '../../api/client.ts'
 import { useGet } from '../team/api.ts'
-import { Card, ErrorText, secondaryButton } from '../team/ui.tsx'
+import { Card, ErrorText, dangerButton, secondaryButton } from '../team/ui.tsx'
 import type { AdminRoom } from './adminApi.ts'
 
 const STATUS_LABELS: Record<AdminRoom['status'], string> = {
@@ -13,8 +13,8 @@ const STATUS_LABELS: Record<AdminRoom['status'], string> = {
 
 const STATUS_STYLES: Record<AdminRoom['status'], string> = {
   RECRUITING: 'bg-brand-soft text-brand',
-  FULL: 'bg-(--color-subtle) text-(--color-muted)',
-  CLOSED: 'bg-(--color-accent-soft) text-(--color-accent)',
+  FULL: 'bg-subtle text-muted',
+  CLOSED: 'bg-accent-soft text-accent',
 }
 
 export default function AdminRoomsTab() {
@@ -53,10 +53,10 @@ export default function AdminRoomsTab() {
         onChange={(e) => setQuery(e.target.value)}
         placeholder="방 제목, 방장, 공모전으로 검색"
         aria-label="모집 방 검색"
-        className="mb-4 h-10 w-full rounded-xl border border-(--color-line-strong) bg-white px-3 text-[15px]"
+        className="mb-4 h-10 w-full rounded-md border border-line-strong bg-white px-3 text-[15px]"
       />
-      <p className="mb-3 text-[13px] text-(--color-muted)">모집 방 {shown.length}개</p>
-      {data && shown.length === 0 && <Card className="px-6 py-10 text-center text-sm text-(--color-muted)">방이 없어요.</Card>}
+      <p className="mb-3 text-[13px] text-muted">모집 방 {shown.length}개</p>
+      {data && shown.length === 0 && <Card className="px-6 py-10 text-center text-sm text-muted">방이 없어요.</Card>}
       <ul className="space-y-3">
         {shown.map((r) => (
           <li key={r.id}>
@@ -66,11 +66,11 @@ export default function AdminRoomsTab() {
                   <Link to={`/rooms/${r.id}/members`} className="hover:underline">
                     #{r.id} {r.title}
                   </Link>
-                  <span className={`rounded-md px-1.5 py-0.5 text-xs font-medium ${STATUS_STYLES[r.status]}`}>
+                  <span className={`rounded-sm px-1.5 py-0.5 text-xs font-medium ${STATUS_STYLES[r.status]}`}>
                     {STATUS_LABELS[r.status]}
                   </span>
                 </p>
-                <p className="mt-1 truncate text-sm text-(--color-ink-2)">
+                <p className="mt-1 truncate text-sm text-ink-2">
                   {r.contestId ? (
                     <Link to={`/contests/${r.contestId}`} className="hover:underline">
                       {r.contestTitle}
@@ -80,7 +80,7 @@ export default function AdminRoomsTab() {
                   )}
                   {r.contestEndDate ? ` · ${r.contestEndDate} 마감` : ''}
                 </p>
-                <p className="mt-1 text-xs text-(--color-muted)">
+                <p className="mt-1 text-xs text-muted">
                   방장 {r.hostName} · {r.memberCount} / {r.capacity}명
                   {r.pendingRequests > 0 ? ` · 대기 요청 ${r.pendingRequests}건` : ''} · 만든 날 {r.createdAt.slice(0, 10)}
                 </p>
@@ -90,7 +90,7 @@ export default function AdminRoomsTab() {
                   공모전 마감 처리
                 </button>
               )}
-              <button onClick={() => act(r, 'delete')} className={`${secondaryButton} text-red-700`}>
+              <button onClick={() => act(r, 'delete')} className={dangerButton}>
                 방 삭제
               </button>
             </Card>
