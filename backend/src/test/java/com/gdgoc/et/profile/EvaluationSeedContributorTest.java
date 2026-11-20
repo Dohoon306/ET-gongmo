@@ -18,7 +18,7 @@ class EvaluationSeedContributorTest {
     void hostKimHasAlreadyReviewedMemberHanInTheClosedTeam() {
         new EvaluationSeedContributor(jdbc).seed();
 
-        verify(jdbc).update(EvaluationSeedContributor.INSERT_EVALUATION, 1L, 5L, 1L, 6L, 4,
+        verify(jdbc).update(EvaluationSeedContributor.INSERT_EVALUATION, 1L, 5L, 2L, 7L, 4,
                 "맡은 화면을 끝까지 책임지고 마무리했어요", Timestamp.valueOf(LocalDateTime.of(2025, 12, 20, 12, 0)));
         verifyNoMoreInteractions(jdbc);
     }
@@ -26,7 +26,7 @@ class EvaluationSeedContributorTest {
     @Test
     void lastYearSproutHasNotReviewedAnyoneYet() {
         assertThat(EvaluationSeedContributor.SEED_EVALUATIONS)
-                .extracting(EvaluationSeedContributor.SeedEvaluation::evaluatorId).doesNotContain(7L);
+                .extracting(EvaluationSeedContributor.SeedEvaluation::evaluatorId).doesNotContain(8L);
         assertThat(EvaluationSeedContributor.SEED_EVALUATIONS).allSatisfy(evaluation -> {
             assertThat(evaluation.score()).isBetween(1, 5);
             assertThat(evaluation.comment()).hasSizeLessThanOrEqualTo(200);

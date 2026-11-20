@@ -23,6 +23,7 @@ spring:
         - optional:classpath:db/schema/team.sql
         - optional:classpath:db/schema/bookmark.sql
         - optional:classpath:db/schema/profile.sql
+        - optional:classpath:db/schema/admin.sql
       encoding: UTF-8
 
 server:

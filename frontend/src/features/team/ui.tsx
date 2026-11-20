@@ -2,6 +2,7 @@ import { useEffect, useState, type CSSProperties, type MouseEvent, type ReactNod
 import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router'
 import { useCurrentUser } from '../../common/useCurrentUser.ts'
+import ReportDialog, { type ReportContext } from '../admin/ReportDialog.tsx'
 import type { Tag } from './api.ts'
 import './team.css'
 
@@ -59,11 +60,17 @@ export function Card({ children, className = '', muted = false }: { children: Re
   )
 }
 
-export function Avatar({ name, size = 'md', userId }: { name: string; size?: 'md' | 'lg'; userId?: number }) {
+export function Avatar({ name, size = 'md', userId, reportContext = { source: 'PROFILE' } }: {
+  name: string
+  size?: 'md' | 'lg'
+  userId?: number
+  reportContext?: ReportContext
+}) {
   const initial = name.replace(/^(방장|팀원)\s*/, '').slice(0, 1)
   const { userId: currentUserId } = useCurrentUser()
   const navigate = useNavigate()
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null)
+  const [reporting, setReporting] = useState(false)
   const canMessage = userId !== undefined && currentUserId !== null && currentUserId !== userId
 
   useEffect(() => {
@@ -90,7 +97,7 @@ export function Avatar({ name, size = 'md', userId }: { name: string; size?: 'md
   return (
     <>
       <span
-        title={canMessage ? '우클릭해서 쪽지 보내기' : undefined}
+        title={canMessage ? '우클릭해서 쪽지 보내기·신고' : undefined}
         onContextMenu={
           canMessage
             ? (e) => {
@@ -118,9 +125,26 @@ export function Avatar({ name, size = 'md', userId }: { name: string; size?: 'md
             <button role="menuitem" onClick={go(`/users/${userId}`)} className="block w-full px-4 py-2 text-left hover:bg-[#EEF1EC]">
               프로필 보기
             </button>
+            <button
+              role="menuitem"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setMenu(null)
+                setReporting(true)
+              }}
+              className="block w-full border-t border-[#DCE2DA] px-4 py-2 text-left text-red-700 hover:bg-red-50"
+            >
+              유저 신고
+            </button>
           </div>,
           document.body,
         )}
+      {reporting && userId !== undefined && (
+        <span onClick={(e) => e.stopPropagation()}>
+          <ReportDialog targetId={userId} targetName={name} context={reportContext} onClose={() => setReporting(false)} />
+        </span>
+      )}
     </>
   )
 }
