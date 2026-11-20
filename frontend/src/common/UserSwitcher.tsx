@@ -1,18 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
+import { getSignedUpUserIds } from './signedUpUserStorage.ts'
 import { useCurrentUser } from './useCurrentUser.ts'
 import checkIcon from './icons/check.svg'
 import chevronDownIcon from './icons/chevron-down.svg'
 import plusIcon from './icons/plus.svg'
 
-const SEED_USER_NAMES_HIDDEN_FROM_SWITCHER = new Set([
-  '방장 이',
-  '방장 박',
-  '방장 최',
-  '팀원 정',
-  '팀원 한',
-  '새싹(작년)',
-])
+const DEMO_CAST_NAMES = new Set(['관리자', '방장 김'])
 
 function avatarInitial(name: string) {
   const lastWord = name.trim().split(/\s+/).at(-1) ?? ''
@@ -60,8 +54,9 @@ export default function UserSwitcher() {
     setOpen(false)
   }
 
+  const signedUpUserIds = getSignedUpUserIds()
   const switchableUsers = users.filter(
-    (user) => user.id === userId || !SEED_USER_NAMES_HIDDEN_FROM_SWITCHER.has(user.name),
+    (user) => user.id === userId || DEMO_CAST_NAMES.has(user.name) || signedUpUserIds.includes(user.id),
   )
 
   const buttonLabel =currentUser?.name ?? (userId !== null ? `사용자 ${userId}` : '사용자 선택')
