@@ -100,15 +100,19 @@ JPA 매핑:
 | `host` | VARCHAR(255) | NULL | 주최 |
 | `start_date` | DATE | NULL | 접수 시작 |
 | `end_date` | DATE | NULL, INDEX | 접수 마감. 추천은 오늘 이후만 |
-| `target` | VARCHAR(100) | NULL | 대상 (예: 누구나) |
-| `prize` | VARCHAR(100) | NULL | 1등 상금 문자열 (예: 300만원). 계산하지 않아서 문자열 |
-| `period_mismatch` | BOOLEAN | NOT NULL, 기본 FALSE | `- 주의: 출처마다 접수 기간이 다름` 줄이 있으면 TRUE (상세 화면 경고) |
-| `gongmoa_url` | VARCHAR(500) | NOT NULL | 출처 표기용 공모아뷰 링크 (필수) |
-| `source_url` | VARCHAR(500) | NULL | 주최 측 원문. 지원 버튼 링크 |
+| `target` | VARCHAR(100) | NULL | 대상 (예: 누구나, `대학생 · 대학원생 · 일반인`). 괄호 조건이 붙기도 함 |
+| `prize` | VARCHAR(100) | NULL | `- 1등 상금:` 값 (예: 300만원). 없으면 `- 1등:` 값 (상품명일 수 있음, 예: 노트북). 계산하지 않아서 문자열 |
+| `benefit` | VARCHAR(100) | NULL | `- 혜택:` 값 (예: `상금(총상금 : 650만원 / 1위 : 300만원)`, `다양한 혜택`). `prize`가 비었을 때 상세 화면에 대신 보여 줌 |
+| `period_mismatch` | BOOLEAN | NOT NULL, 기본 FALSE | `- 주의:` 줄이 있으면 TRUE (상세 화면 경고). 실제 문구는 `출처마다 접수 기간이 다름 — 원문 확인 필요`라서 문구 전체를 비교하지 말고 키로 판정 |
+| `gongmoa_url` | VARCHAR(500) | NOT NULL | 출처 표기용 공모아뷰 링크 (필수). 한글 제목이 URL 인코딩돼 300자를 넘기도 함 |
+| `source_url` | VARCHAR(500) | NULL | `## 확인할 수 있는 곳`의 `- 주최 측 원문:` 링크. 지원 버튼 링크. 없으면 지원 버튼은 `gongmoa_url`로 보냄 |
 | `raw_text` | TEXT | NULL | `get_contest` 원본 마크다운. 파싱 규칙이 바뀌면 다시 파싱 |
 | `fetched_at` | DATETIME | NOT NULL | 마지막으로 받은 시각 |
 
 - 마감된 공고는 지우지 않습니다.
+- 2026-11-20에 실제 공고 90건(`type=contest`, `target=univ`, 분야 5개)을 받아 컬럼 길이를 확인했습니다. 실제 최대 길이: 제목 49자, 주최 45자, 대상 64자, 1등 상금 6자, 혜택 51자, 공모아뷰 링크 349자, 주최 측 원문 150자. 90건 모두 `접수 기간: YYYY-MM-DD ~ YYYY-MM-DD` 형식이었습니다.
+- 90건 중 `1등 상금`이 있는 공고는 49건, `혜택`이 있는 공고는 73건, 주최 측 원문이 없는 공고는 3건이었습니다. `prize`·`benefit`·`source_url`이 비는 경우를 화면에서 처리해야 합니다.
+- `활동 기간`, `장소·방식`, `비용`, `후원` 줄이 붙는 공고도 있습니다. 컬럼으로 만들지 않고 `raw_text`에서 읽습니다.
 - 상세 화면의 "확인할 수 있는 곳" 목록(링커리어, 씽굿 등)은 `raw_text`에서 읽어 보여 줍니다. 별도 테이블은 만들지 않습니다.
 
 ### 3.5 `contest_category` — 공모전 태그 (B, B-2)
@@ -228,6 +232,7 @@ CREATE TABLE contest (
   end_date         DATE          NULL,
   target           VARCHAR(100)  NULL,
   prize            VARCHAR(100)  NULL,
+  benefit          VARCHAR(100)  NULL,
   period_mismatch  BOOLEAN       NOT NULL DEFAULT FALSE,
   gongmoa_url      VARCHAR(500)  NOT NULL,
   source_url       VARCHAR(500)  NULL,
