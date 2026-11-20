@@ -68,7 +68,9 @@ export default function MembersPage() {
                   <Avatar name={m.name} size="lg" />
                   <div className="min-w-0 flex-1">
                     <p className="mb-2 text-[15px] font-semibold">
-                      {m.name}
+                      <Link to={`/users/${m.userId}`} className="hover:underline">
+                        {m.name}
+                      </Link>
                       <span className="ml-1.5 text-xs font-medium text-brand">{roleLabel(m)}</span>
                     </p>
                     <Tags tags={m.tags} />
