@@ -29,6 +29,12 @@ server:
   port: 8080
 
 app:
+  contest-collection:
+    endpoint: ${GONGMOA_MCP_URL:https://www.gongmoaview.com/mcp}
+    fields: it,idea,design,video,marketing
+    target: univ
+    limit: 20
+    snapshot-directory: ${CONTEST_SNAPSHOT_DIRECTORY:data/contest-snapshots}
   ai:
     api-key: ${ET_GPT_API_KEY:}
     model: ${ET_GPT_MODEL:gpt-6.2-astra}
