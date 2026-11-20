@@ -212,8 +212,10 @@ MySQL에는 조건부 UNIQUE가 없어서 생성 컬럼을 씁니다. 대기 중
 
 ## 4. DDL (`schema.sql`)
 
+앱을 켤 때마다 `schema.sql`이 실행되므로(`spring.sql.init.mode=always`) 모든 테이블을 `CREATE TABLE IF NOT EXISTS`로 만듭니다. 이미 있는 테이블은 건너뛰므로, 컬럼을 바꾸면 `docker compose down -v`로 DB를 지우고 다시 띄워야 반영됩니다.
+
 ```sql
-CREATE TABLE category (
+CREATE TABLE IF NOT EXISTS category (
   id          BIGINT       NOT NULL AUTO_INCREMENT,
   axis        VARCHAR(20)  NOT NULL,
   code        VARCHAR(40)  NOT NULL,
@@ -223,7 +225,7 @@ CREATE TABLE category (
   UNIQUE KEY uk_category_code (code)
 );
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
   id          BIGINT       NOT NULL AUTO_INCREMENT,
   name        VARCHAR(30)  NOT NULL,
   intro       TEXT         NULL,
@@ -231,7 +233,7 @@ CREATE TABLE users (
   PRIMARY KEY (id)
 );
 
-CREATE TABLE user_category (
+CREATE TABLE IF NOT EXISTS user_category (
   user_id      BIGINT NOT NULL,
   category_id  BIGINT NOT NULL,
   PRIMARY KEY (user_id, category_id),
@@ -239,7 +241,7 @@ CREATE TABLE user_category (
   CONSTRAINT fk_uc_category FOREIGN KEY (category_id) REFERENCES category (id)
 );
 
-CREATE TABLE contest (
+CREATE TABLE IF NOT EXISTS contest (
   id               BIGINT        NOT NULL AUTO_INCREMENT,
   gongmoa_id       BIGINT        NOT NULL,
   title            VARCHAR(255)  NOT NULL,
@@ -260,7 +262,7 @@ CREATE TABLE contest (
   KEY idx_contest_end_date (end_date)
 );
 
-CREATE TABLE contest_category (
+CREATE TABLE IF NOT EXISTS contest_category (
   contest_id   BIGINT NOT NULL,
   category_id  BIGINT NOT NULL,
   PRIMARY KEY (contest_id, category_id),
@@ -268,7 +270,7 @@ CREATE TABLE contest_category (
   CONSTRAINT fk_cc_category FOREIGN KEY (category_id) REFERENCES category (id)
 );
 
-CREATE TABLE room (
+CREATE TABLE IF NOT EXISTS room (
   id          BIGINT        NOT NULL AUTO_INCREMENT,
   contest_id  BIGINT        NULL,
   host_id     BIGINT        NOT NULL,
@@ -285,7 +287,7 @@ CREATE TABLE room (
   CONSTRAINT ck_room_status   CHECK (status IN ('RECRUITING', 'FULL', 'CLOSED'))
 );
 
-CREATE TABLE room_category (
+CREATE TABLE IF NOT EXISTS room_category (
   room_id      BIGINT NOT NULL,
   category_id  BIGINT NOT NULL,
   PRIMARY KEY (room_id, category_id),
@@ -293,7 +295,7 @@ CREATE TABLE room_category (
   CONSTRAINT fk_rc_category FOREIGN KEY (category_id) REFERENCES category (id)
 );
 
-CREATE TABLE room_member (
+CREATE TABLE IF NOT EXISTS room_member (
   id         BIGINT       NOT NULL AUTO_INCREMENT,
   room_id    BIGINT       NOT NULL,
   user_id    BIGINT       NOT NULL,
@@ -307,7 +309,7 @@ CREATE TABLE room_member (
   CONSTRAINT ck_member_role CHECK (role IN ('HOST', 'MEMBER'))
 );
 
-CREATE TABLE join_request (
+CREATE TABLE IF NOT EXISTS join_request (
   id            BIGINT       NOT NULL AUTO_INCREMENT,
   room_id       BIGINT       NOT NULL,
   user_id       BIGINT       NOT NULL,
@@ -324,7 +326,7 @@ CREATE TABLE join_request (
   CONSTRAINT ck_request_status CHECK (status IN ('PENDING', 'ACCEPTED', 'REJECTED'))
 );
 
-CREATE TABLE evaluation (
+CREATE TABLE IF NOT EXISTS evaluation (
   id            BIGINT        NOT NULL AUTO_INCREMENT,
   room_id       BIGINT        NOT NULL,
   evaluator_id  BIGINT        NOT NULL,
@@ -342,7 +344,7 @@ CREATE TABLE evaluation (
   CONSTRAINT ck_eval_not_self CHECK (evaluator_id <> target_id)
 );
 
-CREATE TABLE bookmark (
+CREATE TABLE IF NOT EXISTS bookmark (
   user_id     BIGINT    NOT NULL,
   contest_id  BIGINT    NOT NULL,
   created_at  DATETIME  NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -444,6 +446,15 @@ SELECT contest_id FROM bookmark WHERE user_id = :userId;
 ## 6. 시드 데이터 (X-5)
 
 [시연용 데이터](demo-data.md)를 테이블로 옮긴 것입니다.
+
+넣는 순서: 방이 공모전 ID를, 평가가 방과 사용자 ID를 참조하므로 아래 순서로 넣습니다. 공모전은 JSON 스냅샷을 수집과 같은 Java upsert 코드로 넣으므로, 시드 전체를 `seed` 프로필의 Java 코드 한 곳에서 실행합니다.
+
+1. `SET FOREIGN_KEY_CHECKS = 0` → 전 테이블 `TRUNCATE` → `SET FOREIGN_KEY_CHECKS = 1`
+2. `category` (6.1)
+3. `contest`, `contest_category` (JSON 스냅샷 upsert, 주인공 공모전 수동 태그)
+4. `users`, `user_category` (6.2). id를 1~7로 직접 넣어, 시연 중 가입한 새싹이 8번이 되게 합니다
+5. `room`, `room_category`, `room_member` (6.3). 방 1~4는 주인공 공모전의 `gongmoa_id`로 `contest.id`를 찾아 넣습니다
+6. `evaluation` (6.4)
 
 ### 6.1 카테고리 시드
 
