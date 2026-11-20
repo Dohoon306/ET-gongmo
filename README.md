@@ -66,7 +66,7 @@ E.T 공모전은 이런 진입 장벽을 낮춰, 누구나 자신의 관심 분�
 | DB | MySQL 8.4 (Docker) | `utf8mb4`, 로컬은 `docker compose`로 실행 |
 | 프론트엔드 | React 19 + Vite 8 + TypeScript | React Router 7, Tailwind CSS 4 |
 | API 문서 | springdoc-openapi (Swagger UI) | 기능 사이 API를 화면으로 맞춰 봄 |
-| AI | 공통 인터페이스 `AiClient` + 대체 응답 | 제공자는 회의에서 확정 (X-3) |
+| AI | 공통 인터페이스 `AiClient` + 대체 응답 | GPT로 가정 (키 `ET_GPT_API_KEY`), 회의에서 확정 (X-3) |
 | 공모전 수집 | 백엔드 안의 수집 기능 (Java `RestClient`) | 공모아뷰 MCP 호출 → 파싱 → upsert (B-1) |
 
 ### 백엔드
@@ -74,7 +74,7 @@ E.T 공모전은 이런 진입 장벽을 낮춰, 누구나 자신의 관심 분�
 - **Java 17**: 팀 PC에 이미 깔려 있는 버전(Corretto 17)에 맞춥니다.
 - **Spring Boot 3.5.16**: 자료와 예제가 가장 많은 3.x 마지막 버전입니다. Spring Initializr에는 이제 4.x만 있으니 새로 만들지 말고 저장소의 `build.gradle`을 그대로 씁니다.
 - 의존성: Spring Web, Spring Data JPA, MySQL Driver, Validation, Lombok, springdoc-openapi
-- 사용자·방·요청·평가는 단순 CRUD라 JPA로 만들고, 겹침 점수 정렬(B-3, C-2)은 [기능 명세서](docs/feature-spec.md)의 SQL을 그대로 native query로 씁니다.
+- 사용자·방·요청·평가는 단순 CRUD라 JPA로 만들고, 겹침 점수 정렬(B-3, C-2)은 [DB 명세서](docs/db-spec.md) 5장의 SQL을 그대로 native query로 씁니다.
 - **현재 사용자 (X-1)**: 로그인 대신 프론트가 모든 요청에 `X-User-Id` 헤더를 붙이고, 백엔드는 이 값을 현재 사용자로 씁니다. Spring Security는 넣지 않습니다.
 
 담당자끼리 같은 파일을 덜 건드리도록 패키지는 계층이 아니라 기능으로 나눕니다.
@@ -191,6 +191,7 @@ IntelliJ에서 `backend` 폴더를 열고 `EtApplication`을 실행해도 됩니
 | 헤더에 **서버 연결 안 됨** | 백엔드(8080)가 안 떠 있습니다 |
 | 헤더에 **DB 연결 안 됨** | MySQL 컨테이너가 꺼져 있거나 `.env` 값이 다릅니다. `docker compose ps`로 확인 |
 | DB를 처음 상태로 지우고 싶음 | `docker compose down -v` 후 다시 `docker compose up -d` |
+| `schema.sql`의 컬럼을 바꿨는데 반영이 안 됨 | 이미 있는 테이블은 건너뛰기 때문입니다. `docker compose down -v`로 지우고 다시 띄우기 |
 
 ### 그 밖에
 

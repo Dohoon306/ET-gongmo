@@ -4,8 +4,9 @@ import HomePage from './common/HomePage.tsx'
 import { userRoutes } from './features/user/routes.tsx'
 import { contestRoutes } from './features/contest/routes.tsx'
 import { teamRoutes } from './features/team/routes.tsx'
+import { bookmarkRoutes } from './features/bookmark/routes.tsx'
 
-const featureRoutes = [...userRoutes, ...contestRoutes, ...teamRoutes]
+const featureRoutes = [...userRoutes, ...contestRoutes, ...teamRoutes, ...bookmarkRoutes]
 
 export default function App() {
   return (
