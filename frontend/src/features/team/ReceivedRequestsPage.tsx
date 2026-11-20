@@ -81,7 +81,9 @@ export default function ReceivedRequestsPage() {
                 <div className="flex items-center gap-3">
                   <Avatar name={req.name} size="lg" />
                   <div>
-                    <p className="text-lg font-bold">{req.name}</p>
+                    <Link to={`/users/${req.userId}`} className="text-lg font-bold hover:underline">
+                      {req.name}
+                    </Link>
                     <p className="text-[13px] text-(--color-muted)">{timeAgo(req.createdAt)} · 답을 기다리는 중</p>
                   </div>
                 </div>

@@ -26,12 +26,23 @@ function RoomListView({ contestId, initialJoinRoomId }: { contestId: number; ini
   const { userId } = useCurrentUser()
   const { data, error, reload } = useGet<RoomList>(`/api/contests/${contestId}/rooms`)
   const [joinRoomId, setJoinRoomId] = useState(initialJoinRoomId)
-  const joinRoom = data?.rooms.find((r) => r.id === joinRoomId)
+  const [requestedKeys, setRequestedKeys] = useState<string[]>([])
+  const requestKey = (roomId: number) => `${userId}:${roomId}`
+  const joinRoom = data?.rooms.find(
+    (r) => r.id === joinRoomId && userId !== null && r.hostId !== userId && r.status === 'RECRUITING',
+  )
   const open = data?.rooms.filter((r) => r.status !== 'FULL') ?? []
   const full = data?.rooms.filter((r) => r.status === 'FULL') ?? []
 
   const card = (room: Room) => (
-    <RoomCard key={room.id} room={room} isHost={room.hostId === userId} canJoin={userId !== null} onJoin={() => setJoinRoomId(room.id)} />
+    <RoomCard
+      key={room.id}
+      room={room}
+      isHost={room.hostId === userId}
+      canJoin={userId !== null}
+      requested={requestedKeys.includes(requestKey(room.id))}
+      onJoin={() => setJoinRoomId(room.id)}
+    />
   )
 
   return (
@@ -72,12 +83,33 @@ function RoomListView({ contestId, initialJoinRoomId }: { contestId: number; ini
         </>
       )}
 
-      {joinRoom && <JoinDialog room={joinRoom} onClose={() => setJoinRoomId(null)} onSent={reload} />}
+      {joinRoom && (
+        <JoinDialog
+          room={joinRoom}
+          onClose={() => setJoinRoomId(null)}
+          onSent={() => {
+            setRequestedKeys((keys) => [...keys, requestKey(joinRoom.id)])
+            reload()
+          }}
+        />
+      )}
     </TeamPage>
   )
 }
 
-function RoomCard({ room, isHost, canJoin, onJoin }: { room: Room; isHost: boolean; canJoin: boolean; onJoin: () => void }) {
+function RoomCard({
+  room,
+  isHost,
+  canJoin,
+  requested,
+  onJoin,
+}: {
+  room: Room
+  isHost: boolean
+  canJoin: boolean
+  requested: boolean
+  onJoin: () => void
+}) {
   const full = room.status === 'FULL'
   return (
     <Card muted={full} className="flex gap-6 p-7">
@@ -114,6 +146,8 @@ function RoomCard({ room, isHost, canJoin, onJoin }: { room: Room; isHost: boole
           </Link>
         ) : full ? (
           <span className="inline-flex h-10 items-center px-4 text-[15px] font-semibold text-(--color-muted)">모집 완료</span>
+        ) : requested ? (
+          <span className="inline-flex h-10 items-center px-4 text-[15px] font-semibold text-(--color-muted)">요청 보냄</span>
         ) : (
           <button onClick={onJoin} disabled={!canJoin} className={primaryButton}>
             참가 요청
