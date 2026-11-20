@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import { api, ApiError } from '../../api/client.ts'
+import { rememberSignedUpUser } from '../../common/signedUpUserStorage.ts'
 import { useCurrentUser } from '../../common/useCurrentUser.ts'
 
 type SavedUser = { id: number; name: string }
@@ -38,6 +39,7 @@ export default function SignupPage() {
         await reloadUsers()
       } else {
         const created = await api<SavedUser>('/api/users', { method: 'POST', body })
+        rememberSignedUpUser(created.id)
         setUserId(created.id)
       }
       navigate('/signup/tags')
