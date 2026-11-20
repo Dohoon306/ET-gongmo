@@ -476,7 +476,21 @@ SELECT contest_id FROM bookmark WHERE user_id = :userId;
 
 ### 5.7 내 방 찾기 (C)
 
-헤더의 "내 팀"(`/my/team`)과 "받은 요청"(`/my/requests`)이 현재 사용자의 방으로 이동할 때 씁니다 ([기능 명세서 헤더 메뉴](feature-spec.md#헤더-메뉴)). 종료된 팀은 빼고, 가장 최근에 들어간 방 하나를 고릅니다.
+한 사람이 2개 이상의 팀에 참여할 수 있으므로, 헤더의 "내 팀"(`/my/team`)은 참여한 팀을 모두 가져옵니다 (C-7, [기능 명세서 헤더 메뉴](feature-spec.md#헤더-메뉴)). 종료된 팀은 빼고, 가장 최근에 들어간 팀이 위에 옵니다.
+
+```sql
+SELECT r.id AS room_id, r.title, r.status, m.role, r.capacity,
+       (SELECT COUNT(*) FROM room_member x WHERE x.room_id = r.id) AS member_count,
+       c.id AS contest_id, c.title AS contest_title, c.end_date
+FROM room_member m
+JOIN room r ON r.id = m.room_id
+LEFT JOIN contest c ON c.id = r.contest_id
+WHERE m.user_id = :userId
+  AND r.status IN ('RECRUITING', 'FULL')
+ORDER BY m.joined_at DESC, r.id DESC;
+```
+
+"받은 요청"(`/my/requests`)은 현재 사용자가 방장인 방 중 가장 최근에 들어간 방 하나로 이동합니다.
 
 ```sql
 SELECT r.id
@@ -484,11 +498,12 @@ FROM room r
 JOIN room_member m ON m.room_id = r.id
 WHERE m.user_id = :userId
   AND r.status IN ('RECRUITING', 'FULL')
+  AND m.role = 'HOST'
 ORDER BY m.joined_at DESC, r.id DESC
 LIMIT 1;
 ```
 
-"받은 요청"은 여기에 `AND m.role = 'HOST'`를 더합니다. 결과가 없으면 화면에서 "아직 속한 팀이 없어요" 안내를 보여 줍니다. 시드 기준으로 방장 김은 방 1이 나오고(방 5는 종료라 빠짐), 새싹(작년)은 결과가 없습니다.
+결과가 없으면 화면에서 "아직 속한 팀이 없어요" 안내를 보여 줍니다. 시드 기준으로 방장 김은 방 1이 나오고(방 5는 종료라 빠짐), 새싹(작년)은 결과가 없습니다.
 
 ## 6. 시드 데이터 (X-5)
 
