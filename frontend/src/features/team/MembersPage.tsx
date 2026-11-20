@@ -1,12 +1,20 @@
+import { useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { getDeadline } from '../../common/deadline.ts'
 import { idParam, teamComposition, useGet, type Person, type Room } from './api.ts'
+import { MemberActions, RoomActions } from './RoomManage.tsx'
 import { Avatar, Card, ErrorText, MissingId, StatusChip, Tags, TeamPage, secondaryButton } from './ui.tsx'
 
 export default function MembersPage() {
   const roomId = idParam(useParams().roomId)
   const room = useGet<Room>(roomId ? `/api/rooms/${roomId}` : null)
   const members = useGet<Person[]>(roomId ? `/api/rooms/${roomId}/members` : null)
+  const [manageError, setManageError] = useState<string | null>(null)
+  const refresh = () => {
+    setManageError(null)
+    room.reload()
+    members.reload()
+  }
 
   if (!roomId) return <MissingId what="방" sample="/rooms/1/members" />
 
@@ -56,7 +64,7 @@ export default function MembersPage() {
           )}
         </div>
       )}
-      <ErrorText message={room.error ?? members.error} />
+      <ErrorText message={room.error ?? members.error ?? manageError} />
 
       {members.data && (
         <div className="grid items-start gap-5 md:grid-cols-[1fr_300px]">
@@ -78,9 +86,11 @@ export default function MembersPage() {
                   <Link to={`/users/${m.userId}`} className="shrink-0 text-sm font-semibold text-brand hover:underline">
                     프로필 ›
                   </Link>
+                  {r && <MemberActions room={r} member={m} onChanged={refresh} onError={setManageError} />}
                 </li>
               ))}
             </ul>
+            {r && <RoomActions room={r} memberCount={members.data.length} />}
           </Card>
 
           <Card className="p-5">

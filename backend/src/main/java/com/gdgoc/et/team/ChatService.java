@@ -23,13 +23,15 @@ public class ChatService {
 
     private static final String MESSAGE_COLUMNS = """
             m.id, m.sender_id, u.name AS sender_name, m.content,
-            DATE_FORMAT(m.created_at, '%Y-%m-%dT%H:%i:%s') AS created_at
+            DATE_FORMAT(m.created_at, '%Y-%m-%dT%H:%i:%s') AS created_at,
+            EXISTS (SELECT 1 FROM room_event e WHERE e.message_id = m.id) AS notice
             """;
 
     private final JdbcTemplate jdbc;
     private final NamedParameterJdbcTemplate named;
 
-    public record Message(long id, long senderId, String senderName, String content, String createdAt, boolean mine) {}
+    public record Message(long id, long senderId, String senderName, String content, String createdAt, boolean mine,
+                          boolean notice) {}
 
     public record RoomUnread(long roomId, String title, long unread, String lastContent) {}
 
@@ -150,7 +152,7 @@ public class ChatService {
     private static Message toMessage(ResultSet rs, long userId) throws SQLException {
         long senderId = rs.getLong("sender_id");
         return new Message(rs.getLong("id"), senderId, rs.getString("sender_name"), rs.getString("content"),
-                rs.getString("created_at"), senderId == userId);
+                rs.getString("created_at"), senderId == userId, rs.getBoolean("notice"));
     }
 
     private static List<Message> latestFirst(List<Message> newestFirst) {

@@ -79,3 +79,23 @@ CREATE TABLE IF NOT EXISTS chat_read (
   CONSTRAINT fk_chat_read_room FOREIGN KEY (room_id) REFERENCES room (id)  ON DELETE CASCADE,
   CONSTRAINT fk_chat_read_user FOREIGN KEY (user_id) REFERENCES users (id)
 );
+
+CREATE TABLE IF NOT EXISTS room_event (
+  id          BIGINT        NOT NULL AUTO_INCREMENT,
+  room_id     BIGINT        NULL,
+  actor_id    BIGINT        NOT NULL,
+  user_id     BIGINT        NOT NULL,
+  kind        VARCHAR(20)   NOT NULL,
+  reason      VARCHAR(200)  NULL,
+  message_id  BIGINT        NULL,
+  created_at  DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_event_actor (actor_id, kind),
+  KEY idx_event_user (user_id, kind),
+  KEY idx_event_message (message_id),
+  CONSTRAINT fk_event_room    FOREIGN KEY (room_id)    REFERENCES room (id)         ON DELETE SET NULL,
+  CONSTRAINT fk_event_actor   FOREIGN KEY (actor_id)   REFERENCES users (id)        ON DELETE CASCADE,
+  CONSTRAINT fk_event_user    FOREIGN KEY (user_id)    REFERENCES users (id)        ON DELETE CASCADE,
+  CONSTRAINT fk_event_message FOREIGN KEY (message_id) REFERENCES chat_message (id) ON DELETE SET NULL,
+  CONSTRAINT ck_event_kind CHECK (kind IN ('KICK', 'LEAVE', 'HOST_CHANGE'))
+);

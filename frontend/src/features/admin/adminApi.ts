@@ -10,6 +10,8 @@ export type AdminUser = {
   suspended: boolean
   suspendReason: string | null
   reportCount: number
+  kickCount: number
+  kickedCount: number
   categories: string[]
 }
 
