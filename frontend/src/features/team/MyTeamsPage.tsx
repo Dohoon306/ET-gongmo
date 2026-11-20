@@ -2,11 +2,15 @@ import { Link } from 'react-router'
 import { useCurrentUser } from '../../common/useCurrentUser.ts'
 import { useGet, type MyTeam } from './api.ts'
 import DDayBadge from '../../common/DDayBadge.tsx'
+import { UnreadBadge } from './ChatBell.tsx'
+import { useUnread } from './chatApi.ts'
 import { Card, EmptyState, ErrorText, PersonIcon, StatusChip, TeamPage, primaryButton, secondaryButton } from './ui.tsx'
 
 export default function MyTeamsPage() {
   const { userId } = useCurrentUser()
   const { data, error } = useGet<MyTeam[]>(userId ? '/api/my/teams' : null)
+  const unread = useUnread()
+  const unreadByRoom = new Map(unread?.rooms.map((r) => [r.roomId, r.unread]))
 
   return (
     <TeamPage>
@@ -57,6 +61,10 @@ export default function MyTeamsPage() {
                     )}
                     <Link to={`/rooms/${team.roomId}/members`} className={primaryButton}>
                       팀 보기
+                    </Link>
+                    <Link to={`/rooms/${team.roomId}/chat`} className={`${secondaryButton} relative`}>
+                      채팅방 열기
+                      <UnreadBadge count={unreadByRoom.get(team.roomId) ?? 0} />
                     </Link>
                   </div>
                 </Card>

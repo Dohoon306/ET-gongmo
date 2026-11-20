@@ -43,11 +43,17 @@ export type MyTeam = {
   contest: Contest | null
 }
 
-export function useGet<T>(path: string | null) {
+export function useGet<T>(path: string | null, pollMs?: number) {
   const { userId } = useCurrentUser()
   const [data, setData] = useState<T | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [version, setVersion] = useState(0)
+
+  useEffect(() => {
+    if (!path || !pollMs) return
+    const timer = setInterval(() => setVersion((v) => v + 1), pollMs)
+    return () => clearInterval(timer)
+  }, [path, pollMs])
 
   useEffect(() => {
     if (!path) return
