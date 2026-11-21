@@ -14,10 +14,6 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class CategorySuggester {
 
-    static final String DEMO_INTRO = "학교에서 자바로 과제 좀 해봤고, 서버 쪽을 해보고 싶어요. IT 공모전은 처음이에요";
-
-    private static final String DEMO_ANSWER = "it,backend,java,beginner,learn";
-
     private static final Map<String, CategorySeed> SEED_BY_CODE = CategoryCatalog.ALL.stream()
             .collect(Collectors.toUnmodifiableMap(CategorySeed::code, Function.identity()));
 
@@ -73,18 +69,7 @@ public class CategorySuggester {
         if (intro == null || intro.isBlank()) {
             return List.of();
         }
-        if (isDemoIntro(intro)) {
-            return toCategoryIds(DEMO_ANSWER);
-        }
         return toCategoryIds(aiClient.ask(promptFor(intro), keywordAnswer(intro)));
-    }
-
-    private boolean isDemoIntro(String intro) {
-        return lettersOnly(intro).equals(lettersOnly(DEMO_INTRO));
-    }
-
-    private String lettersOnly(String text) {
-        return text.replaceAll("[^\\p{L}\\p{N}]", "");
     }
 
     private String promptFor(String intro) {

@@ -3,11 +3,13 @@ package com.gdgoc.et.user;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.gdgoc.et.common.ai.AiClient;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 class CategorySuggesterTest {
 
@@ -16,11 +18,15 @@ class CategorySuggesterTest {
     private final CategorySuggester suggester = new CategorySuggester(aiClient);
 
     @Test
-    void demoIntroIsFixedWithoutAskingAi() {
-        assertThat(suggester.suggest("  “" + CategorySuggester.DEMO_INTRO + ".”\n"))
-                .containsExactly(1L, 13L, 19L, 26L, 29L);
+    void demoIntroAsksAiLikeAnyOtherIntro() {
+        String demoIntro = "학교에서 자바로 과제 좀 해봤고, 서버 쪽을 해보고 싶어요. IT 공모전은 처음이에요";
+        when(aiClient.ask(anyString(), anyString())).thenReturn("it,backend,java,beginner,learn");
 
-        verifyNoInteractions(aiClient);
+        assertThat(suggester.suggest(demoIntro)).containsExactly(1L, 13L, 19L, 26L, 29L);
+
+        ArgumentCaptor<String> prompt = ArgumentCaptor.forClass(String.class);
+        verify(aiClient).ask(prompt.capture(), anyString());
+        assertThat(prompt.getValue()).contains(demoIntro);
     }
 
     @Test
