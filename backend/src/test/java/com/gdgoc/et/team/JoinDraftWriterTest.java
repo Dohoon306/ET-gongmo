@@ -3,7 +3,6 @@ package com.gdgoc.et.team;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -25,9 +24,11 @@ class JoinDraftWriterTest {
     }
 
     @Test
-    void demoPersonaToRoomOneIsFixedWithoutCallingAi() {
-        assertThat(writer.write(input(1, PERSONA_TAGS))).isEqualTo(JoinDraftWriter.DEMO_DRAFT);
-        verify(aiClient, never()).ask(anyString(), anyString());
+    void demoPersonaToRoomOneAsksAiLikeAnyOtherRoom() {
+        when(aiClient.ask(anyString(), anyString())).thenReturn("백엔드를 배우며 함께하고 싶어요.");
+
+        assertThat(writer.write(input(1, PERSONA_TAGS))).isEqualTo("백엔드를 배우며 함께하고 싶어요.");
+        verify(aiClient).ask(anyString(), anyString());
     }
 
     @Test

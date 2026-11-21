@@ -2,20 +2,12 @@ package com.gdgoc.et.team;
 
 import com.gdgoc.et.common.ai.AiClient;
 import java.util.List;
-import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
 public class JoinDraftWriter {
-
-    static final long DEMO_ROOM_ID = 1L;
-
-    static final Set<String> DEMO_USER_TAGS = Set.of("IT", "백엔드", "Java", "초보", "배우고 싶음");
-
-    static final String DEMO_DRAFT = "안녕하세요! 학교 과제로 Java를 써 봤고, 이번 공모전에서 백엔드를 제대로 배워 보고 싶어 지원합니다. "
-            + "공모전은 처음이지만 맡은 부분은 끝까지 해내겠습니다.";
 
     static final int MAX_LENGTH = 500;
 
@@ -25,15 +17,8 @@ public class JoinDraftWriter {
                              String userName, List<String> userTags) {}
 
     public String write(DraftInput input) {
-        if (isDemo(input)) {
-            return DEMO_DRAFT;
-        }
         String fallback = templateDraft(input);
         return clean(aiClient.ask(promptFor(input), fallback), fallback);
-    }
-
-    private static boolean isDemo(DraftInput input) {
-        return input.roomId() == DEMO_ROOM_ID && Set.copyOf(input.userTags()).equals(DEMO_USER_TAGS);
     }
 
     private static String promptFor(DraftInput input) {
